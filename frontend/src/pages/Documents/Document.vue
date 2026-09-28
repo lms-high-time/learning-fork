@@ -117,9 +117,9 @@
 					:courseTitle="courseTitle"
 				/>
 
-				<RegisterPanel
-					v-else-if="active === REGISTER_VIEW && register"
-					:table="register"
+				<TablePanel
+					v-else-if="active === TABLE_VIEW && wholeTable"
+					:table="wholeTable"
 					:document="doc"
 					:api="api"
 				/>
@@ -161,8 +161,8 @@ import CanvasPanel from '@/components/Documents/CanvasPanel.vue'
 import ComparePanel from '@/components/Documents/ComparePanel.vue'
 import DocumentOutline from '@/components/Documents/DocumentOutline.vue'
 import LessonDocument from '@/components/Documents/LessonDocument.vue'
-import RegisterPanel from '@/components/Documents/RegisterPanel.vue'
 import ReportPanel from '@/components/Documents/ReportPanel.vue'
+import TablePanel from '@/components/Documents/TablePanel.vue'
 import { useDocument } from '@/composables/useDocument'
 import { useSpace, type Space } from '@/stores/space'
 import { documentReaders } from '@/utils/space'
@@ -174,8 +174,9 @@ import {
 	defaultView,
 	isSharedTable,
 	outline,
-	REGISTER_VIEW,
+	reportOf,
 	REPORT_VIEW,
+	TABLE_VIEW,
 	type DocBlock,
 	type OutlineLesson,
 } from '@/utils/documentTable'
@@ -251,19 +252,19 @@ const groups = computed(() =>
 )
 const ordered = computed(() => groups.value.flatMap((g) => g.blocks))
 
-// A document with a canvas reads as the sheet, not as a register: its tables
-// are parts of cells, and «Реестр целиком» would name the risks course's
-// document in Lean Canvas (learning-services#351).
-const register = computed(() =>
-	doc.value?.canvas
-		? null
-		: Object.values(doc.value?.tables ?? {}).find(isSharedTable) ?? null
+// The whole table and the report are named as the course names them — the
+// table's title, the report view's title — and only then by a neutral word:
+// dozens of courses define their documents as data (learning-services#360).
+// A sheet has its whole table too: problems and solutions side by side.
+const wholeTable = computed(
+	() => Object.values(doc.value?.tables ?? {}).find(isSharedTable) ?? null
 )
-const hasReport = computed(() =>
-	Object.values(doc.value?.tables ?? {}).some((t) =>
-		t.views.some((v) => v.type === 'report')
-	)
+const tableTitle = computed(
+	() => wholeTable.value?.title || __('The whole table')
 )
+const report = computed(() => (doc.value ? reportOf(doc.value) : null))
+const hasReport = computed(() => Boolean(report.value))
+const reportTitle = computed(() => report.value?.view.title || __('Report'))
 // The whole canvas and «было → стало» lead the contents when the course
 // lays the document out as one sheet (learning-services#351).
 const canvas = computed(() => doc.value?.canvas ?? null)
@@ -287,11 +288,11 @@ const specials = computed(() => [
 				},
 		  ]
 		: []),
-	...(register.value
+	...(wholeTable.value
 		? [
 				{
-					view: REGISTER_VIEW,
-					title: __('The whole register'),
+					view: TABLE_VIEW,
+					title: tableTitle.value,
 					icon: 'lucide-table',
 				},
 		  ]
@@ -300,7 +301,7 @@ const specials = computed(() => [
 		? [
 				{
 					view: REPORT_VIEW,
-					title: __('Report for the sponsor'),
+					title: reportTitle.value,
 					icon: 'lucide-printer',
 				},
 		  ]
@@ -308,12 +309,12 @@ const specials = computed(() => [
 ])
 
 // What is open: the address, or where the document opens by itself — the
-// current lesson during the course, the canvas or the register after it.
+// current lesson during the course, the canvas or the whole table after it.
 const active = computed(() => {
 	const known = new Set([
 		...(canvas.value ? [CANVAS_VIEW] : []),
 		...(hasCompare.value ? [COMPARE_VIEW] : []),
-		...(register.value ? [REGISTER_VIEW] : []),
+		...(wholeTable.value ? [TABLE_VIEW] : []),
 		...(hasReport.value ? [REPORT_VIEW] : []),
 		...(doc.value?.blocks.map((b) => b.key) ?? []),
 	])
@@ -424,8 +425,8 @@ const downloads = computed(() => [
 const viewTitle = computed(() => {
 	if (active.value === CANVAS_VIEW) return __('The whole canvas')
 	if (active.value === COMPARE_VIEW) return __('Before → after')
-	if (active.value === REGISTER_VIEW) return __('The whole register')
-	if (active.value === REPORT_VIEW) return __('Report for the sponsor')
+	if (active.value === TABLE_VIEW) return tableTitle.value
+	if (active.value === REPORT_VIEW) return reportTitle.value
 	return block.value?.title ?? ''
 })
 

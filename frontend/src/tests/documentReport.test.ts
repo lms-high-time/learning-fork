@@ -105,10 +105,14 @@ describe('ReportPanel', () => {
 			props: { document: doc(register()), courseTitle: 'Риски', api },
 			global,
 		})
-		expect(wrapper.get('[data-testid="report-suggest"]').text()).toContain('R1')
-		expect(wrapper.get('[data-testid="report-suggest"]').text()).not.toContain(
-			'R2'
-		)
+		const suggest = wrapper.get('[data-testid="report-suggest"]').text()
+		expect(suggest).toContain('Nothing is ticked for the report yet.')
+		// The rank is called what the table calls it (learning-services#360).
+		expect(suggest).toContain('Top by «Ранг»:')
+		expect(suggest).toContain('R1')
+		expect(suggest).not.toContain('R2')
+		// A report view with no title of its own gets a neutral one.
+		expect(wrapper.get('h1').text()).toBe('Report')
 		await wrapper.get('[data-testid="tick-suggested"]').trigger('click')
 		expect(api.write).toHaveBeenCalledWith('top3', {
 			rows: [
@@ -169,33 +173,68 @@ describe('DocumentCard', () => {
 		expect(wrapper.text()).toContain('Continue')
 	})
 
-	it('after the course, says when the review is and opens the register', () => {
+	// After the course: the table's most urgent date, under the field's own
+	// title — no key is special, each course names its dates
+	// (learning-services#360).
+	const finished = (d: DocumentData) => {
 		resources['lms_frappe_app.api.public.course_map'] = {
 			data: { data: { next_lesson: null, chapters: [] } },
 			fetch: vi.fn(),
 		}
-		const table = { ...register(), columns: register().columns }
-		const d = doc(table)
-		d.blocks = [
-			{
-				key: 'risks',
-				fields: [{ key: 'next_review', title: 'Пересмотр', type: 'date' }],
-			} as never,
-		]
-		d.fields = { next_review: '2020-01-01' }
-		const assessment = { ...table, columns: [...table.columns] }
-		d.tables = { register: assessment }
 		resources['lms_frappe_app.api.student.artifact'] = {
 			data: { data: d },
 			fetch: vi.fn(),
 		}
-		const wrapper = card()
+		return card()
+	}
+	const dated = (fields: DocumentData['fields'], canvas?: unknown) => {
+		const d = doc(register())
+		d.blocks = [
+			{
+				key: 'risks',
+				fields: [
+					{ key: 'check_on', title: 'Сверка', type: 'date' },
+					{ key: 'call_on', title: 'Созвон', type: 'date' },
+				],
+			} as never,
+		]
+		d.fields = fields
+		if (canvas) (d as { canvas?: unknown }).canvas = canvas
+		return d
+	}
+
+	it('after the course, puts an overdue date first, named by its field', () => {
+		const wrapper = finished(
+			dated({ check_on: '2099-01-01', call_on: '2020-01-01' })
+		)
 		expect(
 			resources['lms_frappe_app.api.student.artifact'].fetch
 		).toHaveBeenCalled()
-		expect(wrapper.get('[data-testid="document-next"]').text()).toMatch(
-			/Review overdue by \d+ d/
+		const next = wrapper.get('[data-testid="document-next"]')
+		expect(next.text()).toMatch(/^Созвон: overdue by \d+ d$/)
+		expect(next.get('span').classes()).toContain('text-ink-red-5')
+		// «Open» lets the document open where it should by itself.
+		expect(wrapper.text()).toContain('Open')
+		const links = wrapper.findAll('a[data-to]')
+		expect(
+			links.map((a) => JSON.parse(a.attributes('data-to') as string))
+		).toEqual(
+			links.map(() => ({
+				name: 'Document',
+				params: { courseName: 'c1', artifact: 'risk_register' },
+			}))
 		)
-		expect(wrapper.text()).toContain('Open the register')
+	})
+
+	it("shows the nearest date of a sheet's table too", () => {
+		const wrapper = finished(
+			dated(
+				{ check_on: '2099-03-01', call_on: '2099-01-15' },
+				{ grid: ['risks'] }
+			)
+		)
+		expect(wrapper.get('[data-testid="document-next"]').text()).toBe(
+			'Созвон: 15.01.2099'
+		)
 	})
 })

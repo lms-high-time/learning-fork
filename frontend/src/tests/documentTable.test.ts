@@ -271,6 +271,8 @@ import {
 	defaultView,
 	outline,
 	readyLine,
+	TABLE_VIEW,
+	titleColumn,
 	viewColumns,
 	type DocumentData,
 } from '@/utils/documentTable'
@@ -350,7 +352,7 @@ describe('workspace', () => {
 		])
 	})
 
-	it('opens on the current lesson, then on the register after the course', () => {
+	it('opens on the current lesson, then on the whole table after the course', () => {
 		const d = doc(
 			[
 				lesson('goals', 'l2', { filled: true }),
@@ -360,7 +362,27 @@ describe('workspace', () => {
 		)
 		const groups = outline(d, [{ id: 'l2', number: 2, title: 'Цели' }])
 		expect(defaultView(d, groups, 'l2')).toBe('stages')
-		expect(defaultView(d, groups, null)).toBe('register')
+		expect(defaultView(d, groups, null)).toBe(TABLE_VIEW)
+	})
+
+	it('names a row by the first required text column, whatever its key', () => {
+		// No course's key is special (learning-services#360): a column keyed
+		// `event` names the row only when the generic rule picks it.
+		const columns = [
+			{ key: 'event', title: 'Событие', type: 'text', block: 'a' },
+			{
+				key: 'problem',
+				title: 'Проблема',
+				type: 'text',
+				block: 'a',
+				required: true,
+			},
+		] as DocTable['columns']
+		expect(titleColumn({ ...register, columns })?.key).toBe('problem')
+		expect(titleColumn({ ...register, columns: [columns[0]] })?.key).toBe(
+			'event'
+		)
+		expect(titleColumn(register)?.key).toBe('event')
 	})
 
 	it('shows a lesson the name, earlier formulas and its own columns', () => {
