@@ -43,7 +43,7 @@
 								class="rounded px-2 py-1 text-p-sm"
 								:class="
 									person === author.user
-										? 'bg-surface-gray-7 text-ink-white'
+										? 'bg-surface-gray-7 text-ink-base'
 										: 'bg-surface-gray-2 text-ink-gray-7 hover:bg-surface-gray-3'
 								"
 								:aria-pressed="person === author.user"
@@ -79,7 +79,7 @@
 						<a
 							v-for="block in shown"
 							:key="block.key"
-							:href="`#team-block-${block.key}`"
+							:href="safeUrl(`#team-block-${block.key}`)"
 							class="text-ink-gray-6 hover:text-ink-gray-9 hover:underline"
 							@click.prevent="jump(block.key)"
 						>
@@ -166,6 +166,7 @@
 import { computed, ref, watch } from 'vue'
 import { createResource, FormControl, LoadingIndicator } from 'frappe-ui'
 import TeamEntryBody from '@/components/Team/TeamEntryBody.vue'
+import { safeUrl } from '@/utils/safeUrl'
 import {
 	blockView,
 	firstDocument,
