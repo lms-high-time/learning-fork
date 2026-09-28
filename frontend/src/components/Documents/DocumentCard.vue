@@ -139,8 +139,11 @@ const document = createResource({
 const data = computed(
 	() => (document.data as { data?: DocumentData } | null)?.data ?? null
 )
-const register = computed(
-	() => Object.values(data.value?.tables ?? {}).find(isSharedTable) ?? null
+// With a canvas the document opens on the sheet by itself (learning-services#351).
+const register = computed(() =>
+	data.value?.canvas
+		? null
+		: Object.values(data.value?.tables ?? {}).find(isSharedTable) ?? null
 )
 const hasRegister = computed(() => Boolean(register.value) || !data.value)
 const review = computed(() => {

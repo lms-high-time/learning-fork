@@ -103,8 +103,22 @@
 			</aside>
 
 			<main class="min-w-0 flex-1">
+				<CanvasPanel
+					v-if="active === CANVAS_VIEW && canvas"
+					:document="doc"
+					:canvas="canvas"
+					:courseTitle="courseTitle"
+				/>
+
+				<ComparePanel
+					v-else-if="active === COMPARE_VIEW && canvas"
+					:document="doc"
+					:canvas="canvas"
+					:courseTitle="courseTitle"
+				/>
+
 				<RegisterPanel
-					v-if="active === REGISTER_VIEW && register"
+					v-else-if="active === REGISTER_VIEW && register"
 					:table="register"
 					:document="doc"
 					:api="api"
@@ -143,6 +157,8 @@ import {
 	usePageMeta,
 } from 'frappe-ui'
 import PageHeader from '@/components/Layouts/PageHeader.vue'
+import CanvasPanel from '@/components/Documents/CanvasPanel.vue'
+import ComparePanel from '@/components/Documents/ComparePanel.vue'
 import DocumentOutline from '@/components/Documents/DocumentOutline.vue'
 import LessonDocument from '@/components/Documents/LessonDocument.vue'
 import RegisterPanel from '@/components/Documents/RegisterPanel.vue'
@@ -153,6 +169,8 @@ import { documentReaders } from '@/utils/space'
 import { sessionStore } from '@/stores/session'
 import { useScreenSize } from '@/utils/composables'
 import {
+	CANVAS_VIEW,
+	COMPARE_VIEW,
 	defaultView,
 	isSharedTable,
 	outline,
@@ -233,15 +251,42 @@ const groups = computed(() =>
 )
 const ordered = computed(() => groups.value.flatMap((g) => g.blocks))
 
-const register = computed(
-	() => Object.values(doc.value?.tables ?? {}).find(isSharedTable) ?? null
+// A document with a canvas reads as the sheet, not as a register: its tables
+// are parts of cells, and «Реестр целиком» would name the risks course's
+// document in Lean Canvas (learning-services#351).
+const register = computed(() =>
+	doc.value?.canvas
+		? null
+		: Object.values(doc.value?.tables ?? {}).find(isSharedTable) ?? null
 )
 const hasReport = computed(() =>
 	Object.values(doc.value?.tables ?? {}).some((t) =>
 		t.views.some((v) => v.type === 'report')
 	)
 )
+// The whole canvas and «было → стало» lead the contents when the course
+// lays the document out as one sheet (learning-services#351).
+const canvas = computed(() => doc.value?.canvas ?? null)
+const hasCompare = computed(() => Boolean(canvas.value?.sketch))
 const specials = computed(() => [
+	...(canvas.value
+		? [
+				{
+					view: CANVAS_VIEW,
+					title: __('The whole canvas'),
+					icon: 'lucide-layout-grid',
+				},
+		  ]
+		: []),
+	...(hasCompare.value
+		? [
+				{
+					view: COMPARE_VIEW,
+					title: __('Before → after'),
+					icon: 'lucide-git-compare',
+				},
+		  ]
+		: []),
 	...(register.value
 		? [
 				{
@@ -263,9 +308,11 @@ const specials = computed(() => [
 ])
 
 // What is open: the address, or where the document opens by itself — the
-// current lesson during the course, the register after it.
+// current lesson during the course, the canvas or the register after it.
 const active = computed(() => {
 	const known = new Set([
+		...(canvas.value ? [CANVAS_VIEW] : []),
+		...(hasCompare.value ? [COMPARE_VIEW] : []),
 		...(register.value ? [REGISTER_VIEW] : []),
 		...(hasReport.value ? [REPORT_VIEW] : []),
 		...(doc.value?.blocks.map((b) => b.key) ?? []),
@@ -375,6 +422,8 @@ const downloads = computed(() => [
 ])
 
 const viewTitle = computed(() => {
+	if (active.value === CANVAS_VIEW) return __('The whole canvas')
+	if (active.value === COMPARE_VIEW) return __('Before → after')
 	if (active.value === REGISTER_VIEW) return __('The whole register')
 	if (active.value === REPORT_VIEW) return __('Report for the sponsor')
 	return block.value?.title ?? ''
