@@ -1,7 +1,7 @@
 /**
  * A course document's table as the page shows it (learning-services#331):
  * columns grouped by the block that adds them, sorting, filters, the cells a
- * block still lacks, the matrix and the sponsor report. The server owns the
+ * block still lacks, the matrix and the report. The server owns the
  * data and the formulas; this only arranges what `artifact` returned.
  */
 
@@ -184,10 +184,13 @@ export const isMissing = (column: DocColumn, row: DocRow): boolean =>
 	isRequired(column, row) &&
 	isBlank(row[column.key])
 
-/** The first text column: what names a row where there is room for one cell. */
+/**
+ * The first required text column, else the first text column: what names a
+ * row where there is room for one cell. No course's key is special here — a
+ * document is the course's data (learning-services#360).
+ */
 export function titleColumn(table: DocTable): DocColumn | undefined {
 	return (
-		table.columns.find((c) => c.key === 'event') ??
 		table.columns.find((c) => c.type === 'text' && c.required === true) ??
 		table.columns.find((c) => c.type === 'text')
 	)
@@ -381,7 +384,7 @@ export function formatCell(
 // ---------------------------------------------------------------- workspace
 //
 // The document as a workspace (learning-services#342): each lesson's block is
-// its own document, grouped under its lesson, with the whole register and the
+// its own document, grouped under its lesson, with the whole table and the
 // report on top.
 
 export type BlockState = 'done' | 'progress' | 'preset' | 'empty'
@@ -416,7 +419,7 @@ export function readyLine(hint: string): string | null {
 	return found ? found[0] : null
 }
 
-/** A table more than one block adds columns to: the register. */
+/** A table more than one block adds columns to: the document's whole table. */
 export const isSharedTable = (table: DocTable): boolean =>
 	new Set(table.columns.map((c) => c.block)).size > 1
 
@@ -447,14 +450,14 @@ export function outline(
 	return groups
 }
 
-export const REGISTER_VIEW = 'register'
+export const TABLE_VIEW = 'table'
 export const REPORT_VIEW = 'report'
 export const CANVAS_VIEW = 'canvas'
 export const COMPARE_VIEW = 'compare'
 
 /**
  * Where the document opens: during the course the current lesson's first
- * unfinished block, after it the whole canvas or the whole register.
+ * unfinished block, after it the whole canvas or the whole table.
  */
 export function defaultView(
 	doc: DocumentData,
@@ -468,12 +471,12 @@ export function defaultView(
 	}
 	// The sheet is what the course builds up to (#351).
 	if (doc.canvas) return CANVAS_VIEW
-	if (Object.values(doc.tables).some(isSharedTable)) return REGISTER_VIEW
-	return doc.blocks[0]?.key ?? REGISTER_VIEW
+	if (Object.values(doc.tables).some(isSharedTable)) return TABLE_VIEW
+	return doc.blocks[0]?.key ?? TABLE_VIEW
 }
 
 /**
- * A lesson's view of the register: the row's name, the computed columns —
+ * A lesson's view of the whole table: the row's name, the computed columns —
  * the numbers a row is read by — then the lesson's own columns.
  */
 export function viewColumns(table: DocTable, blockKey: string): DocColumn[] {
@@ -494,11 +497,11 @@ export function viewColumns(table: DocTable, blockKey: string): DocColumn[] {
 	return [...(name ? [name] : []), ...formulas, ...ownFormulas, ...ownInputs]
 }
 
-// ---------------------------------------------------------------- the whole register
+// ---------------------------------------------------------------- the whole table
 
 /**
  * Columns worth filtering by value: choices, references, and text with a
- * handful of distinct values — the owner, not the event.
+ * handful of distinct values — an owner or a stage, not a row's name.
  */
 export function filterableColumns(table: DocTable): DocColumn[] {
 	return table.columns.filter((c) => {
@@ -524,7 +527,7 @@ export const columnValues = (table: DocTable, key: string): string[] =>
 		),
 	].sort((a, b) => a.localeCompare(b, 'ru'))
 
-/** The first numeric formula — the rank — sorts the register, highest first. */
+/** The first numeric formula — the rank — sorts the whole table, highest first. */
 export const rankColumn = (table: DocTable): DocColumn | undefined =>
 	table.columns.find(
 		(c) =>
@@ -533,16 +536,24 @@ export const rankColumn = (table: DocTable): DocColumn | undefined =>
 	)
 
 /**
- * The dates the register lives by — next review, next report — from the
- * fields of the blocks that add to it, with how far off they are.
+ * The dates the whole table lives by — the date fields of the blocks that add
+ * to it — with how far off they are.
  */
-export function registerDates(
+export interface TableDate {
+	key: string
+	title: string
+	value: string
+	/** Days from today; below zero once the date has passed. */
+	days: number
+}
+
+export function tableDates(
 	table: DocTable,
 	doc: DocumentData,
 	today: Date = new Date()
-): { key: string; title: string; value: string; days: number }[] {
+): TableDate[] {
 	const blocks = new Set(table.columns.map((c) => c.block))
-	const out = []
+	const out: TableDate[] = []
 	for (const block of doc.blocks) {
 		if (!blocks.has(block.key)) continue
 		for (const field of block.fields ?? []) {
@@ -559,6 +570,30 @@ export function registerDates(
 		}
 	}
 	return out
+}
+
+/**
+ * The date that asks first: the nearest one, an overdue one before any. Which
+ * date matters is not told by its key — every course names its own
+ * (learning-services#360).
+ */
+export const urgentDate = (dates: TableDate[]): TableDate | null =>
+	dates.reduce<TableDate | null>(
+		(first, d) => (!first || d.days < first.days ? d : first),
+		null
+	)
+
+/** The document's report: the first table with a report view, and the view. */
+export function reportOf(
+	doc: DocumentData
+): { table: DocTable; view: ReportView } | null {
+	for (const table of Object.values(doc.tables)) {
+		const view = table.views.find((v) => v.type === 'report') as
+			| ReportView
+			| undefined
+		if (view) return { table, view }
+	}
+	return null
 }
 
 /** The rows and columns on screen as CSV, labels instead of scale numbers. */
@@ -586,7 +621,7 @@ export function toCsv(
 	return lines.map((l) => l.map((v) => quote(String(v))).join(',')).join('\n')
 }
 
-/** Tables whose rows point at this one: «Проблемы» at the register. */
+/** Tables whose rows point at this one: a table of issues at the one they arise from. */
 export const referringTables = (
 	table: DocTable,
 	tables: Record<string, DocTable>

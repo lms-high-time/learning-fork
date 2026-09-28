@@ -88,7 +88,7 @@ import {
 	type OutlineGroup,
 } from '@/utils/documentTable'
 
-// The document's contents: the register and the report on top, then each
+// The document's contents: the whole table and the report on top, then each
 // lesson's documents under it (learning-services#342).
 
 const props = defineProps<{

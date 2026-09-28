@@ -10259,11 +10259,7 @@ msgstr "Заменить файл"
 
 #: frontend/src/pages/Documents/Document.vue
 msgid "Report"
-msgstr "Доклад"
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "Report for the sponsor"
-msgstr "Доклад спонсору"
+msgstr "Отчёт"
 
 #: frontend/src/pages/Documents/Document.vue
 msgid "Required"
@@ -10291,7 +10287,7 @@ msgstr "Поиск по таблице"
 
 #: frontend/src/pages/Documents/Document.vue
 msgid "This document has no report."
-msgstr "У этого документа нет доклада."
+msgstr "У этого документа нет отчёта."
 
 #: frontend/src/pages/Documents/Document.vue
 msgid "This document is not available: the course is not yours or the document is gone."
@@ -10344,10 +10340,6 @@ msgstr "{0} из {1} строк"
 #: frontend/src/pages/Documents/Document.vue
 msgid "{0} to fill"
 msgstr "заполнить: {0}"
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "The whole table «{0}»"
-msgstr "Вся таблица «{0}»"
 
 #: frontend/src/components/CourseDocumentCard.vue
 msgid "Into the document:"
@@ -10430,10 +10422,6 @@ msgid "template"
 msgstr "заготовка"
 
 #: frontend/src/pages/Documents/Document.vue
-msgid "The whole register"
-msgstr "Реестр целиком"
-
-#: frontend/src/pages/Documents/Document.vue
 msgid "Saved at {0}"
 msgstr "Сохранено в {0}"
 
@@ -10445,55 +10433,59 @@ msgstr "Изменён {0} · версия {1}"
 msgid "Preset"
 msgstr "Заготовка"
 
-#: frontend/src/components/Documents/RegisterPanel.vue
+#: frontend/src/components/Documents/TablePanel.vue
+msgid "The whole table"
+msgstr "Таблица целиком"
+
+#: frontend/src/components/Documents/TablePanel.vue
 msgid "{0} rows"
 msgstr "Строк: {0}"
 
-#: frontend/src/components/Documents/RegisterPanel.vue
+#: frontend/src/components/Documents/TablePanel.vue
 msgid "overdue by {0} d"
-msgstr "просрочен на {0} дн."
+msgstr "просрочено на {0} дн."
 
-#: frontend/src/components/Documents/RegisterPanel.vue
+#: frontend/src/components/Documents/TablePanel.vue
 msgid "today"
 msgstr "сегодня"
 
-#: frontend/src/components/Documents/RegisterPanel.vue
+#: frontend/src/components/Documents/TablePanel.vue
 msgid "in {0} d"
 msgstr "через {0} дн."
 
-#: frontend/src/components/Documents/RegisterPanel.vue
+#: frontend/src/components/Documents/TablePanel.vue
 msgid "Show as"
 msgstr "Показать как"
 
-#: frontend/src/components/Documents/RegisterPanel.vue
+#: frontend/src/components/Documents/TablePanel.vue
 msgid "Table"
 msgstr "Таблица"
 
-#: frontend/src/components/Documents/RegisterPanel.vue
+#: frontend/src/components/Documents/TablePanel.vue
 msgid "Matrix"
 msgstr "Матрица"
 
-#: frontend/src/components/Documents/RegisterPanel.vue
+#: frontend/src/components/Documents/TablePanel.vue
 msgid "Filter by"
 msgstr "Фильтр"
 
-#: frontend/src/components/Documents/RegisterPanel.vue
+#: frontend/src/components/Documents/TablePanel.vue
 msgid "Filter by…"
 msgstr "Фильтр…"
 
-#: frontend/src/components/Documents/RegisterPanel.vue
+#: frontend/src/components/Documents/TablePanel.vue
 msgid "Any"
 msgstr "Любое"
 
-#: frontend/src/components/Documents/RegisterPanel.vue
+#: frontend/src/components/Documents/TablePanel.vue
 msgid "Download this view (CSV)"
 msgstr "Скачать этот вид (CSV)"
 
-#: frontend/src/components/Documents/RegisterPanel.vue
+#: frontend/src/components/Documents/TablePanel.vue
 msgid "Open {0}"
 msgstr "Открыть {0}"
 
-#: frontend/src/components/Documents/RegisterPanel.vue
+#: frontend/src/components/Documents/TablePanel.vue
 msgid "Add to «{0}»"
 msgstr "Добавить в «{0}»"
 
@@ -10502,12 +10494,12 @@ msgid "Copy as text"
 msgstr "Скопировать текстом"
 
 #: frontend/src/components/Documents/ReportPanel.vue
-msgid "No risks are ticked for the report yet."
-msgstr "Для доклада пока ничего не отмечено."
+msgid "Nothing is ticked for the report yet."
+msgstr "Для отчёта пока ничего не отмечено."
 
 #: frontend/src/components/Documents/ReportPanel.vue
-msgid "The highest by rank:"
-msgstr "Самые высокие по рангу:"
+msgid "Top by «{0}»:"
+msgstr "Первые по «{0}»:"
 
 #: frontend/src/components/Documents/ReportPanel.vue
 msgid "Tick these"
@@ -10522,24 +10514,12 @@ msgid "Could not copy"
 msgstr "Не удалось скопировать"
 
 #: frontend/src/components/Documents/ReportPanel.vue
-msgid "Review overdue by {0} d"
-msgstr "Пересмотр просрочен на {0} дн."
-
-#: frontend/src/components/Documents/ReportPanel.vue
-msgid "Next review {0}"
-msgstr "Следующий пересмотр {0}"
-
-#: frontend/src/components/Documents/ReportPanel.vue
 msgid "The course is behind you"
 msgstr "Курс пройден"
 
 #: frontend/src/components/Documents/ReportPanel.vue
 msgid "Continue"
 msgstr "Продолжить"
-
-#: frontend/src/components/Documents/ReportPanel.vue
-msgid "Open the register"
-msgstr "Открыть реестр"
 
 #: frontend/src/components/Sidebar/SpaceSwitcher.vue
 #: frontend/src/pages/MobileYou.vue

@@ -27,8 +27,9 @@
 			</span>
 		</div>
 
-		<!-- The next step: the lesson in progress during the course, the next
-		review after it (learning-services#342). -->
+		<!-- The next step: the lesson in progress during the course, after it
+		the table's most urgent date under its own title (learning-services#342,
+		#360). -->
 		<div class="flex flex-wrap items-center justify-between gap-3 ps-9">
 			<p class="text-p-sm text-ink-gray-6" data-testid="document-next">
 				<template v-if="lesson">
@@ -36,14 +37,13 @@
 						__('Lesson {0} · {1}').format(String(lesson.number), lesson.title)
 					}}
 				</template>
-				<template v-else-if="review">
-					<span :class="review.days < 0 ? 'font-medium text-ink-red-5' : ''">
+				<template v-else-if="due">
+					<span :class="due.days < 0 ? 'font-medium text-ink-red-5' : ''">
+						{{ due.title }}:
 						{{
-							review.days < 0
-								? __('Review overdue by {0} d').format(String(-review.days))
-								: __('Next review {0}').format(
-										formatCell({ type: 'date' }, review.value)
-								  )
+							due.days < 0
+								? __('overdue by {0} d').format(String(-due.days))
+								: formatCell({ type: 'date' }, due.value)
 						}}
 					</span>
 				</template>
@@ -51,18 +51,10 @@
 					__('The course is behind you')
 				}}</template>
 			</p>
-			<router-link
-				:to="open(finished && hasRegister ? REGISTER_VIEW : undefined)"
-			>
+			<router-link :to="open()">
 				<Button
 					:variant="lesson ? 'solid' : 'subtle'"
-					:label="
-						lesson
-							? __('Continue')
-							: hasRegister
-							? __('Open the register')
-							: __('Open')
-					"
+					:label="lesson ? __('Continue') : __('Open')"
 				/>
 			</router-link>
 		</div>
@@ -76,8 +68,8 @@ import ProgressBar from '@/components/ProgressBar.vue'
 import {
 	formatCell,
 	isSharedTable,
-	registerDates,
-	REGISTER_VIEW,
+	tableDates,
+	urgentDate,
 	type DocumentData,
 } from '@/utils/documentTable'
 
@@ -129,7 +121,9 @@ const finished = computed(
 	() => Boolean(mapData.value) && mapData.value?.next_lesson === null
 )
 
-// After the course, the register's own dates: next review first.
+// After the course, the whole table's own dates: the most urgent one, named by
+// its field — which date matters is the course's to say, not a key's
+// (learning-services#360).
 const document = createResource({
 	url: 'lms_frappe_app.api.student.artifact',
 	method: 'GET',
@@ -139,18 +133,14 @@ const document = createResource({
 const data = computed(
 	() => (document.data as { data?: DocumentData } | null)?.data ?? null
 )
-// With a canvas the document opens on the sheet by itself (learning-services#351).
-const register = computed(() =>
-	data.value?.canvas
-		? null
-		: Object.values(data.value?.tables ?? {}).find(isSharedTable) ?? null
+const wholeTable = computed(
+	() => Object.values(data.value?.tables ?? {}).find(isSharedTable) ?? null
 )
-const hasRegister = computed(() => Boolean(register.value) || !data.value)
-const review = computed(() => {
-	if (!register.value || !data.value) return null
-	const dates = registerDates(register.value, data.value)
-	return dates.find((d) => /review/.test(d.key)) ?? dates[0] ?? null
-})
+const due = computed(() =>
+	wholeTable.value && data.value
+		? urgentDate(tableDates(wholeTable.value, data.value))
+		: null
+)
 watch(
 	finished,
 	(done) => {
@@ -159,12 +149,10 @@ watch(
 	{ immediate: true }
 )
 
-const open = (view?: string) => ({
+// The document opens where it should by itself: the lesson in progress, or
+// after the course the canvas or the whole table.
+const open = () => ({
 	name: 'Document',
-	params: {
-		courseName: props.course,
-		artifact: props.doc.artifact,
-		...(view ? { view } : {}),
-	},
+	params: { courseName: props.course, artifact: props.doc.artifact },
 })
 </script>

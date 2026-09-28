@@ -171,8 +171,10 @@ export const routes = [
 		redirect: { name: 'Documents' },
 	},
 	{
-		// `view` — a lesson's document by its key, `register` or `report`;
-		// without it the document opens where the student is (#342).
+		// `view` — a lesson's document by its key, or `table`, `report`, `canvas`,
+		// `compare`; without it, or with one the document lacks (an old
+		// `register` link, learning-services#360), the document opens where the
+		// student is (#342).
 		path: '/documents/:courseName/:artifact/:view?',
 		name: 'Document',
 		component: () => import('@/pages/Documents/Document.vue'),

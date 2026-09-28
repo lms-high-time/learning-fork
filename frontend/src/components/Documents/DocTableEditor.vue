@@ -332,12 +332,12 @@ const props = defineProps<{
 	canEditRows: boolean
 	/**
 	 * Only this block's columns, beside the row's name: a later lesson's block
-	 * fills its own columns in place instead of in the whole register.
+	 * fills its own columns in place instead of in the whole table.
 	 */
 	only?: string
-	/** Search belongs to the whole register, not to a lesson's view. */
+	/** Search belongs to the whole table, not to a lesson's view. */
 	searchable?: boolean
-	/** A view of the register: only these columns, in the table's order. */
+	/** A view of the whole table: only these columns, in the table's order. */
 	columnKeys?: string[] | null
 	/** A filter by value from outside: owner, status, stage. */
 	filterBy?: { column: string; value: string } | null
@@ -367,7 +367,7 @@ const sortKey = ref<string | null>(null)
 const sortDirection = ref<SortDirection>('asc')
 
 // Which lessons' columns are hidden, per table, kept across visits: a wide
-// register is read a few groups at a time.
+// table is read a few groups at a time.
 const storageKey = computed(() => `lms-doc-hidden-${props.table.name}`)
 const hidden = ref<Set<string>>(new Set())
 try {
@@ -428,7 +428,7 @@ const pinned = computed(() =>
 )
 
 // What the counts and filters look at: in a block's own view, its columns
-// only — «empty cells» there means the block's, not the whole register's.
+// only — «empty cells» there means the block's, not the whole table's.
 const scope = computed(() =>
 	props.only ? { ...props.table, columns: shownColumns.value } : props.table
 )

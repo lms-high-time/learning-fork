@@ -91,9 +91,9 @@ import {
 	type DocumentData,
 } from '@/utils/documentTable'
 
-// A row of the register whole: every field under the lesson that adds it,
-// and a way to carry it into a table that points at it — a triggered risk
-// into «Проблемы» (learning-services#342).
+// A row of the whole table in full: every field under the lesson that adds
+// it, and a way to carry it into a table that points at it — in the risks
+// course, a triggered risk into «Проблемы» (learning-services#342).
 
 const props = defineProps<{
 	row: DocRow

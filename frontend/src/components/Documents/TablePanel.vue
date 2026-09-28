@@ -1,13 +1,13 @@
 <template>
-	<section class="space-y-4" data-testid="register-panel">
+	<section class="space-y-4" data-testid="table-panel">
 		<header class="space-y-2">
 			<h1 class="text-2xl-semibold text-ink-gray-9">
-				{{ table.title || __('The whole register') }}
+				{{ table.title || __('The whole table') }}
 			</h1>
-			<!-- The register at a glance; each part narrows the table to it. -->
+			<!-- The table at a glance; each part narrows the table to it. -->
 			<p
 				class="flex flex-wrap items-center gap-x-3 gap-y-1 text-p-sm text-ink-gray-6"
-				data-testid="register-summary"
+				data-testid="table-summary"
 			>
 				<span>{{ __('{0} rows').format(String(table.rows.length)) }}</span>
 				<button
@@ -18,14 +18,14 @@
 				>
 					{{ flag.title }}: {{ flagCount }}
 				</button>
-				<span v-for="field in thresholds" :key="field.key">
+				<span v-for="field in flagFields" :key="field.key">
 					{{ field.title }}: {{ field.value }}
 				</span>
 				<span
 					v-for="date in dates"
 					:key="date.key"
 					:class="date.days < 0 ? 'font-medium text-ink-red-5' : ''"
-					:data-testid="`register-date-${date.key}`"
+					:data-testid="`table-date-${date.key}`"
 				>
 					{{ date.title }}: {{ formatCell({ type: 'date' }, date.value) }}
 					<template v-if="date.days < 0">
@@ -178,7 +178,7 @@ import {
 	flagColumns,
 	formatCell,
 	rankColumn,
-	registerDates,
+	tableDates,
 	toCsv,
 	type ColumnsView,
 	type DocColumn,
@@ -188,8 +188,9 @@ import {
 	type MatrixView as Matrix,
 } from '@/utils/documentTable'
 
-// The whole register: every column, the views the author named, filters,
-// the matrix and a card per row (learning-services#342).
+// The whole table: every column, the views the author named, filters,
+// the matrix and a card per row (learning-services#342). Its name is the
+// table's own title — each course names its table (learning-services#360).
 
 const props = defineProps<{
 	table: DocTable
@@ -207,8 +208,8 @@ const flagCount = computed(
 )
 const rank = computed(() => rankColumn(props.table))
 
-// The fields the flag is computed against — the threshold of «in work».
-const thresholds = computed(() => {
+// The fields the flag's formula reads — what decides a row is flagged.
+const flagFields = computed(() => {
 	const formula = flag.value?.formula ?? ''
 	return props.document.blocks
 		.flatMap((b) => b.fields ?? [])
@@ -223,7 +224,7 @@ const thresholds = computed(() => {
 			value: props.document.fields[f.key],
 		}))
 })
-const dates = computed(() => registerDates(props.table, props.document))
+const dates = computed(() => tableDates(props.table, props.document))
 
 const matrixView = computed(
 	() =>
@@ -236,7 +237,7 @@ const columnViews = computed(
 )
 
 // The chosen view and filter are remembered per table.
-const store = (key: string) => `lms-register-${props.table.name}-${key}`
+const store = (key: string) => `lms-table-${props.table.name}-${key}`
 const remembered = (key: string) => {
 	try {
 		return localStorage.getItem(store(key)) ?? ''

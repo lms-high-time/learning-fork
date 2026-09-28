@@ -33,7 +33,7 @@
 			</div>
 		</header>
 
-		<!-- Nothing ticked yet: the report offers the top of the register
+		<!-- Nothing ticked yet: the report offers the top of the table
 		rather than an empty page. -->
 		<div
 			v-if="!report.rows.length"
@@ -41,9 +41,9 @@
 			data-testid="report-suggest"
 		>
 			<p class="text-p-base text-ink-gray-7">
-				{{ __('No risks are ticked for the report yet.') }}
-				<template v-if="suggested.length">
-					{{ __('The highest by rank:') }}
+				{{ __('Nothing is ticked for the report yet.') }}
+				<template v-if="suggested.length && report.rank">
+					{{ __('Top by «{0}»:').format(report.rank.title) }}
 				</template>
 			</p>
 			<ol v-if="suggested.length" class="space-y-1 text-p-sm text-ink-gray-8">
@@ -51,7 +51,7 @@
 					<span class="font-medium text-ink-gray-5">{{ row.id }}</span>
 					{{ name(row) }}
 					<span v-if="report.rank" class="text-ink-gray-5"
-						>· {{ row[report.rank] }}</span
+						>· {{ row[report.rank.key] }}</span
 					>
 				</li>
 			</ol>
@@ -99,16 +99,17 @@ import {
 	cellOptions,
 	formatCell,
 	rankColumn,
+	reportOf,
 	reportRows,
 	titleColumn,
 	type DocColumn,
 	type DocRow,
 	type DocumentData,
-	type ReportView,
 } from '@/utils/documentTable'
 
-// The report for the sponsor, inside the document's workspace; printing
-// leaves only the report on the page (learning-services#342).
+// The document's report, inside its workspace; printing leaves only the
+// report on the page (learning-services#342). Its title is the view's own —
+// each course names its report (learning-services#360).
 
 const props = defineProps<{
 	document: DocumentData
@@ -119,30 +120,26 @@ const props = defineProps<{
 const today = new Date().toLocaleDateString('ru-RU')
 
 const report = computed(() => {
-	for (const table of Object.values(props.document.tables)) {
-		const view = table.views.find((v) => v.type === 'report') as
-			| ReportView
-			| undefined
-		if (!view) continue
-		const { columns, rows } = reportRows(table, view)
-		const field = view.field
-			? props.document.blocks
-					.flatMap((b) => b.fields ?? [])
-					.find((f) => f.key === view.field)
-			: undefined
-		const tick = table.columns.find((c) => c.key === view.filter)
-		return {
-			title: view.title || __('Report for the sponsor'),
-			table,
-			tick,
-			rank: rankColumn(table)?.key ?? null,
-			columns,
-			rows,
-			dateLabel: field?.title ?? '',
-			date: field ? formatCell(field, props.document.fields[field.key]) : '',
-		}
+	const found = reportOf(props.document)
+	if (!found) return null
+	const { table, view } = found
+	const { columns, rows } = reportRows(table, view)
+	const field = view.field
+		? props.document.blocks
+				.flatMap((b) => b.fields ?? [])
+				.find((f) => f.key === view.field)
+		: undefined
+	const tick = table.columns.find((c) => c.key === view.filter)
+	return {
+		title: view.title || __('Report'),
+		table,
+		tick,
+		rank: rankColumn(table) ?? null,
+		columns,
+		rows,
+		dateLabel: field?.title ?? '',
+		date: field ? formatCell(field, props.document.fields[field.key]) : '',
 	}
-	return null
 })
 
 // A scale or a reference reads better by its label than by its number.
@@ -162,14 +159,15 @@ const name = (row: DocRow) => {
 	return title ? String(row[title.key] ?? '') : ''
 }
 
-// As many as the tick allows (three for the sponsor), by rank.
+// As many as the tick allows (three when it does not say), by rank.
 const suggested = computed(() => {
 	const r = report.value
 	if (!r?.tick || !r.rank) return []
+	const key = r.rank.key
 	const limit = r.tick.max ?? 3
 	return [...r.table.rows]
-		.filter((row) => typeof row[r.rank as string] === 'number')
-		.sort((a, b) => Number(b[r.rank as string]) - Number(a[r.rank as string]))
+		.filter((row) => typeof row[key] === 'number')
+		.sort((a, b) => Number(b[key]) - Number(a[key]))
 		.slice(0, limit)
 })
 

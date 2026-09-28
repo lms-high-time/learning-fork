@@ -78,11 +78,11 @@
 
 		<router-link
 			v-if="report"
-			:to="report"
+			:to="report.to"
 			class="inline-block"
 			data-testid="report-link"
 		>
-			<Button variant="subtle" :label="__('Report for the sponsor')">
+			<Button variant="subtle" :label="report.title">
 				<template #prefix>
 					<span class="lucide-printer size-4" />
 				</template>
@@ -277,7 +277,7 @@ const shared = computed(() =>
 	Boolean(table.value && isSharedTable(table.value))
 )
 
-// The matrix sits with the lesson whose columns are its axes: «Оценка».
+// The matrix sits with the lesson whose columns are its axes.
 const matrix = computed(() => {
 	const own = new Set((props.block.columns ?? []).map((c) => c.key))
 	return (
@@ -290,20 +290,24 @@ const matrix = computed(() => {
 	)
 })
 
-// The report belongs to the lesson whose tick picks its rows.
-const report = computed<RouteLocationRaw | null>(() => {
+// The report belongs to the lesson whose tick picks its rows; it is named as
+// the course names it (learning-services#360).
+const report = computed<{ to: RouteLocationRaw; title: string } | null>(() => {
 	const own = new Set((props.block.columns ?? []).map((c) => c.key))
 	const view = table.value?.views.find(
 		(v) => v.type === 'report' && own.has((v as ReportView).filter ?? '')
-	)
+	) as ReportView | undefined
 	return view
 		? {
-				name: 'Document',
-				params: {
-					courseName: props.document.course,
-					artifact: props.document.artifact,
-					view: REPORT_VIEW,
+				to: {
+					name: 'Document',
+					params: {
+						courseName: props.document.course,
+						artifact: props.document.artifact,
+						view: REPORT_VIEW,
+					},
 				},
+				title: view.title || __('Report'),
 		  }
 		: null
 })

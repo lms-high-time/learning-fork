@@ -5,15 +5,17 @@ import {
 	filterableColumns,
 	rankColumn,
 	referringTables,
-	registerDates,
+	tableDates,
 	toCsv,
+	urgentDate,
 	type DocBlock,
 	type DocTable,
 	type DocumentData,
 } from '@/utils/documentTable'
 
-// learning-services#342, step 2: the whole register — its views, filters,
-// summary, CSV and the card of a row.
+// learning-services#342, step 2: the whole table — its views, filters,
+// summary, CSV and the card of a row. The fixture is the risks course's
+// register; the code knows no course (learning-services#360).
 
 const push = vi.fn()
 vi.mock('vue-router', () => ({ useRouter: () => ({ push }) }))
@@ -29,7 +31,7 @@ vi.mock('@/utils/composables', () => ({
 	useScreenSize: () => ({ isMobile: false }),
 }))
 
-import RegisterPanel from '@/components/Documents/RegisterPanel.vue'
+import TablePanel from '@/components/Documents/TablePanel.vue'
 
 const __ = (message: string) => {
 	if (!/{\d+}/.test(message)) return message
@@ -197,7 +199,7 @@ const document = {
 	fields: { threshold: 12, next_review: '2026-09-20' },
 } as DocumentData
 
-describe('register helpers', () => {
+describe('whole table helpers', () => {
 	it('filters by choices and by text with a few values', () => {
 		expect(filterableColumns(register).map((c) => c.key)).toEqual([
 			'owner',
@@ -210,8 +212,8 @@ describe('register helpers', () => {
 		expect(rankColumn(register)?.key).toBe('rank')
 	})
 
-	it('knows how far off the register dates are', () => {
-		const dates = registerDates(register, document, new Date(2026, 8, 28))
+	it('knows how far off the table dates are', () => {
+		const dates = tableDates(register, document, new Date(2026, 8, 28))
 		expect(dates).toEqual([
 			{
 				key: 'next_review',
@@ -220,6 +222,18 @@ describe('register helpers', () => {
 				days: -8,
 			},
 		])
+	})
+
+	it('picks the most urgent date, an overdue one first', () => {
+		const at = (key: string, days: number) => ({
+			key,
+			title: key,
+			value: '',
+			days,
+		})
+		expect(urgentDate([])).toBeNull()
+		expect(urgentDate([at('a', 30), at('b', 3)])?.key).toBe('b')
+		expect(urgentDate([at('a', 3), at('b', -2), at('c', -1)])?.key).toBe('b')
 	})
 
 	it('writes the view as CSV, quoting what needs it', () => {
@@ -235,7 +249,7 @@ describe('register helpers', () => {
 		])
 	})
 
-	it('finds the tables that point at the register', () => {
+	it('finds the tables that point at this one', () => {
 		expect(
 			referringTables(register, { register, issues }).map((r) => [
 				r.table.name,
@@ -245,29 +259,44 @@ describe('register helpers', () => {
 	})
 })
 
-describe('RegisterPanel', () => {
+describe('TablePanel', () => {
 	const api = {
 		setCell: vi.fn(),
 		addRow: vi.fn().mockResolvedValue('PR1'),
 		deleteRow: vi.fn(),
 	}
-	const panel = () =>
-		mount(RegisterPanel, {
-			props: { table: register, document, api: api as never },
+	const panel = (table: DocTable = register) =>
+		mount(TablePanel, {
+			props: { table, document, api: api as never },
 			global,
 		})
 	const rowIds = (w: ReturnType<typeof panel>) =>
 		w.findAll('tbody tr[data-row]').map((r) => r.attributes('data-row'))
 
-	it('opens sorted by rank, and says the review is overdue', () => {
+	it('opens sorted by rank, and says a date is overdue', () => {
 		const wrapper = panel()
 		expect(rowIds(wrapper)).toEqual(['R1', 'R3', 'R2'])
 		expect(
-			wrapper.get('[data-testid="register-date-next_review"]').text()
+			wrapper.get('[data-testid="table-date-next_review"]').text()
 		).toMatch(/overdue by \d+ d/)
-		expect(wrapper.get('[data-testid="register-summary"]').text()).toContain(
+		expect(wrapper.get('[data-testid="table-summary"]').text()).toContain(
 			'Порог: 12'
 		)
+	})
+
+	it('is named by the table, and neutrally when the table has no title', () => {
+		expect(panel().get('h1').text()).toBe('Реестр рисков')
+		expect(
+			panel({ ...register, title: '' })
+				.get('h1')
+				.text()
+		).toBe('The whole table')
+	})
+
+	it('remembers the chosen view under the table key', async () => {
+		const wrapper = panel()
+		await wrapper.get('[data-testid="view-Кратко"]').trigger('click')
+		expect(localStorage.getItem('lms-table-register-view')).toBe('Кратко')
 	})
 
 	it('switches to a named view of columns', async () => {
