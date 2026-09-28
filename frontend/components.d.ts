@@ -63,6 +63,7 @@ declare module 'vue' {
     Discussions: typeof import('./src/components/Discussions.vue')['default']
     DocTableEditor: typeof import('./src/components/Documents/DocTableEditor.vue')['default']
     DocumentBlock: typeof import('./src/components/Documents/DocumentBlock.vue')['default']
+    DocumentCard: typeof import('./src/components/Documents/DocumentCard.vue')['default']
     DocumentOutline: typeof import('./src/components/Documents/DocumentOutline.vue')['default']
     EditCoverImage: typeof import('./src/components/Modals/EditCoverImage.vue')['default']
     EmailAccountList: typeof import('./src/components/Settings/EmailAccount/EmailAccountList.vue')['default']

@@ -10234,10 +10234,6 @@ msgid "No file yet."
 msgstr "Файла пока нет."
 
 #: frontend/src/pages/Documents/Document.vue
-msgid "No rows are ticked for the report yet. Tick them in the table."
-msgstr "Для доклада пока ничего не отмечено. Отметьте строки в таблице."
-
-#: frontend/src/pages/Documents/Document.vue
 msgid "No rows match the filter"
 msgstr "Под фильтр ничего не подходит"
 
@@ -10500,3 +10496,47 @@ msgstr "Открыть {0}"
 #: frontend/src/components/Documents/RegisterPanel.vue
 msgid "Add to «{0}»"
 msgstr "Добавить в «{0}»"
+
+#: frontend/src/components/Documents/ReportPanel.vue
+msgid "Copy as text"
+msgstr "Скопировать текстом"
+
+#: frontend/src/components/Documents/ReportPanel.vue
+msgid "No risks are ticked for the report yet."
+msgstr "Для доклада пока ничего не отмечено."
+
+#: frontend/src/components/Documents/ReportPanel.vue
+msgid "The highest by rank:"
+msgstr "Самые высокие по рангу:"
+
+#: frontend/src/components/Documents/ReportPanel.vue
+msgid "Tick these"
+msgstr "Отметить эти"
+
+#: frontend/src/components/Documents/ReportPanel.vue
+msgid "Copied"
+msgstr "Скопировано"
+
+#: frontend/src/components/Documents/ReportPanel.vue
+msgid "Could not copy"
+msgstr "Не удалось скопировать"
+
+#: frontend/src/components/Documents/ReportPanel.vue
+msgid "Review overdue by {0} d"
+msgstr "Пересмотр просрочен на {0} дн."
+
+#: frontend/src/components/Documents/ReportPanel.vue
+msgid "Next review {0}"
+msgstr "Следующий пересмотр {0}"
+
+#: frontend/src/components/Documents/ReportPanel.vue
+msgid "The course is behind you"
+msgstr "Курс пройден"
+
+#: frontend/src/components/Documents/ReportPanel.vue
+msgid "Continue"
+msgstr "Продолжить"
+
+#: frontend/src/components/Documents/ReportPanel.vue
+msgid "Open the register"
+msgstr "Открыть реестр"

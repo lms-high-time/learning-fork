@@ -103,6 +103,7 @@
 					v-else-if="active === REPORT_VIEW"
 					:document="doc"
 					:courseTitle="courseTitle"
+					:api="api"
 				/>
 
 				<LessonDocument
