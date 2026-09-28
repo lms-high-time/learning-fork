@@ -8,9 +8,14 @@
 		<header class="flex flex-wrap items-start justify-between gap-2">
 			<div class="min-w-0">
 				<h2 class="text-lg-semibold text-ink-gray-9">{{ block.title }}</h2>
-				<p v-if="lessonLabel" class="mt-0.5 text-p-sm text-ink-gray-5">
-					{{ lessonLabel }}
-				</p>
+				<router-link
+					v-if="lesson"
+					:to="lesson.route"
+					class="mt-0.5 inline-block text-p-sm text-ink-gray-5 underline decoration-outline-gray-2 underline-offset-2 hover:text-ink-gray-8"
+					data-testid="block-lesson"
+				>
+					{{ __('Built in lesson {0}').format(String(lesson.number)) }}
+				</router-link>
 			</div>
 			<span
 				class="shrink-0 rounded-full px-2 py-0.5 text-p-xs font-medium"
@@ -232,6 +237,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
+import type { RouteLocationRaw } from 'vue-router'
 import MarkdownIt from 'markdown-it'
 import { Button } from 'frappe-ui'
 import BlockFields from '@/components/Documents/BlockFields.vue'
@@ -245,7 +251,8 @@ const props = defineProps<{
 	block: DocBlock
 	document: DocumentData
 	api: DocumentApi
-	lessonNumber?: number | null
+	/** The lesson that builds the block, and the way to it. */
+	lesson?: { number: number; route: RouteLocationRaw } | null
 	focused?: boolean
 }>()
 
@@ -312,12 +319,6 @@ const legacy = computed(() => {
 		own.some((k) => r[k] !== undefined && r[k] !== null && r[k] !== '')
 	)
 })
-
-const lessonLabel = computed(() =>
-	props.lessonNumber
-		? __('Built in lesson {0}').format(String(props.lessonNumber))
-		: ''
-)
 
 const status = computed(() => {
 	const missing = props.block.empty_cells?.length ?? 0

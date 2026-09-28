@@ -103,7 +103,7 @@
 					:block="block"
 					:document="doc"
 					:api="api"
-					:lessonNumber="lessonNumbers.get(block.lesson ?? '') ?? null"
+					:lesson="lessons.get(block.lesson ?? '') ?? null"
 					:focused="focused === block.key"
 					@focusBlock="focusBlock"
 					@showTable="showTable"
@@ -115,7 +115,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, toRef } from 'vue'
+import { computed, nextTick, ref, toRef, watch } from 'vue'
+import { useRoute, type RouteLocationRaw } from 'vue-router'
 import {
 	createResource,
 	Dropdown,
@@ -157,12 +158,37 @@ const mapData = computed(
 		)?.data
 )
 const courseTitle = computed(() => mapData.value?.title ?? props.courseName)
-const lessonNumbers = computed(() => {
-	const out = new Map<string, number>()
-	for (const chapter of mapData.value?.chapters ?? [])
-		for (const lesson of chapter.lessons) out.set(lesson.id, lesson.number)
+// A block's lesson, by number and as a way back to it (#340).
+const lessons = computed(() => {
+	const out = new Map<string, { number: number; route: RouteLocationRaw }>()
+	;(mapData.value?.chapters ?? []).forEach((chapter, c) =>
+		chapter.lessons.forEach((lesson, l) =>
+			out.set(lesson.id, {
+				number: lesson.number,
+				route: {
+					name: 'Lesson',
+					params: {
+						courseName: props.courseName,
+						chapterNumber: c + 1,
+						lessonNumber: l + 1,
+					},
+				},
+			})
+		)
+	)
 	return out
 })
+
+// A link to a block — from the course page or a lesson — opens on it.
+const route = useRoute()
+watch(
+	() => Boolean(doc.value) && route.hash,
+	(hash) => {
+		if (typeof hash === 'string' && hash.startsWith('#block-'))
+			focusBlock(hash.slice('#block-'.length))
+	},
+	{ immediate: true }
+)
 
 const isFilled = (block: DocBlock): boolean =>
 	block.filled ?? Boolean(block.content || block.file || block.url)

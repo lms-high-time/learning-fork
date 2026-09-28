@@ -13,6 +13,23 @@ export type ProgramObjective = {
 	status?: 'covered' | 'touched' | 'skipped'
 }
 
+/** A block of the course's document built in a lesson (learning-services#340). */
+export type ProgramBlock = {
+	artifact: string
+	key: string
+	title: string
+	/** Present only for an enrolled student. */
+	filled?: boolean
+}
+
+/** A document the course builds; the counts only for an enrolled student. */
+export type ProgramDocument = {
+	artifact: string
+	title: string
+	blocks_total?: number
+	blocks_filled?: number
+}
+
 export type ProgramLesson = {
 	id: string
 	number: number
@@ -22,6 +39,8 @@ export type ProgramLesson = {
 	objectives: ProgramObjective[]
 	/** Present only for an enrolled student. */
 	completed?: boolean
+	/** The document blocks built in this lesson. */
+	blocks?: ProgramBlock[]
 }
 
 export type ProgramChapter = {
@@ -35,9 +54,15 @@ export type ProgramData = {
 	chapters: ProgramChapter[]
 	/** Present only for an enrolled student; null once every lesson is closed. */
 	next_lesson?: string | null
+	documents?: ProgramDocument[]
 }
 
-export type LessonStatus = 'completed' | 'in-progress' | 'next' | 'ahead' | 'none'
+export type LessonStatus =
+	| 'completed'
+	| 'in-progress'
+	| 'next'
+	| 'ahead'
+	| 'none'
 
 /** Every lesson in program order, each with its chapter's title and index. */
 export function flattenLessons(

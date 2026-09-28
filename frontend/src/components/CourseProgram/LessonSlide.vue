@@ -81,6 +81,14 @@
 			</button>
 		</section>
 
+		<LessonBlocks
+			v-if="lesson.blocks?.length"
+			class="mt-4"
+			:blocks="lesson.blocks"
+			:courseName="courseName"
+			:linked="status !== 'none'"
+		/>
+
 		<!-- A way to the lesson, not a second call to action: the course card
 		holds the one button (learning-services#326). -->
 		<div class="mt-auto pt-5">
@@ -98,6 +106,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import LessonBlocks from '@/components/Documents/LessonBlocks.vue'
 import { safeUrl } from '@/utils/safeUrl'
 import {
 	topicCount,
@@ -113,6 +122,8 @@ const props = defineProps<{
 	total: number
 	/** The lesson page: it offers the way in, or a log-in or enrolment. */
 	lessonUrl: string
+	/** For the links to the document's blocks this lesson builds (#340). */
+	courseName: string
 }>()
 
 // Six fit a slide without pushing the button off a laptop screen.

@@ -34,6 +34,15 @@
 				</div>
 			</div>
 
+			<LessonBlocks
+				v-if="entry.blocks?.length"
+				class="mt-6"
+				:blocks="entry.blocks"
+				:courseName="entry.course"
+				:linked="entry.blocks.some((b) => b.filled !== undefined)"
+				:label="__('In this session you build:')"
+			/>
+
 			<div v-if="inWebChat" class="mt-6 text-p-sm text-ink-gray-6">
 				{{ __('Have your own AI agent?') }}
 				<a
@@ -51,12 +60,15 @@
 import { computed } from 'vue'
 import { Button } from 'frappe-ui'
 import { safeUrl } from '@/utils/safeUrl'
+import LessonBlocks from '@/components/Documents/LessonBlocks.vue'
+import type { ProgramBlock } from '@/utils/courseProgram'
 
 // What lms_frappe_app.api.public.lesson_entry answers. A lesson on this
 // platform is taught by an agent, so the page shows the way into that lesson
 // instead of the material: the material is written for the agent, not for
 // reading alone.
 export interface LessonEntryData {
+	course: string
 	title: string
 	hook: string | null
 	completed: boolean
@@ -67,6 +79,8 @@ export interface LessonEntryData {
 		url: string
 		demo_left: number
 	}
+	/** The document blocks this lesson builds (#340). */
+	blocks?: ProgramBlock[]
 }
 
 const props = defineProps<{

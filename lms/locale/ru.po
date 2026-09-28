@@ -10352,3 +10352,27 @@ msgstr "заполнить: {0}"
 #: frontend/src/pages/Documents/Document.vue
 msgid "The whole table «{0}»"
 msgstr "Вся таблица «{0}»"
+
+#: frontend/src/components/CourseDocumentCard.vue
+msgid "Into the document:"
+msgstr "В документ:"
+
+#: frontend/src/components/CourseDocumentCard.vue
+msgid "In this session you build:"
+msgstr "На этом занятии собираете:"
+
+#: frontend/src/components/CourseDocumentCard.vue
+msgid "Your document"
+msgstr "Ваш документ"
+
+#: frontend/src/components/CourseDocumentCard.vue
+msgid "You will build"
+msgstr "В курсе вы соберёте"
+
+#: frontend/src/components/CourseDocumentCard.vue
+msgid "Open the document"
+msgstr "Открыть документ"
+
+#: frontend/src/components/CourseDocumentCard.vue
+msgid "Built lesson by lesson on your own project, with your agent. It stays yours after the course."
+msgstr "Собирается урок за уроком на вашем проекте вместе с агентом и остаётся у вас после курса."

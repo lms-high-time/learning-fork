@@ -85,8 +85,13 @@
 					>
 						{{ course.data.short_introduction }}
 					</p>
-					<div class="md:hidden">
+					<div class="md:hidden space-y-4">
 						<CourseCardOverlay :course="course" />
+						<CourseDocumentCard
+							:documents="documents"
+							:courseName="course.data.name"
+							:enrolled="Boolean(course.data.membership)"
+						/>
 					</div>
 				</section>
 
@@ -152,9 +157,14 @@
 			<aside
 				class="hidden md:flex w-80 shrink-0 flex-col space-y-6 self-start sticky top-5"
 			>
-				<!-- Just the way in: the author is in the header already
-				(learning-services#326). -->
+				<!-- The way in, and what the course leaves you with (#340); the
+				author is in the header already (learning-services#326). -->
 				<CourseCardOverlay :course="course" />
+				<CourseDocumentCard
+					:documents="documents"
+					:courseName="course.data.name"
+					:enrolled="Boolean(course.data.membership)"
+				/>
 			</aside>
 		</div>
 
@@ -173,6 +183,7 @@ import type {
 	SessionUser,
 } from '@/types'
 import CourseCardOverlay from '@/components/CourseCardOverlay.vue'
+import CourseDocumentCard from '@/components/CourseDocumentCard.vue'
 import CourseOutline from '@/components/CourseOutline.vue'
 import CourseProgram from '@/components/CourseProgram/CourseProgram.vue'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
@@ -245,6 +256,9 @@ watch(
 
 // The program needs lessons, not objectives: a lesson without them still gets
 // its slide, just without the topics. No lessons — the outline's own empty state.
+// The documents the course builds, from the same map (#340).
+const documents = computed(() => courseMap.data?.data?.documents ?? [])
+
 const program = computed<ProgramData | null>(() => {
 	const data = courseMap.data?.data
 	return data?.chapters?.some((chapter) => chapter.lessons.length) ? data : null
