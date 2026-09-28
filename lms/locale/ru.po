@@ -10540,3 +10540,7 @@ msgstr "Продолжить"
 #: frontend/src/components/Documents/ReportPanel.vue
 msgid "Open the register"
 msgstr "Открыть реестр"
+
+#: frontend/src/pages/Documents/Document.vue
+msgid "Updated at {0}"
+msgstr "Обновлено в {0}"
