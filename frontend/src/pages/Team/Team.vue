@@ -61,6 +61,7 @@
 				:team="team"
 				@changed="reloadTeam"
 			/>
+			<TeamAssignments v-else-if="tab === 'assignments'" :team="team" />
 
 			<!-- Documents: one block at a time, everyone's entry side by side. -->
 			<div v-else-if="tab === 'documents'" class="space-y-5">
@@ -226,6 +227,7 @@ import {
 import MarkdownIt from 'markdown-it'
 import PageHeader from '@/components/Layouts/PageHeader.vue'
 import TeamMembers from '@/components/Team/TeamMembers.vue'
+import TeamAssignments from '@/components/Team/TeamAssignments.vue'
 import { useSpace } from '@/stores/space'
 import { safeUrl } from '@/utils/safeUrl'
 import {
@@ -282,10 +284,13 @@ const state = computed(() => {
 	return 'ready'
 })
 
-const tab = ref<'members' | 'documents' | 'report'>('documents')
+const tab = ref<'members' | 'documents' | 'assignments' | 'report'>('documents')
 const tabs = computed(() => [
 	{ value: 'documents' as const, label: __('Documents') },
 	{ value: 'members' as const, label: __('Members') },
+	...(team.value?.can_manage
+		? [{ value: 'assignments' as const, label: __('Course assignments') }]
+		: []),
 	...(team.value?.can_see_report
 		? [{ value: 'report' as const, label: __('Progress report') }]
 		: []),
