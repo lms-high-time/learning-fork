@@ -10596,3 +10596,61 @@ msgstr "Было"
 #: frontend/src/components/Documents/ComparePanel.vue
 msgid "After"
 msgstr "Стало"
+
+#: frontend/src/pages/Team/Team.vue
+#: frontend/src/components/Sidebar/SpaceSwitcher.vue
+#: frontend/src/pages/MobileYou.vue
+msgid "Team"
+msgstr "Команда"
+
+#: frontend/src/pages/Team/Team.vue
+msgid "A team belongs to an organization. Choose it in the space switcher."
+msgstr "Команда есть у организации. Выберите её в переключателе пространств."
+
+#: frontend/src/pages/Team/Team.vue
+msgid "This organization shows its documents to managers only."
+msgstr "Документы этой организации видят только руководители."
+
+#: frontend/src/pages/Team/Team.vue
+msgid "Left {0}"
+msgstr "Вышел(а) {0}"
+
+#: frontend/src/pages/Team/Team.vue
+msgid "No course of this organization builds a document yet."
+msgstr "Ни в одном курсе организации пока нет документа."
+
+#: frontend/src/pages/Team/Team.vue
+msgid "Nobody has started this document in the organization yet."
+msgstr "В организации этот документ пока никто не начал."
+
+#: frontend/src/pages/Team/Team.vue
+msgid "left"
+msgstr "вышел(а)"
+
+#: frontend/src/pages/Team/Team.vue
+msgid "Not filled yet"
+msgstr "Пока не заполнено"
+
+#: frontend/src/pages/Team/Team.vue
+msgid "Deadline"
+msgstr "Срок"
+
+#: frontend/src/pages/Team/Team.vue
+msgid "Passed first try"
+msgstr "С первой попытки"
+
+#: frontend/src/pages/Team/Team.vue
+msgid "Documents"
+msgstr "Документы"
+
+#: frontend/src/pages/Team/Team.vue
+msgid "Progress report"
+msgstr "Отчёт"
+
+#: frontend/src/utils/team.ts
+msgid "Manager"
+msgstr "Руководитель"
+
+#: frontend/src/utils/team.ts
+msgid "Not started"
+msgstr "Не начат"

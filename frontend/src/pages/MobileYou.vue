@@ -240,6 +240,22 @@ const spaceGroups = computed(() => [
 			selected: item.id === space.current,
 		})),
 	},
+	// The organization's team lives in its space (learning-services#358).
+	...(space.isOrganization
+		? [
+				{
+					key: 'Team',
+					rows: [
+						{
+							key: 'team',
+							label: 'Team',
+							icon: 'lucide-users',
+							to: { name: 'Team' },
+						},
+					],
+				},
+		  ]
+		: []),
 ])
 
 const showColourMode = ref(false)

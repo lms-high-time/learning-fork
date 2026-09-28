@@ -158,6 +158,13 @@ export const routes = [
 		component: () => import('@/pages/Documents/Documents.vue'),
 		meta: { sidebarLink: 'artifacts-sidebar' },
 	},
+	// «Команда» (learning-services#358): the organization's members and the
+	// documents they build in its space, side by side.
+	{
+		path: '/team',
+		name: 'Team',
+		component: () => import('@/pages/Team/Team.vue'),
+	},
 	{
 		path: '/artifacts-sidebar',
 		name: 'artifacts-sidebar',
