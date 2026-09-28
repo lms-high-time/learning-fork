@@ -10376,3 +10376,75 @@ msgstr "Открыть документ"
 #: frontend/src/components/CourseDocumentCard.vue
 msgid "Built lesson by lesson on your own project, with your agent. It stays yours after the course."
 msgstr "Собирается урок за уроком на вашем проекте вместе с агентом и остаётся у вас после курса."
+
+#: frontend/src/pages/Documents/Document.vue
+msgid "Show unfilled"
+msgstr "Показать незаполненное"
+
+#: frontend/src/pages/Documents/Document.vue
+msgid "Not filled"
+msgstr "Не заполнено"
+
+#: frontend/src/pages/Documents/Document.vue
+msgid "Lesson {0} · {1}"
+msgstr "Урок {0} · {1}"
+
+#: frontend/src/pages/Documents/Document.vue
+msgid "More about this document"
+msgstr "Подробнее о документе"
+
+#: frontend/src/pages/Documents/Document.vue
+msgid "When the document is done"
+msgstr "Когда документ готов"
+
+#: frontend/src/pages/Documents/Document.vue
+msgid "This is a template from the lesson. Adjust it to your project."
+msgstr "Это заготовка из урока. Подгоните её под свой проект."
+
+#: frontend/src/pages/Documents/Document.vue
+msgid "Edit the note"
+msgstr "Изменить заметку"
+
+#: frontend/src/pages/Documents/Document.vue
+msgid "Clear this document?"
+msgstr "Очистить документ?"
+
+#: frontend/src/pages/Documents/Document.vue
+msgid "Other documents"
+msgstr "Другие документы"
+
+#: frontend/src/pages/Documents/Document.vue
+msgid "Started"
+msgstr "Начат"
+
+#: frontend/src/pages/Documents/Document.vue
+msgid "now"
+msgstr "сейчас"
+
+#: frontend/src/pages/Documents/Document.vue
+msgid "done"
+msgstr "готово"
+
+#: frontend/src/pages/Documents/Document.vue
+msgid "started"
+msgstr "начат"
+
+#: frontend/src/pages/Documents/Document.vue
+msgid "template"
+msgstr "заготовка"
+
+#: frontend/src/pages/Documents/Document.vue
+msgid "The whole register"
+msgstr "Реестр целиком"
+
+#: frontend/src/pages/Documents/Document.vue
+msgid "Saved at {0}"
+msgstr "Сохранено в {0}"
+
+#: frontend/src/pages/Documents/Document.vue
+msgid "Changed {0} · version {1}"
+msgstr "Изменён {0} · версия {1}"
+
+#: frontend/src/components/Documents/StateBadge.vue
+msgid "Preset"
+msgstr "Заготовка"

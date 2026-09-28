@@ -58,8 +58,11 @@ describe('LessonBlocks', () => {
 		const link = wrapper.get('[data-testid="lesson-block-assessment"]')
 		expect(JSON.parse(link.attributes('data-to')!)).toEqual({
 			name: 'Document',
-			params: { courseName: 'c1', artifact: 'risk_register' },
-			hash: '#block-assessment',
+			params: {
+				courseName: 'c1',
+				artifact: 'risk_register',
+				view: 'assessment',
+			},
 		})
 		expect(link.find('.lucide-circle-check').exists()).toBe(true)
 		expect(

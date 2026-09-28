@@ -263,3 +263,121 @@ describe('views', () => {
 		expect(report.columns.map((c) => c.key)).toEqual(['event', 'rank'])
 	})
 })
+
+// ---------------------------------------------------------------- workspace (#342)
+
+import {
+	blockState,
+	defaultView,
+	outline,
+	readyLine,
+	viewColumns,
+	type DocumentData,
+} from '@/utils/documentTable'
+
+describe('workspace', () => {
+	const lesson = (key: string, lessonId: string | null, extra = {}) =>
+		({ ...block(key, key), lesson: lessonId, ...extra } as DocBlock)
+	const doc = (blocks: DocBlock[], tables = {}): DocumentData =>
+		({
+			course: 'c1',
+			artifact: 'risk_register',
+			title: 'Реестр',
+			layout: 'sections',
+			blocks,
+			tables,
+			fields: {},
+		} as DocumentData)
+
+	it('names where a document stands in one word', () => {
+		const register = {
+			...scale,
+			name: 'probability_scale',
+			owner: 'scale',
+			preset: true,
+		}
+		const d = doc([], { probability_scale: register })
+		expect(blockState(lesson('a', null, { filled: true }), d)).toBe('done')
+		expect(
+			blockState(
+				lesson('scale', null, {
+					table: 'probability_scale',
+					columns: scale.columns,
+					filled: false,
+				}),
+				d
+			)
+		).toBe('preset')
+		expect(
+			blockState(
+				lesson('b', null, {
+					content: 'черновик',
+					filled: false,
+					columns: [],
+					fields: [],
+				}),
+				d
+			)
+		).toBe('progress')
+		expect(blockState(lesson('c', null), d)).toBe('empty')
+	})
+
+	it('takes «Готов, когда…» out of the hint', () => {
+		expect(readyLine('Для агента. Готов, когда шкалы записаны. Ещё')).toBe(
+			'Готов, когда шкалы записаны.'
+		)
+		expect(readyLine('Без критерия')).toBeNull()
+	})
+
+	it('groups documents by lesson in course order, the rest last', () => {
+		const d = doc([
+			lesson('worries', 'l1'),
+			lesson('goals', 'l2'),
+			lesson('stages', 'l2'),
+			lesson('free', null),
+		])
+		const groups = outline(d, [
+			{ id: 'l1', number: 1, title: 'Риск' },
+			{ id: 'l2', number: 2, title: 'Цели' },
+			{ id: 'l3', number: 3, title: 'Пусто' },
+		])
+		expect(
+			groups.map((g) => [g.lesson?.id ?? null, g.blocks.map((b) => b.key)])
+		).toEqual([
+			['l1', ['worries']],
+			['l2', ['goals', 'stages']],
+			[null, ['free']],
+		])
+	})
+
+	it('opens on the current lesson, then on the register after the course', () => {
+		const d = doc(
+			[
+				lesson('goals', 'l2', { filled: true }),
+				lesson('stages', 'l2', { filled: false }),
+			],
+			{ register }
+		)
+		const groups = outline(d, [{ id: 'l2', number: 2, title: 'Цели' }])
+		expect(defaultView(d, groups, 'l2')).toBe('stages')
+		expect(defaultView(d, groups, null)).toBe('register')
+	})
+
+	it('shows a lesson the name, earlier formulas and its own columns', () => {
+		expect(viewColumns(register, 'responses').map((c) => c.key)).toEqual([
+			'event',
+			'rank',
+			'in_work',
+			'measure',
+			'sponsor',
+		])
+		// Its own formulas lead: the rank is what a row is read by.
+		expect(viewColumns(register, 'assessment').map((c) => c.key)).toEqual([
+			'event',
+			'rank',
+			'in_work',
+			'probability',
+			'impact',
+		])
+	})
+})

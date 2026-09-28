@@ -71,6 +71,8 @@ export interface DocTable {
 	columns: DocColumn[]
 	views: (MatrixView | ReportView)[]
 	rows: DocRow[]
+	/** The rows are still the author's untouched preset. */
+	preset?: boolean
 	markdown: string
 }
 
@@ -107,6 +109,10 @@ export interface DocumentData {
 	blocks: DocBlock[]
 	tables: Record<string, DocTable>
 	fields: Record<string, CellValue>
+	/** When the student's document last changed; null before the first write. */
+	modified?: string | null
+	/** How many times it has been saved. */
+	version?: number
 }
 
 export interface ColumnGroup {
@@ -348,4 +354,113 @@ export function formatCell(
 		return y && m && d ? `${d}.${m}.${y}` : value
 	}
 	return String(value)
+}
+
+// ---------------------------------------------------------------- workspace
+//
+// The document as a workspace (learning-services#342): each lesson's block is
+// its own document, grouped under its lesson, with the whole register and the
+// report on top.
+
+export type BlockState = 'done' | 'progress' | 'preset' | 'empty'
+
+/**
+ * One word for where a block stands. What exactly is missing is not listed —
+ * there are too many kinds of «missing»; the table highlights it in place.
+ */
+export function blockState(block: DocBlock, doc: DocumentData): BlockState {
+	const filled =
+		block.filled ?? Boolean(block.content || block.file || block.url)
+	if (filled) return 'done'
+	const table = block.table ? doc.tables[block.table] : undefined
+	if (table?.preset && table.owner === block.key) return 'preset'
+	const own = (block.columns ?? []).filter((c) => c.type !== 'formula')
+	const touched =
+		Boolean(block.content || block.file || block.url) ||
+		(block.fields ?? []).some((f) => !isBlank(doc.fields[f.key])) ||
+		(table?.rows ?? []).some((r) => own.some((c) => !isBlank(r[c.key])))
+	return touched ? 'progress' : 'empty'
+}
+
+/**
+ * «Готов, когда …» from the author's hint: the one sentence the student
+ * needs. The rest of the hint is written for the agent and folds away.
+ */
+export function readyLine(hint: string): string | null {
+	const found = hint.match(/Готов[аоы]?,?\s+когда[^.]*\./)
+	return found ? found[0] : null
+}
+
+/** A table more than one block adds columns to: the register. */
+export const isSharedTable = (table: DocTable): boolean =>
+	new Set(table.columns.map((c) => c.block)).size > 1
+
+export interface OutlineLesson {
+	id: string
+	number: number
+	title: string
+}
+
+export interface OutlineGroup {
+	lesson: OutlineLesson | null
+	blocks: DocBlock[]
+}
+
+/** Blocks under their lessons, in course order; blocks with no lesson last. */
+export function outline(
+	doc: DocumentData,
+	lessons: OutlineLesson[]
+): OutlineGroup[] {
+	const groups: OutlineGroup[] = []
+	for (const lesson of lessons) {
+		const blocks = doc.blocks.filter((b) => b.lesson === lesson.id)
+		if (blocks.length) groups.push({ lesson, blocks })
+	}
+	const placed = new Set(groups.flatMap((g) => g.blocks.map((b) => b.key)))
+	const rest = doc.blocks.filter((b) => !placed.has(b.key))
+	if (rest.length) groups.push({ lesson: null, blocks: rest })
+	return groups
+}
+
+export const REGISTER_VIEW = 'register'
+export const REPORT_VIEW = 'report'
+
+/**
+ * Where the document opens: during the course the current lesson's first
+ * unfinished block, after it the whole register.
+ */
+export function defaultView(
+	doc: DocumentData,
+	groups: OutlineGroup[],
+	currentLesson: string | null | undefined
+): string {
+	const current = groups.find((g) => g.lesson?.id === currentLesson)
+	if (current) {
+		const open = current.blocks.find((b) => blockState(b, doc) !== 'done')
+		return (open ?? current.blocks[0]).key
+	}
+	if (Object.values(doc.tables).some(isSharedTable)) return REGISTER_VIEW
+	return doc.blocks[0]?.key ?? REGISTER_VIEW
+}
+
+/**
+ * A lesson's view of the register: the row's name, the computed columns —
+ * the numbers a row is read by — then the lesson's own columns.
+ */
+export function viewColumns(table: DocTable, blockKey: string): DocColumn[] {
+	const name = titleColumn(table)
+	const own = table.columns.filter(
+		(c) => c.block === blockKey && c.key !== name?.key
+	)
+	// Formulas of earlier lessons only: «Оценка» shows no residual rank from
+	// «Ответы», «Ответы» show the rank «Оценка» computed.
+	const first = table.columns.findIndex((c) => c.block === blockKey)
+	const formulas = table.columns.filter(
+		(c, i) => c.type === 'formula' && c.block !== blockKey && i < first
+	)
+	// The lesson's own formulas lead its columns too: the rank is what a row
+	// is read by, and at the far end it scrolls out of sight.
+	const ownFormulas = own.filter((c) => c.type === 'formula')
+	const ownInputs = own.filter((c) => c.type !== 'formula')
+	return [...(name ? [name] : []), ...formulas, ...ownFormulas, ...ownInputs]
 }

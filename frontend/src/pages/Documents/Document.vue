@@ -2,9 +2,18 @@
 	<div>
 		<PageHeader :breadcrumbs="breadcrumbs">
 			<template #actions>
-				<span v-if="api.saving.value" class="text-p-sm text-ink-gray-5">
-					{{ __('Saving…') }}
-				</span>
+				<span
+					v-if="api.saving.value"
+					class="text-p-sm text-ink-gray-5"
+					data-testid="saving"
+					>{{ __('Saving…') }}</span
+				>
+				<span
+					v-else-if="savedAt"
+					class="text-p-sm text-ink-gray-5"
+					data-testid="saved"
+					>{{ __('Saved at {0}').format(savedAt) }}</span
+				>
 				<Dropdown
 					v-if="doc"
 					:options="downloads"
@@ -12,6 +21,15 @@
 						label: __('Download'),
 						variant: 'subtle',
 						iconLeft: 'download',
+					}"
+				/>
+				<Dropdown
+					v-if="doc && doc.version"
+					:options="about"
+					:button="{
+						icon: 'more-horizontal',
+						variant: 'ghost',
+						label: __('More'),
 					}"
 				/>
 			</template>
@@ -25,7 +43,9 @@
 		</div>
 
 		<div
-			v-else-if="api.resource.loading && !doc"
+			v-else-if="
+				(api.resource.loading && !doc) || (courseMap.loading && !mapData)
+			"
 			class="flex items-center justify-center p-10"
 		>
 			<LoadingIndicator class="size-5 text-ink-gray-5" />
@@ -43,70 +63,75 @@
 			}}</router-link>
 		</div>
 
-		<div v-else class="mx-auto flex max-w-[90rem] gap-6 p-4 sm:p-5">
-			<!-- Contents: where each block stands, a jump to it. -->
-			<nav
+		<!-- A phone opens on the contents; a document is the next screen. -->
+		<div v-else-if="isMobile && !view" class="p-4">
+			<h1 class="mb-1 text-xl-semibold text-ink-gray-9">{{ doc.title }}</h1>
+			<p class="mb-4 text-p-sm text-ink-gray-5">{{ courseTitle }}</p>
+			<DocumentOutline
+				:document="doc"
+				:groups="groups"
+				:specials="specials"
+				:active="''"
+				:currentLesson="currentLesson"
+			/>
+		</div>
+
+		<div v-else class="mx-auto flex max-w-[90rem] gap-8 p-4 sm:p-5">
+			<aside
 				v-if="!isMobile"
-				class="sticky top-16 hidden h-fit w-56 shrink-0 space-y-1 lg:block"
-				:aria-label="__('Document contents')"
+				class="sticky top-16 h-fit max-h-[calc(100vh-5rem)] w-64 shrink-0 overflow-y-auto"
 			>
-				<div class="mb-3 space-y-1.5">
-					<div class="text-p-sm text-ink-gray-6">
-						{{
-							__('Filled {0} of {1}').format(
-								String(filledCount),
-								String(doc.blocks.length)
-							)
-						}}
-					</div>
-					<ProgressBar :progress="progress" />
-				</div>
-				<a
-					v-for="block in doc.blocks"
-					:key="block.key"
-					:href="safeUrl(`#block-${block.key}`)"
-					class="flex items-start gap-2 rounded px-2 py-1 text-p-sm text-ink-gray-7 hover:bg-surface-gray-2"
-					@click.prevent="focusBlock(block.key)"
-				>
-					<span
-						class="mt-0.5 size-4 shrink-0"
-						:class="
-							isFilled(block)
-								? 'lucide-circle-check text-ink-green-6'
-								: block.empty_cells?.length
-								? 'lucide-circle-dot text-ink-amber-6'
-								: 'lucide-circle text-ink-gray-4'
-						"
-						aria-hidden="true"
+				<p class="mb-3 px-2 text-p-sm text-ink-gray-5">{{ courseTitle }}</p>
+				<DocumentOutline
+					:document="doc"
+					:groups="groups"
+					:specials="specials"
+					:active="active"
+					:currentLesson="currentLesson"
+				/>
+			</aside>
+
+			<main class="min-w-0 flex-1">
+				<section v-if="active === REGISTER_VIEW && register" class="space-y-5">
+					<h1 class="text-2xl-semibold text-ink-gray-9">
+						{{ register.title || __('The whole register') }}
+					</h1>
+					<DocTableEditor
+						:table="register"
+						:tables="doc.tables"
+						:blocks="doc.blocks"
+						:canEditRows="true"
+						:searchable="true"
+						@setCell="(b, row, column, value) => api.setCell(b, register!.name, row, column, value)"
+						@addRow="api.addRow(register!.owner)"
+						@deleteRow="(id) => api.deleteRow(register!.owner, id)"
+						@focusBlock="open"
 					/>
-					<span class="min-w-0">{{ block.title }}</span>
-				</a>
-			</nav>
+					<MatrixView
+						v-for="view in matrices"
+						:key="view.x + view.y"
+						:table="register"
+						:view="view"
+						class="max-w-xl"
+						@pickRow="pickRow"
+					/>
+				</section>
 
-			<main class="min-w-0 flex-1 space-y-4">
-				<div class="space-y-1">
-					<h1 class="text-2xl-semibold text-ink-gray-9">{{ doc.title }}</h1>
-					<p class="text-p-sm text-ink-gray-6">
-						{{ courseTitle }} ·
-						{{
-							__('Filled {0} of {1}').format(
-								String(filledCount),
-								String(doc.blocks.length)
-							)
-						}}
-					</p>
-				</div>
+				<ReportPanel
+					v-else-if="active === REPORT_VIEW"
+					:document="doc"
+					:courseTitle="courseTitle"
+				/>
 
-				<DocumentBlock
-					v-for="block in doc.blocks"
+				<LessonDocument
+					v-else-if="block"
 					:key="block.key"
 					:block="block"
 					:document="doc"
 					:api="api"
-					:lesson="lessons.get(block.lesson ?? '') ?? null"
-					:focused="focused === block.key"
-					@focusBlock="focusBlock"
-					@showTable="showTable"
+					:lesson="lessonOf(block)"
+					:prev="neighbour(-1)"
+					:next="neighbour(1)"
 					@pickRow="pickRow"
 				/>
 			</main>
@@ -115,8 +140,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, toRef, watch } from 'vue'
-import { useRoute, type RouteLocationRaw } from 'vue-router'
+import { computed, ref, toRef, watch } from 'vue'
+import { useRoute, useRouter, type RouteLocationRaw } from 'vue-router'
 import {
 	createResource,
 	Dropdown,
@@ -124,91 +149,206 @@ import {
 	usePageMeta,
 } from 'frappe-ui'
 import PageHeader from '@/components/Layouts/PageHeader.vue'
-import ProgressBar from '@/components/ProgressBar.vue'
-import DocumentBlock from '@/components/Documents/DocumentBlock.vue'
+import DocTableEditor from '@/components/Documents/DocTableEditor.vue'
+import DocumentOutline from '@/components/Documents/DocumentOutline.vue'
+import LessonDocument from '@/components/Documents/LessonDocument.vue'
+import MatrixView from '@/components/Documents/MatrixView.vue'
+import ReportPanel from '@/components/Documents/ReportPanel.vue'
 import { useDocument } from '@/composables/useDocument'
 import { sessionStore } from '@/stores/session'
 import { useScreenSize } from '@/utils/composables'
-import { safeUrl } from '@/utils/safeUrl'
-import type { DocBlock } from '@/utils/documentTable'
+import {
+	defaultView,
+	isSharedTable,
+	outline,
+	REGISTER_VIEW,
+	REPORT_VIEW,
+	type DocBlock,
+	type MatrixView as Matrix,
+	type OutlineLesson,
+} from '@/utils/documentTable'
 
-const props = defineProps<{ courseName: string; artifact: string }>()
+// The course document as a workspace (learning-services#342): the contents on
+// the left, one document open at a time, each with an address of its own.
+
+const props = defineProps<{
+	courseName: string
+	artifact: string
+	view?: string
+}>()
 
 const { isLoggedIn } = sessionStore()
 const { isMobile } = useScreenSize()
+const route = useRoute()
+const router = useRouter()
 const api = useDocument(toRef(props, 'courseName'), toRef(props, 'artifact'))
 const doc = api.document
 
-// The course's title and lesson numbers: the document names lessons by id.
+// The course's lessons — titles, numbers, the one the student is on — come
+// from the course map; the document names lessons by id only.
 const courseMap = createResource({
 	url: 'lms_frappe_app.api.public.course_map',
 	method: 'GET',
 	makeParams: () => ({ course: props.courseName }),
 	auto: true,
 })
+type MapLesson = { id: string; number: number; title: string }
 const mapData = computed(
 	() =>
 		(
 			courseMap.data as {
 				data?: {
 					title?: string
-					chapters?: { lessons: { id: string; number: number }[] }[]
+					next_lesson?: string | null
+					chapters?: { lessons: MapLesson[] }[]
 				}
 			} | null
 		)?.data
 )
 const courseTitle = computed(() => mapData.value?.title ?? props.courseName)
-// A block's lesson, by number and as a way back to it (#340).
-const lessons = computed(() => {
-	const out = new Map<string, { number: number; route: RouteLocationRaw }>()
-	;(mapData.value?.chapters ?? []).forEach((chapter, c) =>
-		chapter.lessons.forEach((lesson, l) =>
-			out.set(lesson.id, {
+const lessons = computed<
+	(OutlineLesson & { chapter: number; index: number })[]
+>(() =>
+	(mapData.value?.chapters ?? []).flatMap((chapter, c) =>
+		chapter.lessons.map((l, i) => ({
+			id: l.id,
+			number: l.number,
+			title: l.title,
+			chapter: c + 1,
+			index: i + 1,
+		}))
+	)
+)
+const currentLesson = computed(() => mapData.value?.next_lesson ?? null)
+
+const groups = computed(() =>
+	doc.value ? outline(doc.value, lessons.value) : []
+)
+const ordered = computed(() => groups.value.flatMap((g) => g.blocks))
+
+const register = computed(
+	() => Object.values(doc.value?.tables ?? {}).find(isSharedTable) ?? null
+)
+const hasReport = computed(() =>
+	Object.values(doc.value?.tables ?? {}).some((t) =>
+		t.views.some((v) => v.type === 'report')
+	)
+)
+const specials = computed(() => [
+	...(register.value
+		? [
+				{
+					view: REGISTER_VIEW,
+					title: __('The whole register'),
+					icon: 'lucide-table',
+				},
+		  ]
+		: []),
+	...(hasReport.value
+		? [
+				{
+					view: REPORT_VIEW,
+					title: __('Report for the sponsor'),
+					icon: 'lucide-printer',
+				},
+		  ]
+		: []),
+])
+const matrices = computed(
+	() =>
+		(register.value?.views.filter((v) => v.type === 'matrix') as Matrix[]) ?? []
+)
+
+// What is open: the address, or where the document opens by itself — the
+// current lesson during the course, the register after it.
+const active = computed(() => {
+	const known = new Set([
+		...(register.value ? [REGISTER_VIEW] : []),
+		...(hasReport.value ? [REPORT_VIEW] : []),
+		...(doc.value?.blocks.map((b) => b.key) ?? []),
+	])
+	if (props.view && known.has(props.view)) return props.view
+	return doc.value
+		? defaultView(doc.value, groups.value, currentLesson.value)
+		: ''
+})
+const block = computed<DocBlock | null>(
+	() => doc.value?.blocks.find((b) => b.key === active.value) ?? null
+)
+
+const to = (view: string): RouteLocationRaw => ({
+	name: 'Document',
+	params: { courseName: props.courseName, artifact: props.artifact, view },
+})
+const open = (view: string) => router.push(to(view))
+
+function neighbour(step: -1 | 1) {
+	const i = ordered.value.findIndex((b) => b.key === active.value)
+	const other = i < 0 ? null : ordered.value[i + step]
+	return other ? { title: other.title, to: to(other.key) } : null
+}
+
+function lessonOf(b: DocBlock) {
+	const lesson = lessons.value.find((l) => l.id === b.lesson)
+	return lesson
+		? {
 				number: lesson.number,
+				title: lesson.title,
 				route: {
 					name: 'Lesson',
 					params: {
 						courseName: props.courseName,
-						chapterNumber: c + 1,
-						lessonNumber: l + 1,
+						chapterNumber: lesson.chapter,
+						lessonNumber: lesson.index,
 					},
 				},
-			})
-		)
-	)
-	return out
-})
+		  }
+		: null
+}
 
-// A link to a block — from the course page or a lesson — opens on it.
-const route = useRoute()
+// Links made before the workspace pointed at #block-key: open that document.
 watch(
-	() => Boolean(doc.value) && route.hash,
+	() => route.hash,
 	(hash) => {
-		if (typeof hash === 'string' && hash.startsWith('#block-'))
-			focusBlock(hash.slice('#block-'.length))
+		if (hash?.startsWith('#block-'))
+			router.replace(to(hash.slice('#block-'.length)))
 	},
 	{ immediate: true }
 )
 
-const isFilled = (block: DocBlock): boolean =>
-	block.filled ?? Boolean(block.content || block.file || block.url)
-const filledCount = computed(
-	() => doc.value?.blocks.filter(isFilled).length ?? 0
-)
-const progress = computed(() =>
-	doc.value?.blocks.length
-		? Math.round((filledCount.value / doc.value.blocks.length) * 100)
-		: 0
-)
+function pickRow(id: string) {
+	const row = window.document.querySelector(`[data-row="${CSS.escape(id)}"]`)
+	row?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+	row?.classList.add('row-picked')
+	setTimeout(() => row?.classList.remove('row-picked'), 1600)
+}
 
-const breadcrumbs = computed(() => [
-	{ label: __('My documents'), route: { name: 'Documents' } },
-	{
-		label: courseTitle.value,
-		route: { name: 'Documents', query: { course: props.courseName } },
-	},
-	{ label: doc.value?.title ?? __('Document') },
-])
+// «Сохранено в 14:32» once a write lands; the time and the version number live
+// in the menu, for support rather than for the student.
+const savedAt = ref('')
+const clock = (d: Date) =>
+	d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+watch(
+	() => api.saving.value,
+	(now, before) => {
+		if (before && !now) savedAt.value = clock(new Date())
+	}
+)
+const about = computed(() => {
+	const modified = doc.value?.modified ? new Date(doc.value.modified) : null
+	return [
+		{
+			label: __('Changed {0} · version {1}').format(
+				modified
+					? `${modified.toLocaleDateString('ru-RU')} ${clock(modified)}`
+					: '—',
+				String(doc.value?.version ?? 0)
+			),
+			icon: 'history',
+			onClick: () => {},
+		},
+	]
+})
 
 const downloads = computed(() => [
 	{
@@ -223,33 +363,29 @@ const downloads = computed(() => [
 	},
 ])
 
-const focused = ref<string | null>(null)
-let unfocus: ReturnType<typeof setTimeout> | undefined
+const viewTitle = computed(() => {
+	if (active.value === REGISTER_VIEW) return __('The whole register')
+	if (active.value === REPORT_VIEW) return __('Report for the sponsor')
+	return block.value?.title ?? ''
+})
 
-async function focusBlock(key: string) {
-	focused.value = key
-	await nextTick()
-	document
-		.getElementById(`block-${key}`)
-		?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-	clearTimeout(unfocus)
-	unfocus = setTimeout(() => (focused.value = null), 1600)
-}
+const breadcrumbs = computed(() => [
+	{ label: __('My documents'), route: { name: 'Documents' } },
+	{
+		label: doc.value?.title ?? __('Document'),
+		route: {
+			name: 'Document',
+			params: { courseName: props.courseName, artifact: props.artifact },
+		},
+	},
+	...(viewTitle.value && (props.view || !isMobile.value)
+		? [{ label: viewTitle.value }]
+		: []),
+])
 
-// A block whose columns live in another block's table: go there.
-function showTable(table: string) {
-	const owner = doc.value?.tables[table]?.owner
-	if (owner) focusBlock(owner)
-}
-
-function pickRow(id: string) {
-	const row = window.document.querySelector(`[data-row="${CSS.escape(id)}"]`)
-	row?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-	row?.classList.add('row-picked')
-	setTimeout(() => row?.classList.remove('row-picked'), 1600)
-}
-
-usePageMeta(() => ({ title: doc.value?.title ?? __('My documents') }))
+usePageMeta(() => ({
+	title: viewTitle.value || doc.value?.title || __('My documents'),
+}))
 </script>
 
 <style>

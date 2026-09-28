@@ -15,8 +15,7 @@
 				v-if="linked"
 				:to="{
 					name: 'Document',
-					params: { courseName, artifact: block.artifact },
-					hash: `#block-${block.key}`,
+					params: { courseName, artifact: block.artifact, view: block.key },
 				}"
 				class="inline-flex items-center gap-1 font-medium text-ink-gray-8 underline decoration-outline-gray-3 underline-offset-2 hover:text-ink-gray-9"
 				:data-testid="`lesson-block-${block.key}`"
