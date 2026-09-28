@@ -34,9 +34,11 @@ export interface DocColumn {
 export interface DocField {
 	key: string
 	title: string
-	type: Exclude<ColumnType, 'scale' | 'ref' | 'check' | 'formula'>
+	type: Exclude<ColumnType, 'scale' | 'ref' | 'check'>
 	options?: string[]
 	required?: boolean
+	/** A formula field's expression; the server computes its value (#351). */
+	formula?: string
 	value?: CellValue
 }
 
@@ -119,6 +121,20 @@ export interface DocumentData {
 	modified?: string | null
 	/** How many times it has been saved. */
 	version?: number
+	/** The blocks laid out as one sheet — the Lean Canvas (#351). */
+	canvas?: CanvasSpec | null
+}
+
+/**
+ * The document as one sheet (learning-services#351): rows of block keys in
+ * the shape of CSS grid-template-areas, short titles for the cells, the
+ * block holding the student's first sketch, and what each cell shows.
+ */
+export interface CanvasSpec {
+	grid: string[]
+	labels?: Record<string, string>
+	sketch?: string | null
+	summary?: Record<string, string[]>
 }
 
 export interface ColumnGroup {
@@ -381,9 +397,12 @@ export function blockState(block: DocBlock, doc: DocumentData): BlockState {
 	const table = block.table ? doc.tables[block.table] : undefined
 	if (table?.preset && table.owner === block.key) return 'preset'
 	const own = (block.columns ?? []).filter((c) => c.type !== 'formula')
+	// A formula field has a value the student never wrote (#351).
 	const touched =
 		Boolean(block.content || block.file || block.url) ||
-		(block.fields ?? []).some((f) => !isBlank(doc.fields[f.key])) ||
+		(block.fields ?? []).some(
+			(f) => f.type !== 'formula' && !isBlank(doc.fields[f.key])
+		) ||
 		(table?.rows ?? []).some((r) => own.some((c) => !isBlank(r[c.key])))
 	return touched ? 'progress' : 'empty'
 }
@@ -430,10 +449,12 @@ export function outline(
 
 export const REGISTER_VIEW = 'register'
 export const REPORT_VIEW = 'report'
+export const CANVAS_VIEW = 'canvas'
+export const COMPARE_VIEW = 'compare'
 
 /**
  * Where the document opens: during the course the current lesson's first
- * unfinished block, after it the whole register.
+ * unfinished block, after it the whole canvas or the whole register.
  */
 export function defaultView(
 	doc: DocumentData,
@@ -445,6 +466,8 @@ export function defaultView(
 		const open = current.blocks.find((b) => blockState(b, doc) !== 'done')
 		return (open ?? current.blocks[0]).key
 	}
+	// The sheet is what the course builds up to (#351).
+	if (doc.canvas) return CANVAS_VIEW
 	if (Object.values(doc.tables).some(isSharedTable)) return REGISTER_VIEW
 	return doc.blocks[0]?.key ?? REGISTER_VIEW
 }
@@ -576,3 +599,222 @@ export const referringTables = (
 			)
 			.map((column) => ({ table: other, column }))
 	)
+
+// ---------------------------------------------------------------- the whole canvas
+//
+// The document as one sheet (learning-services#351): the blocks placed as the
+// course's canvas lays them out, each cell a summary of its block.
+
+/** Rows of cells; a short row is padded with empty cells, CSS wants a rectangle. */
+export function canvasRows(canvas: CanvasSpec): string[][] {
+	const rows = canvas.grid
+		.map((line) => line.trim().split(/\s+/).filter(Boolean))
+		.filter((row) => row.length)
+	const width = Math.max(0, ...rows.map((r) => r.length))
+	return rows.map((row) => [
+		...row,
+		...Array<string>(width - row.length).fill('.'),
+	])
+}
+
+/** A block key as a grid area name: a CSS identifier, whatever the key. */
+export const canvasArea = (key: string): string =>
+	`a-${key.replace(/[^A-Za-z0-9_-]/g, '_')}`
+
+/** The grid as `grid-template-areas`; «.» stays an empty cell. */
+export const canvasAreas = (canvas: CanvasSpec): string =>
+	canvasRows(canvas)
+		.map(
+			(row) =>
+				`"${row
+					.map((key) => (/^\.+$/.test(key) ? '.' : canvasArea(key)))
+					.join(' ')}"`
+		)
+		.join(' ')
+
+/** The cells in reading order — first appearance — for a phone and for tests. */
+export const canvasKeys = (canvas: CanvasSpec): string[] => [
+	...new Set(
+		canvasRows(canvas)
+			.flat()
+			.filter((key) => !/^\.+$/.test(key))
+	),
+]
+
+/** A cell's short title: the canvas's label, else the block's title. */
+export const canvasLabel = (
+	canvas: CanvasSpec,
+	key: string,
+	blocks: DocBlock[]
+): string =>
+	canvas.labels?.[key] || blocks.find((b) => b.key === key)?.title || key
+
+export interface CanvasLine {
+	text: string
+	/** The field's title, where the line would not say what it is. */
+	label?: string
+	/** A yes/no formula: shown as ✓ or ✗ with its title as the text. */
+	flag?: boolean
+}
+
+/** A computed number reads rounded: 0.33, not 0.3333333. */
+export function formatValue(
+	field: { type: ColumnType },
+	value: CellValue
+): string {
+	if (typeof value === 'number' && !Number.isInteger(value))
+		return String(Math.round(value * 100) / 100)
+	return formatCell(field, value)
+}
+
+/** Markdown as a line of plain text, cut at a word near `limit`. */
+export function plainExcerpt(markdown: string, limit = 200): string {
+	const text = markdown
+		.replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+		.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+		.replace(/<[^>]+>/g, ' ')
+		.replace(/^\s{0,3}(?:#{1,6}|>|[-*+]|\d+[.)])\s+/gm, '')
+		.replace(/[*_`~|#]+/g, '')
+		.replace(/\s+/g, ' ')
+		.trim()
+	if (text.length <= limit) return text
+	const cut = text.slice(0, limit)
+	const space = cut.lastIndexOf(' ')
+	return `${(space > limit / 2 ? cut.slice(0, space) : cut).trimEnd()}…`
+}
+
+/** A field's value: the document's live copy, else what the block carries. */
+const fieldValue = (field: DocField, doc: DocumentData): CellValue =>
+	field.key in doc.fields ? doc.fields[field.key] : field.value
+
+function fieldLine(
+	field: DocField,
+	doc: DocumentData,
+	label: boolean
+): CanvasLine | null {
+	const value = fieldValue(field, doc)
+	if (field.type === 'formula' && typeof value === 'boolean')
+		return { text: field.title, flag: value }
+	if (isBlank(value)) return null
+	const text = formatValue(field, value)
+	return label ? { text, label: field.title } : { text }
+}
+
+/**
+ * Each row as its name followed by the columns' values, « · » between. A row
+ * the columns say nothing about stays out; the name counts when it is asked.
+ */
+function rowLines(table: DocTable, columns: DocColumn[]): CanvasLine[] {
+	const name = titleColumn(table)
+	const named = columns.some((c) => c.key === name?.key)
+	const rest = columns.filter((c) => c.key !== name?.key)
+	const lines: CanvasLine[] = []
+	for (const row of table.rows) {
+		const title = name ? formatCell(name, row[name.key]) : ''
+		const values = rest
+			.map((c) => formatValue(c, row[c.key]))
+			.filter((v) => v !== '')
+		if (!values.length && !(named && title)) continue
+		lines.push({ text: [title || row.id, ...values].join(' · ') })
+	}
+	return lines
+}
+
+/**
+ * What a canvas cell shows of its block. The canvas may name the fields and
+ * columns; otherwise the block's filled fields, the rows it fills, or the
+ * start of its text.
+ */
+export function cellSummary(
+	block: DocBlock,
+	doc: DocumentData,
+	canvas?: CanvasSpec | null
+): CanvasLine[] {
+	const keys = canvas?.summary?.[block.key]
+	return keys?.length
+		? namedSummary(block, doc, keys, canvas?.sketch)
+		: defaultSummary(block, doc)
+}
+
+type RowGroup = { table: DocTable; columns: DocColumn[] }
+
+function namedSummary(
+	block: DocBlock,
+	doc: DocumentData,
+	keys: string[],
+	sketch?: string | null
+): CanvasLine[] {
+	// The block's own fields and table first; the sketch's fields are keyed
+	// by the canvas's block keys and would shadow a column of the same name.
+	const own = block.table ? doc.tables[block.table] : undefined
+	const tables = [
+		...(own ? [own] : []),
+		...Object.values(doc.tables).filter((t) => t !== own),
+	]
+	const others = doc.blocks
+		.filter((b) => b !== block && b.key !== sketch)
+		.flatMap((b) => b.fields ?? [])
+	const findColumn = (key: string) => {
+		for (const table of tables) {
+			const column = table.columns.find((c) => c.key === key)
+			if (column) return { table, column }
+		}
+		return null
+	}
+	// Columns of one table make one line per row, where the first of them is.
+	const parts: (CanvasLine | RowGroup)[] = []
+	for (const key of keys) {
+		const field =
+			(block.fields ?? []).find((f) => f.key === key) ??
+			(findColumn(key) ? undefined : others.find((f) => f.key === key))
+		if (field) {
+			const line = fieldLine(field, doc, false)
+			if (line) parts.push(line)
+			continue
+		}
+		const found = findColumn(key)
+		if (!found) continue
+		const group = parts.find(
+			(p): p is RowGroup => 'table' in p && p.table === found.table
+		)
+		if (group) group.columns.push(found.column)
+		else parts.push({ table: found.table, columns: [found.column] })
+	}
+	return parts.flatMap((p) =>
+		'table' in p ? rowLines(p.table, p.columns) : [p]
+	)
+}
+
+function defaultSummary(block: DocBlock, doc: DocumentData): CanvasLine[] {
+	const lines = (block.fields ?? [])
+		.map((f) => fieldLine(f, doc, true))
+		.filter((l): l is CanvasLine => Boolean(l))
+	const table = block.table ? doc.tables[block.table] : undefined
+	if (table) {
+		const own = (block.columns ?? table.columns).filter(
+			(c) => c.block === block.key
+		)
+		lines.push(...rowLines(table, own))
+	}
+	if (lines.length) return lines
+	const text = block.content ? plainExcerpt(block.content) : ''
+	if (text) return [{ text }]
+	if (block.file) return [{ text: block.file.name }]
+	if (block.url) return [{ text: block.url }]
+	return []
+}
+
+/** The student's first sketch of a cell, from the canvas's sketch block. */
+export function sketchValue(
+	doc: DocumentData,
+	canvas: CanvasSpec,
+	key: string
+): string {
+	const sketch = doc.blocks.find((b) => b.key === canvas.sketch)
+	const field = sketch?.fields?.find((f) => f.key === key)
+	if (!field) return ''
+	// The block's own copy first: the sketch's field keys are the canvas's
+	// block keys and may name something else in the flat `fields`.
+	const value = field.value !== undefined ? field.value : doc.fields[key]
+	return isBlank(value) ? '' : formatValue(field, value)
+}

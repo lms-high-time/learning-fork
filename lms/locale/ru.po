@@ -10544,3 +10544,25 @@ msgstr "Открыть реестр"
 #: frontend/src/pages/Documents/Document.vue
 msgid "Updated at {0}"
 msgstr "Обновлено в {0}"
+
+#: frontend/src/components/Documents/CanvasPanel.vue
+#: frontend/src/pages/Documents/Document.vue
+msgid "The whole canvas"
+msgstr "Холст целиком"
+
+#: frontend/src/components/Documents/ComparePanel.vue
+#: frontend/src/pages/Documents/Document.vue
+msgid "Before → after"
+msgstr "Было → стало"
+
+#: frontend/src/components/Documents/ComparePanel.vue
+msgid "The first sketch from lesson 1 next to what it has become"
+msgstr "Первый набросок из урока 1 рядом с тем, что стало"
+
+#: frontend/src/components/Documents/ComparePanel.vue
+msgid "Before"
+msgstr "Было"
+
+#: frontend/src/components/Documents/ComparePanel.vue
+msgid "After"
+msgstr "Стало"
