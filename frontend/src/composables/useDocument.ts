@@ -1,6 +1,7 @@
-import { computed, ref, type Ref } from 'vue'
+import { computed, ref, watch, type Ref } from 'vue'
 import { call, createResource, toast } from 'frappe-ui'
 import type { CellValue, DocumentData, DocRow } from '@/utils/documentTable'
+import { useSpace } from '@/stores/space'
 
 /**
  * A course document: read with `artifact`, written with `update_artifact` —
@@ -36,16 +37,37 @@ export interface BlockWrite {
 }
 
 export function useDocument(course: Ref<string>, artifact: Ref<string>) {
+	const spaces = useSpace()
 	const resource = createResource({
 		url: 'lms_frappe_app.api.student.artifact',
 		// The read is whitelisted for GET as well; it only reads.
 		method: 'GET',
-		makeParams: () => ({ course: course.value, artifact: artifact.value }),
-		auto: true,
+		makeParams: () => ({
+			course: course.value,
+			artifact: artifact.value,
+			space: spaces.paramFor(course.value),
+		}),
+		auto: false,
 	})
 
+	// Read once the space is known: the document is the chosen space's, and a
+	// read before that would show another space's and then swap
+	// (learning-services#347). Again on every other document the route opens.
+	watch(
+		[course, artifact],
+		() => {
+			spaces.load().then(() => resource.fetch())
+		},
+		{ immediate: true }
+	)
+
 	const answer = computed(
-		() => resource.data as ContractAnswer<DocumentData> | null
+		() => resource.data as ContractAnswer<DocumentData & { space?: string }> | null
+	)
+	// The space the read answered for. Writes, uploads and the download name it
+	// back, so the page never reads one space's document and writes another's.
+	const space = computed(() =>
+		answer.value?.ok ? answer.value.data?.space : undefined
 	)
 	const document = computed<DocumentData | null>(() =>
 		answer.value?.ok ? answer.value.data ?? null : null
@@ -65,6 +87,7 @@ export function useDocument(course: Ref<string>, artifact: Ref<string>) {
 				course: course.value,
 				artifact: artifact.value,
 				key,
+				space: space.value,
 				...change,
 			})) as ContractAnswer<WriteAnswer>
 			if (!result?.ok) {
@@ -119,6 +142,7 @@ export function useDocument(course: Ref<string>, artifact: Ref<string>) {
 		form.append('course', course.value)
 		form.append('artifact', artifact.value)
 		form.append('key', key)
+		if (space.value) form.append('space', space.value)
 		form.append('file', file)
 		saving.value++
 		try {
@@ -150,10 +174,13 @@ export function useDocument(course: Ref<string>, artifact: Ref<string>) {
 	const downloadUrl = (format: 'md' | 'xlsx') =>
 		`/api/method/lms_frappe_app.www.artifacts.download?course=${encodeURIComponent(
 			course.value
-		)}&artifact=${encodeURIComponent(artifact.value)}&format=${format}`
+		)}&artifact=${encodeURIComponent(artifact.value)}&format=${format}${
+			space.value ? `&space=${encodeURIComponent(space.value)}` : ''
+		}`
 
 	return {
 		resource,
+		space,
 		document,
 		refusal,
 		saving: computed(() => saving.value > 0),

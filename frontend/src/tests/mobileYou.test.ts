@@ -36,6 +36,7 @@ const {
 	toggleNotifications,
 	unreadCount,
 	userResource,
+	spaceStore,
 } = vi.hoisted(() => ({
 	// Plain boxes rather than vue refs: the mock factories run before any import
 	// has been evaluated, and every test mounts fresh after setting them, so
@@ -51,6 +52,13 @@ const {
 	toggleNotifications: vi.fn(),
 	unreadCount: { value: 0 },
 	userResource: { data: null as Record<string, unknown> | null },
+	spaceStore: {
+		hasOrganizations: false,
+		current: 'personal',
+		spaces: [] as { id: string; title: string | null }[],
+		load: vi.fn(),
+		choose: vi.fn(),
+	},
 }))
 
 vi.mock('frappe-ui', () => ({
@@ -86,6 +94,8 @@ vi.mock('@/stores/notifications', () => ({
 }))
 
 vi.mock('@/utils/theme', () => ({ setThemePreference, themePreference }))
+
+vi.mock('@/stores/space', () => ({ useSpace: () => spaceStore, PERSONAL: 'personal' }))
 
 import MobileYou from '@/pages/MobileYou.vue'
 
@@ -141,6 +151,9 @@ beforeEach(() => {
 	unreadCount.value = 0
 	sidebarLinks.value = [...SIDEBAR]
 	otherLinks.value = [...OTHER]
+	spaceStore.hasOrganizations = false
+	spaceStore.current = 'personal'
+	spaceStore.spaces = []
 	userResource.data = {
 		full_name: 'Raiza Safeel',
 		username: 'raiza',
@@ -287,5 +300,33 @@ describe('picking a row', () => {
 		expect(wrapper.find('[data-testid="colour-mode-sheet"]').exists()).toBe(
 			false
 		)
+	})
+})
+
+// Personal or an organization (learning-services#347): the phone has no sidebar,
+// so the choice lives on this page.
+describe('choosing a space', () => {
+	it('is absent without an organization', async () => {
+		const { wrapper } = await openYou()
+		expect(wrapper.find('[data-testid="you-spaces"]').exists()).toBe(false)
+	})
+
+	it('lists the spaces, checks the chosen one and switches on a pick', async () => {
+		spaceStore.hasOrganizations = true
+		spaceStore.current = 'org-1'
+		spaceStore.spaces = [
+			{ id: 'personal', title: null },
+			{ id: 'org-1', title: 'Кофейни' },
+		]
+		const { wrapper } = await openYou()
+
+		const group = wrapper.find('[data-testid="you-spaces"]')
+		expect(group.text()).toContain('Personal')
+		expect(group.text()).toContain('Кофейни')
+		expect(group.findAll('[data-testid="row-selected"]')).toHaveLength(1)
+		expect(spaceStore.load).toHaveBeenCalled()
+
+		await rowLabelled(wrapper, 'Personal')?.trigger('click')
+		expect(spaceStore.choose).toHaveBeenCalledWith('personal')
 	})
 })

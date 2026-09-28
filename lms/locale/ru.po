@@ -10540,3 +10540,33 @@ msgstr "Продолжить"
 #: frontend/src/components/Documents/ReportPanel.vue
 msgid "Open the register"
 msgstr "Открыть реестр"
+
+#: frontend/src/components/Sidebar/SpaceSwitcher.vue
+#: frontend/src/pages/MobileYou.vue
+msgid "Space"
+msgstr "Пространство"
+
+#: frontend/src/utils/space.ts
+msgid "Personal"
+msgstr "Личное"
+
+#: frontend/src/utils/space.ts
+msgid "Visible only to you"
+msgstr "Видите только вы"
+
+#: frontend/src/utils/space.ts
+msgid "Visible to the managers of {0}"
+msgstr "Видят руководители: {0}"
+
+#: frontend/src/utils/space.ts
+msgid "Visible to everyone in {0}"
+msgstr "Видят все участники: {0}"
+
+#: frontend/src/stores/space.ts
+msgid "Could not switch the space"
+msgstr "Не удалось переключить пространство"
+
+#: frontend/src/components/CourseCardOverlay.vue
+#: frontend/src/pages/Lesson.vue
+msgid "Could not enroll"
+msgstr "Не удалось записаться"

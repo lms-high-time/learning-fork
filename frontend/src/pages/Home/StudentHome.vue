@@ -73,11 +73,11 @@
 			</div>
 		</div>
 
-		<div v-if="myCourses.data?.length" class="mt-10">
+		<div v-if="homeCourses.length" class="mt-10">
 			<div class="flex items-center justify-between mb-3">
 				<h2 class="font-semibold text-md text-ink-gray-9">
 					{{
-						myCourses.data[0].membership
+						homeCourses[0].membership
 							? __('My Courses')
 							: __('Our Popular Courses')
 					}}
@@ -97,7 +97,7 @@
 			</div>
 			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 				<router-link
-					v-for="course in myCourses.data"
+					v-for="course in homeCourses"
 					:key="course.name"
 					:to="{ name: 'CourseDetail', params: { courseName: course.name } }"
 				>
@@ -141,7 +141,8 @@
 	</div>
 </template>
 <script setup lang="ts">
-import { inject } from 'vue'
+import { computed, inject, onMounted } from 'vue'
+import { useSpace } from '@/stores/space'
 import { createResource, Tooltip } from 'frappe-ui'
 import { formatTime } from '@/utils'
 import CourseCard from '@/components/CourseCard.vue'
@@ -158,8 +159,32 @@ const props = defineProps<{
 
 const myCourses = createResource({
 	url: 'lms.lms.api.get_my_courses',
-	auto: true,
+	auto: false,
 })
+
+// In an organization's space the home shows its courses, not the latest three
+// of everything (learning-services#347). `get_courses` rather than our own list:
+// it answers with the card fields CourseCard draws.
+const spaceCourses = createResource({
+	url: 'lms.lms.utils.get_courses',
+	auto: false,
+})
+
+const space = useSpace()
+
+onMounted(async () => {
+	await space.load()
+	if (!space.isOrganization) return myCourses.reload()
+	const ids = space.myCourseIds
+	// An empty `in` is invalid SQL; an organization with no courses yet simply
+	// has nothing to show.
+	if (!ids.length) return
+	spaceCourses.reload({ filters: { name: ['in', ids] }, limit_page_length: 3 })
+})
+
+const homeCourses = computed<any[]>(() =>
+	(space.isOrganization ? spaceCourses.data : myCourses.data) ?? []
+)
 
 const myBatches = createResource({
 	url: 'lms.lms.api.get_my_batches',

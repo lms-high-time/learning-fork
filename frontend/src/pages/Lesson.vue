@@ -455,6 +455,7 @@ import InlineLessonMenu from '@/components/Notes/InlineLessonMenu.vue'
 import { parseStoredEditorJs } from '@/utils/lessonForm'
 import { getLmsRoute } from '@/utils/basePath'
 import { provideStudentView } from '@/composables/useStudentView'
+import { useSpace } from '@/stores/space'
 
 const router = useRouter()
 const route = useRoute()
@@ -468,6 +469,7 @@ const { isStudentView, mockedUser } = provideStudentView(
 // Shadows every user.data read below and in every child, so the page renders
 // exactly what a student sees.
 const user = mockedUser
+const space = useSpace()
 const socket = inject('$socket')
 const allowDiscussions = ref(false)
 const editor = ref(null)
@@ -582,7 +584,7 @@ const lessonEntry = createResource({
 	// GET-only on the server, like the course map; the default POST gets 403.
 	method: 'GET',
 	makeParams() {
-		return { lesson: lesson.data?.name }
+		return { lesson: lesson.data?.name, space: space.paramFor(props.courseName) }
 	},
 	auto: false,
 })
@@ -608,7 +610,10 @@ watch(
 		entryState.value = 'loading'
 		// Wrapped: a fetch that hands back no promise must still settle the page
 		// on the material rather than leave it blank.
-		Promise.resolve(lessonEntry.fetch())
+		// The space first: the entry names the blocks of the chosen space's document.
+		space
+			.load()
+			.then(() => lessonEntry.fetch())
 			.then((answer) => {
 				// Same lesson still on screen? A quick next/prev can outrun the call.
 				if (lesson.data?.name !== data.name) return
@@ -1220,32 +1225,24 @@ const allowInstructorContent = () => {
 	return isAdmin.value
 }
 
-const enrollment = createResource({
-	url: 'frappe.client.insert',
-	makeParams() {
-		return {
-			doc: {
-				doctype: 'LMS Enrollment',
-				course: props.courseName,
-				member: user.data?.name,
-			},
+// Through our contract, not a bare LMS Enrollment: in an organization's space
+// the enrolment is its allocation (learning-services#347).
+const enrollStudent = async () => {
+	try {
+		await space.load()
+		const result = await call('lms_frappe_app.api.student.enroll', {
+			course: props.courseName,
+			space: space.enrolFor(props.courseName),
+		})
+		if (!result?.ok) {
+			toast.error(result?.error?.message ?? __('Could not enroll'))
+			return
 		}
-	},
-})
-
-const enrollStudent = () => {
-	enrollment.submit(
-		{},
-		{
-			onSuccess() {
-				window.location.reload()
-			},
-			onError(err) {
-				toast.error(__(err.messages?.[0] || err))
-				console.error(err)
-			},
-		}
-	)
+		window.location.reload()
+	} catch (err) {
+		toast.error(__(err.messages?.[0] || err))
+		console.error(err)
+	}
 }
 
 const toggleInlineMenu = async () => {

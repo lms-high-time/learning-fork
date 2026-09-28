@@ -120,6 +120,7 @@ import VideoPreview from '@/components/VideoPreview.vue'
 import { useTelemetry } from 'frappe-ui/frappe'
 import { openExternal } from '@/utils/openExternal'
 import { safeUrl } from '@/utils/safeUrl'
+import { useSpace } from '@/stores/space'
 import type {
 	CourseDetails,
 	CourseInstructorInfo,
@@ -129,6 +130,7 @@ import type {
 
 const router = useRouter()
 const user = inject<SessionUser>('$user')!
+const space = useSpace()
 const readOnlyMode = (window as Window & { read_only_mode?: boolean })
 	.read_only_mode
 const { capture } = useTelemetry()
@@ -155,7 +157,8 @@ const courseEntry = createResource({
 	// GET-only on the server, like the course map; the default POST gets 403.
 	method: 'GET',
 	makeParams() {
-		return { course: props.course.data?.name }
+		const course = props.course.data?.name
+		return { course, space: space.paramFor(course) }
 	},
 	auto: false,
 })
@@ -164,8 +167,13 @@ watch(
 	() => [props.course.data?.name, Boolean(props.course.data?.membership)],
 	([name, enrolled]) => {
 		// Rejections handled: a site without lms_frappe_app answers
-		// AppNotInstalledError, and the reader link stays.
-		if (name && enrolled) Promise.resolve(courseEntry.fetch()).catch(() => {})
+		// AppNotInstalledError, and the reader link stays. The space first: the
+		// entry names the blocks of the chosen space's document.
+		if (name && enrolled)
+			space
+				.load()
+				.then(() => courseEntry.fetch())
+				.catch(() => {})
 	},
 	{ immediate: true }
 )
@@ -191,14 +199,22 @@ function enrollStudent() {
 	}
 	const courseName = props.course.data?.name
 	if (!courseName) return
-	call('frappe.client.insert', {
-		doc: {
-			doctype: 'LMS Enrollment',
-			course: courseName,
-			member: user.data.name,
-		},
-	})
-		.then(() => {
+	// Through our contract, not a bare LMS Enrollment: in an organization's
+	// space the enrolment is its allocation and lands in its space and report
+	// (learning-services#347).
+	space
+		.load()
+		.then(() =>
+			call('lms_frappe_app.api.student.enroll', {
+				course: courseName,
+				space: space.enrolFor(courseName),
+			})
+		)
+		.then((result: { ok: boolean; error?: { message: string } }) => {
+			if (!result?.ok) {
+				toast.warning(result?.error?.message ?? __('Could not enroll'))
+				return
+			}
 			capture('enrolled_in_course', { course: courseName })
 			toast.success(__('You have been enrolled in this course'))
 			setTimeout(() => {
