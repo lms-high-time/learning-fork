@@ -33,6 +33,17 @@
 			</p>
 
 			<template v-else>
+				<p
+					v-if="invite.verified === false"
+					class="rounded bg-surface-amber-1 p-3 text-p-sm text-ink-amber-3"
+					data-testid="join-unverified"
+				>
+					{{
+						__(
+							'This organization was started by a user of the platform; we have not verified it. Join only if you know who invited you.'
+						)
+					}}
+				</p>
 				<ul
 					class="list-disc space-y-1 ps-5 text-p-base text-ink-gray-7"
 					data-testid="join-terms"
@@ -111,6 +122,7 @@ type Invite = {
 	organization: string
 	title: string
 	documents_visible_to: 'managers' | 'members' | 'only_me'
+	verified: boolean
 	member: boolean
 }
 

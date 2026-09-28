@@ -187,3 +187,31 @@ describe('joining by link', () => {
 		expect(wrapper.find('[data-testid="join-invalid"]').exists()).toBe(true)
 	})
 })
+
+describe('joining an organization nobody verified', () => {
+	it('warns before the button', async () => {
+		answers['lms_frappe_app.api.team.invite_info'] = {
+			ok: true,
+			data: {
+				organization: 'org-2',
+				title: 'Своя',
+				documents_visible_to: 'managers',
+				verified: false,
+				member: false,
+			},
+		}
+		const router = createRouter({
+			history: createMemoryHistory(),
+			routes: [
+				{ path: '/join/:token', name: 'JoinTeam', component: Join },
+				{ path: '/team', name: 'Team', component: { template: '<div />' } },
+			],
+		})
+		router.push('/join/k4')
+		await router.isReady()
+		const wrapper = mount(Join, { global: { plugins: [router], mocks } })
+		await flushPromises()
+
+		expect(wrapper.find('[data-testid="join-unverified"]').exists()).toBe(true)
+	})
+})

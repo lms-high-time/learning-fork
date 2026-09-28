@@ -56,8 +56,15 @@
 			</div>
 
 			<!-- A wrapper, not an attribute on the list: it renders a fragment. -->
-			<div v-if="space.hasOrganizations" data-testid="you-spaces">
-				<SettingsRowList :groups="spaceGroups" @action="space.choose" />
+			<div data-testid="you-spaces">
+				<SettingsRowList
+					:groups="
+						space.hasOrganizations
+							? spaceGroups
+							: spaceGroups.filter((group) => group.key === 'NewTeam')
+					"
+					@action="space.choose"
+				/>
 			</div>
 			<SettingsRowList :groups="groups" @action="activate" />
 		</template>
@@ -239,6 +246,18 @@ const spaceGroups = computed(() => [
 			action: item.id,
 			selected: item.id === space.current,
 		})),
+	},
+	// Anyone may start an organization (learning-services#366).
+	{
+		key: 'NewTeam',
+		rows: [
+			{
+				key: 'new-team',
+				label: 'Create an organization',
+				icon: 'lucide-building-2',
+				to: { name: 'NewTeam' },
+			},
+		],
 	},
 	// The organization's team lives in its space (learning-services#358).
 	...(space.isOrganization
