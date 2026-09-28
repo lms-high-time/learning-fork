@@ -10658,3 +10658,92 @@ msgstr "Не начат"
 #: frontend/src/pages/Documents/Documents.vue
 msgid "The course is behind you, and the company's document is not complete yet. Fill it in here, or ask your agent: “let's fill in the document for the company”."
 msgstr "Курс пройден, а документ компании ещё не собран. Заполните его здесь или попросите своего агента: «давай заполним документ для компании»."
+
+#: frontend/src/components/Team/TeamMembers.vue
+#: frontend/src/pages/Team/Join.vue
+msgid "Invite by link"
+msgstr "Пригласить по ссылке"
+
+#: frontend/src/components/Team/TeamMembers.vue
+#: frontend/src/pages/Team/Join.vue
+msgid "Anyone with the link joins as a member."
+msgstr "Кто откроет ссылку, вступит участником."
+
+#: frontend/src/components/Team/TeamMembers.vue
+#: frontend/src/pages/Team/Join.vue
+msgid "Revoke"
+msgstr "Отозвать"
+
+#: frontend/src/components/Team/TeamMembers.vue
+#: frontend/src/pages/Team/Join.vue
+msgid "Mark as left"
+msgstr "Отметить уход"
+
+#: frontend/src/components/Team/TeamMembers.vue
+#: frontend/src/pages/Team/Join.vue
+msgid "Link copied"
+msgstr "Ссылка скопирована"
+
+#: frontend/src/components/Team/TeamMembers.vue
+#: frontend/src/pages/Team/Join.vue
+msgid "Your documents for the courses of {0} will be visible to everyone in it."
+msgstr "Ваши документы по курсам «{0}» увидят все её участники."
+
+#: frontend/src/components/Team/TeamMembers.vue
+#: frontend/src/pages/Team/Join.vue
+msgid "Your documents for the courses of {0} will be visible to its managers."
+msgstr "Ваши документы по курсам «{0}» увидят её руководители."
+
+#: frontend/src/components/Team/TeamMembers.vue
+#: frontend/src/pages/Team/Join.vue
+msgid "This link is not valid: it was revoked or mistyped. Ask for a new one."
+msgstr "Ссылка недействительна: её отозвали или она набрана с ошибкой. Попросите новую."
+
+#: frontend/src/components/Team/TeamMembers.vue
+#: frontend/src/pages/Team/Join.vue
+msgid "Join {0}"
+msgstr "Вступить в «{0}»"
+
+#: frontend/src/components/Team/TeamMembers.vue
+#: frontend/src/pages/Team/Join.vue
+msgid "You are already in this organization."
+msgstr "Вы уже в этой организации."
+
+#: frontend/src/components/Team/TeamMembers.vue
+#: frontend/src/pages/Team/Join.vue
+msgid "Open the team"
+msgstr "Открыть команду"
+
+#: frontend/src/components/Team/TeamMembers.vue
+#: frontend/src/pages/Team/Join.vue
+msgid "Your courses and documents for yourself stay yours: the company does not see them."
+msgstr "Ваши курсы и документы для себя остаются вашими: компания их не видит."
+
+#: frontend/src/components/Team/TeamMembers.vue
+#: frontend/src/pages/Team/Join.vue
+msgid "The company will see which of its courses you have already passed."
+msgstr "Компания увидит, какие из её курсов вы уже прошли."
+
+#: frontend/src/components/Team/TeamMembers.vue
+#: frontend/src/pages/Team/Join.vue
+msgid "Nobody sees your conversations with the mentor."
+msgstr "Разговоры с наставником не видит никто."
+
+#: frontend/src/components/Team/TeamMembers.vue
+#: frontend/src/pages/Team/Join.vue
+msgid "Log in to join"
+msgstr "Войти, чтобы вступить"
+
+#: frontend/src/components/Team/TeamMembers.vue
+#: frontend/src/pages/Team/Join.vue
+msgid "Could not join"
+msgstr "Не удалось вступить"
+
+#: frontend/src/components/Team/TeamMembers.vue
+#: frontend/src/pages/Team/Join.vue
+msgid "Invitation"
+msgstr "Приглашение"
+
+#: frontend/src/components/Team/TeamMembers.vue
+msgid "Copy"
+msgstr "Скопировать"

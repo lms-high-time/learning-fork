@@ -56,27 +56,11 @@
 			</nav>
 
 			<!-- Members: the current ones, then who left and when. -->
-			<ul v-if="tab === 'members'" class="divide-y" data-testid="team-members">
-				<li
-					v-for="member in team.members"
-					:key="member.user"
-					class="flex items-center justify-between gap-3 py-2"
-				>
-					<span
-						class="text-p-base"
-						:class="member.left ? 'text-ink-gray-5' : 'text-ink-gray-9'"
-					>
-						{{ member.full_name || member.user }}
-					</span>
-					<span class="text-p-sm text-ink-gray-5">
-						{{
-							member.left
-								? __('Left {0}').format(member.left_on || '')
-								: roleLabel(member.role)
-						}}
-					</span>
-				</li>
-			</ul>
+			<TeamMembers
+				v-if="tab === 'members'"
+				:team="team"
+				@changed="reloadTeam"
+			/>
 
 			<!-- Documents: one block at a time, everyone's entry side by side. -->
 			<div v-else-if="tab === 'documents'" class="space-y-5">
@@ -241,13 +225,13 @@ import {
 } from 'frappe-ui'
 import MarkdownIt from 'markdown-it'
 import PageHeader from '@/components/Layouts/PageHeader.vue'
+import TeamMembers from '@/components/Team/TeamMembers.vue'
 import { useSpace } from '@/stores/space'
 import { safeUrl } from '@/utils/safeUrl'
 import {
 	firstDocument,
 	isEmpty,
 	percent,
-	roleLabel,
 	statusLabel,
 	type ReportRow,
 	type TeamData,
@@ -278,10 +262,11 @@ const report = createResource({
 })
 
 const loaded = ref(false)
+const reloadTeam = () =>
+	teamResource.reload({ organization: space.current }).catch(() => {})
 onMounted(async () => {
 	await space.load()
-	if (space.isOrganization)
-		await teamResource.reload({ organization: space.current }).catch(() => {})
+	if (space.isOrganization) await reloadTeam()
 	loaded.value = true
 })
 
