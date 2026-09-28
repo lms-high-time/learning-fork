@@ -18,3 +18,18 @@ export const documentReaders = (
 		return __('Visible to the managers of {0}').format(spaceLabel(space))
 	return __('Visible only to you')
 }
+
+// A course the learner has finished whose document in the organization's space
+// is still not whole: progress is one per person, documents are per space, so a
+// course passed on one's own before the company assigned it arrives here done —
+// with the company's document empty (learning-services#361).
+export const documentToFill = (
+	course: {
+		completion?: number
+		documents: { blocks_total: number; blocks_filled: number }[]
+	},
+	isOrganization: boolean
+): boolean =>
+	isOrganization &&
+	(course.completion ?? 0) >= 1 &&
+	course.documents.some((doc) => doc.blocks_filled < doc.blocks_total)

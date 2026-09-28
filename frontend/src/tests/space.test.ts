@@ -24,7 +24,7 @@ vi.mock('frappe-ui', () => ({
 }))
 
 import { PERSONAL, useSpace } from '@/stores/space'
-import { documentReaders, spaceLabel } from '@/utils/space'
+import { documentReaders, documentToFill, spaceLabel } from '@/utils/space'
 
 const SPACES = 'lms_frappe_app.api.student.my_spaces'
 const COURSES = 'lms_frappe_app.api.student.list_my_courses'
@@ -120,5 +120,22 @@ describe('space wording', () => {
 		expect(
 			documentReaders({ ...company, documents_visible_to: 'members' })
 		).toBe('Visible to everyone in Кофейни')
+	})
+})
+
+describe('a document to fill (learning-services#361)', () => {
+	const course = (completion: number, filled: number) => ({
+		completion,
+		documents: [{ blocks_total: 3, blocks_filled: filled }],
+	})
+
+	it('asks for the company document once the course is done', () => {
+		expect(documentToFill(course(1, 1), true)).toBe(true)
+	})
+
+	it('stays quiet mid-course, when the document is whole, or in the personal space', () => {
+		expect(documentToFill(course(0.5, 0), true)).toBe(false)
+		expect(documentToFill(course(1, 3), true)).toBe(false)
+		expect(documentToFill(course(1, 0), false)).toBe(false)
 	})
 })

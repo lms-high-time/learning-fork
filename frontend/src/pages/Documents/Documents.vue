@@ -34,6 +34,18 @@
 			</p>
 			<section v-for="course in shown" :key="course.id" class="space-y-2">
 				<h2 class="text-lg-semibold text-ink-gray-9">{{ course.title }}</h2>
+				<p
+					v-if="documentToFill(course, space.isOrganization)"
+					class="rounded bg-surface-gray-2 p-3 text-p-sm text-ink-gray-7"
+					data-testid="fill-document-hint"
+				>
+					{{
+						__(
+							"The course is behind you, and the company's document is not complete yet. Fill it in here, or ask your agent: “let's fill in the document for the company”."
+						)
+					}}
+					<a href="/agent" class="underline">{{ __('Connect your agent') }}</a>
+				</p>
 				<DocumentCard
 					v-for="doc in course.documents"
 					:key="doc.artifact"
@@ -58,6 +70,8 @@ import { computed, inject, onBeforeUnmount, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { createResource, LoadingIndicator, usePageMeta } from 'frappe-ui'
 import PageHeader from '@/components/Layouts/PageHeader.vue'
+import { useSpace } from '@/stores/space'
+import { documentToFill } from '@/utils/space'
 import DocumentCard from '@/components/Documents/DocumentCard.vue'
 import { sessionStore } from '@/stores/session'
 
@@ -71,10 +85,13 @@ interface DocumentSummary {
 interface CourseDocuments {
 	id: string
 	title: string
+	completion?: number
 	documents: DocumentSummary[]
 }
 
 const { isLoggedIn } = sessionStore()
+const space = useSpace()
+if (isLoggedIn) space.load()
 const route = useRoute()
 
 // The student's courses with their documents — the same summary the agent
