@@ -53,7 +53,7 @@
 		</div>
 
 		<div
-			v-if="!only && groups.length > 1"
+			v-if="!only && !columnKeys && groups.length > 1"
 			class="flex flex-wrap items-center gap-1.5"
 		>
 			<span class="text-p-xs text-ink-gray-5">{{ __('Columns') }}:</span>
@@ -152,7 +152,18 @@
 						:class="{ 'is-flagged': flags[0] && row[flags[0].key] === true }"
 						:data-row="row.id"
 					>
-						<th scope="row" class="sticky-id id-cell">{{ row.id }}</th>
+						<th scope="row" class="sticky-id id-cell">
+							<button
+								v-if="openable"
+								type="button"
+								class="font-medium text-ink-gray-7 underline decoration-outline-gray-3 underline-offset-2 hover:text-ink-gray-9"
+								:aria-label="__('Open {0}').format(row.id)"
+								@click="$emit('openRow', row.id)"
+							>
+								{{ row.id }}
+							</button>
+							<template v-else>{{ row.id }}</template>
+						</th>
 						<td
 							v-for="column in shownColumns"
 							:key="column.key"
@@ -326,6 +337,16 @@ const props = defineProps<{
 	only?: string
 	/** Search belongs to the whole register, not to a lesson's view. */
 	searchable?: boolean
+	/** A view of the register: only these columns, in the table's order. */
+	columnKeys?: string[] | null
+	/** A filter by value from outside: owner, status, stage. */
+	filterBy?: { column: string; value: string } | null
+	/** Sorted by this column, highest first, until a header is clicked. */
+	defaultSort?: string | null
+	/** The row's ID opens its card. */
+	openable?: boolean
+	/** The summary's «in work» turns the flag filter on from outside. */
+	flagOn?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -333,6 +354,8 @@ const emit = defineEmits<{
 	addRow: []
 	deleteRow: [id: string]
 	focusBlock: [block: string]
+	openRow: [id: string]
+	shown: [rows: DocRow[], columns: DocColumn[]]
 }>()
 
 const { isMobile } = useScreenSize()
@@ -387,6 +410,12 @@ const shownGroups = computed(() => {
 				: []),
 		]
 	}
+	if (props.columnKeys) {
+		const keys = new Set(props.columnKeys)
+		return groups.value
+			.map((g) => ({ ...g, columns: g.columns.filter((c) => keys.has(c.key)) }))
+			.filter((g) => g.columns.length)
+	}
 	return groups.value.filter((g) => !hidden.value.has(g.block))
 })
 const shownColumns = computed(() => shownGroups.value.flatMap((g) => g.columns))
@@ -410,9 +439,10 @@ const rows = computed(() =>
 			search: search.value,
 			flag: flagFilter.value,
 			missing: onlyMissing.value,
+			select: props.filterBy ?? null,
 		}),
-		sortKey.value,
-		sortDirection.value
+		sortKey.value ?? props.defaultSort ?? null,
+		sortKey.value ? sortDirection.value : 'desc'
 	)
 )
 
@@ -433,6 +463,19 @@ function rowSummary(row: DocRow): string {
 		.filter(Boolean)
 		.join(' · ')
 }
+
+watch(
+	() => props.flagOn,
+	(on) => {
+		if (on === undefined) return
+		flagFilter.value = on ? flags.value[0]?.key ?? null : null
+	}
+)
+
+// What is on screen — for a CSV of exactly this view.
+watch([rows, shownColumns], ([r, c]) => emit('shown', r, c), {
+	immediate: true,
+})
 
 const rowMissing = (row: DocRow): number =>
 	scope.value.columns.filter((c) => isMissing(c, row)).length

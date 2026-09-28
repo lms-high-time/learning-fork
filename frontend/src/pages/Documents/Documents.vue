@@ -34,37 +34,12 @@
 			</p>
 			<section v-for="course in shown" :key="course.id" class="space-y-2">
 				<h2 class="text-lg-semibold text-ink-gray-9">{{ course.title }}</h2>
-				<router-link
+				<DocumentCard
 					v-for="doc in course.documents"
 					:key="doc.artifact"
-					:to="{
-						name: 'Document',
-						params: { courseName: course.id, artifact: doc.artifact },
-					}"
-					class="flex items-center gap-4 rounded-lg border border-outline-gray-2 bg-surface-base p-4 hover:border-outline-gray-4"
-					:data-testid="`document-${doc.artifact}`"
-				>
-					<span
-						class="lucide-file-text size-5 shrink-0 text-ink-gray-5"
-						aria-hidden="true"
-					/>
-					<span class="min-w-0 flex-1">
-						<span class="block text-p-base font-medium text-ink-gray-9">{{
-							doc.title
-						}}</span>
-						<span class="mt-1 block text-p-sm text-ink-gray-6">
-							{{
-								__('Filled {0} of {1}').format(
-									String(doc.blocks_filled),
-									String(doc.blocks_total)
-								)
-							}}
-						</span>
-					</span>
-					<span class="w-24 shrink-0">
-						<ProgressBar :progress="percent(doc)" />
-					</span>
-				</router-link>
+					:course="course.id"
+					:doc="doc"
+				/>
 			</section>
 			<p v-if="filtered" class="text-p-sm">
 				<router-link
@@ -83,7 +58,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { createResource, LoadingIndicator, usePageMeta } from 'frappe-ui'
 import PageHeader from '@/components/Layouts/PageHeader.vue'
-import ProgressBar from '@/components/ProgressBar.vue'
+import DocumentCard from '@/components/Documents/DocumentCard.vue'
 import { sessionStore } from '@/stores/session'
 
 interface DocumentSummary {
@@ -132,11 +107,6 @@ const shown = computed(() =>
 		? courses.value.filter((c) => c.id === filtered.value)
 		: courses.value
 )
-
-const percent = (doc: DocumentSummary) =>
-	doc.blocks_total
-		? Math.round((doc.blocks_filled / doc.blocks_total) * 100)
-		: 0
 
 usePageMeta(() => ({ title: __('My documents') }))
 </script>

@@ -92,35 +92,18 @@
 			</aside>
 
 			<main class="min-w-0 flex-1">
-				<section v-if="active === REGISTER_VIEW && register" class="space-y-5">
-					<h1 class="text-2xl-semibold text-ink-gray-9">
-						{{ register.title || __('The whole register') }}
-					</h1>
-					<DocTableEditor
-						:table="register"
-						:tables="doc.tables"
-						:blocks="doc.blocks"
-						:canEditRows="true"
-						:searchable="true"
-						@setCell="(b, row, column, value) => api.setCell(b, register!.name, row, column, value)"
-						@addRow="api.addRow(register!.owner)"
-						@deleteRow="(id) => api.deleteRow(register!.owner, id)"
-						@focusBlock="open"
-					/>
-					<MatrixView
-						v-for="view in matrices"
-						:key="view.x + view.y"
-						:table="register"
-						:view="view"
-						class="max-w-xl"
-						@pickRow="pickRow"
-					/>
-				</section>
+				<RegisterPanel
+					v-if="active === REGISTER_VIEW && register"
+					:table="register"
+					:document="doc"
+					:api="api"
+				/>
 
 				<ReportPanel
 					v-else-if="active === REPORT_VIEW"
 					:document="doc"
 					:courseTitle="courseTitle"
+					:api="api"
 				/>
 
 				<LessonDocument
@@ -149,10 +132,9 @@ import {
 	usePageMeta,
 } from 'frappe-ui'
 import PageHeader from '@/components/Layouts/PageHeader.vue'
-import DocTableEditor from '@/components/Documents/DocTableEditor.vue'
 import DocumentOutline from '@/components/Documents/DocumentOutline.vue'
 import LessonDocument from '@/components/Documents/LessonDocument.vue'
-import MatrixView from '@/components/Documents/MatrixView.vue'
+import RegisterPanel from '@/components/Documents/RegisterPanel.vue'
 import ReportPanel from '@/components/Documents/ReportPanel.vue'
 import { useDocument } from '@/composables/useDocument'
 import { sessionStore } from '@/stores/session'
@@ -164,7 +146,6 @@ import {
 	REGISTER_VIEW,
 	REPORT_VIEW,
 	type DocBlock,
-	type MatrixView as Matrix,
 	type OutlineLesson,
 } from '@/utils/documentTable'
 
@@ -254,10 +235,6 @@ const specials = computed(() => [
 		  ]
 		: []),
 ])
-const matrices = computed(
-	() =>
-		(register.value?.views.filter((v) => v.type === 'matrix') as Matrix[]) ?? []
-)
 
 // What is open: the address, or where the document opens by itself — the
 // current lesson during the course, the register after it.
