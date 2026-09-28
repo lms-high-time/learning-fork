@@ -160,6 +160,13 @@ export const routes = [
 	},
 	// «Команда» (learning-services#358): the organization's members and the
 	// documents they build in its space, side by side.
+	// Starting one's own organization (learning-services#366). Before `/team`
+	// only for reading order: the paths do not overlap.
+	{
+		path: '/team/new',
+		name: 'NewTeam',
+		component: () => import('@/pages/Team/NewTeam.vue'),
+	},
 	{
 		path: '/team',
 		name: 'Team',

@@ -10771,3 +10771,31 @@ msgstr "Назначения"
 #: frontend/src/components/Team/TeamAssignments.vue
 msgid "Assign the course"
 msgstr "Назначить"
+
+#: frontend/src/pages/Team/NewTeam.vue
+msgid "Create an organization"
+msgstr "Создать организацию"
+
+#: frontend/src/pages/Team/NewTeam.vue
+msgid "This organization was started by a user of the platform; we have not verified it. Join only if you know who invited you."
+msgstr "Эту организацию создал пользователь платформы, мы её не проверяли. Вступайте, только если знаете, кто вас пригласил."
+
+#: frontend/src/pages/Team/NewTeam.vue
+msgid "You become its administrator and invite people by a link."
+msgstr "Вы станете её администратором и пригласите людей ссылкой."
+
+#: frontend/src/pages/Team/NewTeam.vue
+msgid "Its courses are the open catalog; a course of your own process is made with us."
+msgstr "Её курсы — открытый каталог; курс по вашему процессу собираем вместе с нами."
+
+#: frontend/src/pages/Team/NewTeam.vue
+msgid "Until we verify it, it holds a limited number of members."
+msgstr "Пока мы её не подтвердили, число участников ограничено."
+
+#: frontend/src/pages/Team/NewTeam.vue
+msgid "For example, the sales team"
+msgstr "Например, отдел продаж"
+
+#: frontend/src/pages/Team/NewTeam.vue
+msgid "Organization name"
+msgstr "Название"

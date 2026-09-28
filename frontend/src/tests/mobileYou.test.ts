@@ -309,9 +309,11 @@ describe('picking a row', () => {
 // Personal or an organization (learning-services#347): the phone has no sidebar,
 // so the choice lives on this page.
 describe('choosing a space', () => {
-	it('is absent without an organization', async () => {
+	it('offers only starting an organization without one', async () => {
 		const { wrapper } = await openYou()
-		expect(wrapper.find('[data-testid="you-spaces"]').exists()).toBe(false)
+		const group = wrapper.find('[data-testid="you-spaces"]')
+		expect(group.text()).toContain('Create an organization')
+		expect(group.findAll('[data-testid="row-selected"]')).toHaveLength(0)
 	})
 
 	it('lists the spaces, checks the chosen one and switches on a pick', async () => {
