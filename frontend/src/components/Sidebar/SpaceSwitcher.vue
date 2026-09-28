@@ -43,6 +43,7 @@
 // Absent for someone with no organization: there is nothing to switch between.
 import { computed, onMounted } from 'vue'
 import { Dropdown } from 'frappe-ui'
+import { useRouter } from 'vue-router'
 import { useSpace, type Space } from '@/stores/space'
 import { spaceLabel } from '@/utils/space'
 
@@ -56,11 +57,23 @@ const currentLabel = computed(() =>
 	space.currentSpace ? spaceLabel(space.currentSpace) : ''
 )
 
-const options = computed(() =>
-	space.spaces.map((item: Space) => ({
+const router = useRouter()
+
+const options = computed(() => [
+	...space.spaces.map((item: Space) => ({
 		label: spaceLabel(item),
 		icon: item.id === space.current ? 'check' : undefined,
 		onClick: () => space.choose(item.id),
-	}))
-)
+	})),
+	// The organization's team lives in its space (learning-services#358).
+	...(space.isOrganization
+		? [
+				{
+					label: __('Team'),
+					icon: 'users',
+					onClick: () => router.push({ name: 'Team' }),
+				},
+		  ]
+		: []),
+])
 </script>
