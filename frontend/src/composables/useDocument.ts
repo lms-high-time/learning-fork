@@ -1,4 +1,12 @@
-import { computed, ref, watch, type Ref } from 'vue'
+import {
+	computed,
+	inject,
+	onBeforeUnmount,
+	onMounted,
+	ref,
+	watch,
+	type Ref,
+} from 'vue'
 import { call, createResource, toast } from 'frappe-ui'
 import type { CellValue, DocumentData, DocRow } from '@/utils/documentTable'
 import { useSpace } from '@/stores/space'
@@ -25,6 +33,11 @@ interface WriteAnswer {
 	blocks_filled: number
 	created: string[]
 	empty_cells: { row?: string; column?: string; field?: string }[]
+}
+
+interface LiveEvent {
+	course: string
+	artifact: string
 }
 
 export interface BlockWrite {
@@ -77,6 +90,9 @@ export function useDocument(course: Ref<string>, artifact: Ref<string>) {
 		answer.value && !answer.value.ok ? answer.value.error ?? null : null
 	)
 	const saving = ref(0)
+	// When this page last wrote: the server's echo of its own write is not
+	// news, the page has read the document back already.
+	let lastOwnWrite = 0
 
 	async function write(
 		key: string,
@@ -104,6 +120,7 @@ export function useDocument(course: Ref<string>, artifact: Ref<string>) {
 			return null
 		} finally {
 			saving.value--
+			lastOwnWrite = Date.now()
 		}
 	}
 
@@ -169,6 +186,7 @@ export function useDocument(course: Ref<string>, artifact: Ref<string>) {
 			return true
 		} finally {
 			saving.value--
+			lastOwnWrite = Date.now()
 		}
 	}
 
@@ -179,10 +197,41 @@ export function useDocument(course: Ref<string>, artifact: Ref<string>) {
 			space.value ? `&space=${encodeURIComponent(space.value)}` : ''
 		}`
 
+	// Live: the agent writes to the document from the chat or over MCP, and
+	// the open page reads it again without a reload (learning-services#348).
+	// Back on the tab — in case the socket was down meanwhile.
+	const updatedAt = ref<Date | null>(null)
+	const OWN_ECHO_MS = 4000
+	const socket = inject<{
+		on: (event: string, handler: (data: LiveEvent) => void) => void
+		off: (event: string, handler: (data: LiveEvent) => void) => void
+	} | null>('$socket', null)
+
+	async function onUpdated(data: LiveEvent) {
+		if (data?.course !== course.value || data?.artifact !== artifact.value)
+			return
+		if (saving.value > 0 || Date.now() - lastOwnWrite < OWN_ECHO_MS) return
+		await resource.reload()
+		updatedAt.value = new Date()
+	}
+	function onVisible() {
+		if (window.document.visibilityState === 'visible' && saving.value === 0)
+			resource.reload()
+	}
+	onMounted(() => {
+		socket?.on('artifact_updated', onUpdated)
+		window.document.addEventListener('visibilitychange', onVisible)
+	})
+	onBeforeUnmount(() => {
+		socket?.off('artifact_updated', onUpdated)
+		window.document.removeEventListener('visibilitychange', onVisible)
+	})
+
 	return {
 		resource,
 		space,
 		document,
+		updatedAt,
 		refusal,
 		saving: computed(() => saving.value > 0),
 		write,

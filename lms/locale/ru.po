@@ -10570,3 +10570,7 @@ msgstr "Не удалось переключить пространство"
 #: frontend/src/pages/Lesson.vue
 msgid "Could not enroll"
 msgstr "Не удалось записаться"
+
+#: frontend/src/pages/Documents/Document.vue
+msgid "Updated at {0}"
+msgstr "Обновлено в {0}"

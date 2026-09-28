@@ -16,10 +16,14 @@
 					>{{ __('Saving…') }}</span
 				>
 				<span
-					v-else-if="savedAt"
+					v-else-if="stamp"
 					class="text-p-sm text-ink-gray-5"
 					data-testid="saved"
-					>{{ __('Saved at {0}').format(savedAt) }}</span
+					>{{
+						stamp.updated
+							? __('Updated at {0}').format(stamp.time)
+							: __('Saved at {0}').format(stamp.time)
+					}}</span
 				>
 				<Dropdown
 					v-if="doc"
@@ -324,13 +328,21 @@ function pickRow(id: string) {
 
 // «Сохранено в 14:32» once a write lands; the time and the version number live
 // in the menu, for support rather than for the student.
-const savedAt = ref('')
+// «Сохранено» after the student's own write, «Обновлено» after the agent's.
+const stamp = ref<{ time: string; updated: boolean } | null>(null)
 const clock = (d: Date) =>
 	d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
 watch(
 	() => api.saving.value,
 	(now, before) => {
-		if (before && !now) savedAt.value = clock(new Date())
+		if (before && !now)
+			stamp.value = { time: clock(new Date()), updated: false }
+	}
+)
+watch(
+	() => api.updatedAt.value,
+	(at) => {
+		if (at) stamp.value = { time: clock(at), updated: true }
 	}
 )
 const about = computed(() => {
