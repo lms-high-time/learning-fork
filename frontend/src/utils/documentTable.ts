@@ -55,6 +55,12 @@ export interface MatrixView {
 	highlight?: string
 }
 
+export interface ColumnsView {
+	type: 'columns'
+	title: string
+	columns: string[]
+}
+
 export interface ReportView {
 	type: 'report'
 	title?: string
@@ -69,7 +75,7 @@ export interface DocTable {
 	owner: string
 	prefix: string
 	columns: DocColumn[]
-	views: (MatrixView | ReportView)[]
+	views: (MatrixView | ReportView | ColumnsView)[]
 	rows: DocRow[]
 	/** The rows are still the author's untouched preset. */
 	preset?: boolean
@@ -464,3 +470,109 @@ export function viewColumns(table: DocTable, blockKey: string): DocColumn[] {
 	const ownInputs = own.filter((c) => c.type !== 'formula')
 	return [...(name ? [name] : []), ...formulas, ...ownFormulas, ...ownInputs]
 }
+
+// ---------------------------------------------------------------- the whole register
+
+/**
+ * Columns worth filtering by value: choices, references, and text with a
+ * handful of distinct values — the owner, not the event.
+ */
+export function filterableColumns(table: DocTable): DocColumn[] {
+	return table.columns.filter((c) => {
+		if (c.type === 'select' || c.type === 'ref') return true
+		if (c.type !== 'text') return false
+		const values = new Set(
+			table.rows.map((r) => r[c.key]).filter((v) => !isBlank(v))
+		)
+		return (
+			values.size >= 2 && values.size <= 10 && values.size < table.rows.length
+		)
+	})
+}
+
+/** The distinct values a column holds, for its filter. */
+export const columnValues = (table: DocTable, key: string): string[] =>
+	[
+		...new Set(
+			table.rows
+				.map((r) => r[key])
+				.filter((v) => !isBlank(v))
+				.map(String)
+		),
+	].sort((a, b) => a.localeCompare(b, 'ru'))
+
+/** The first numeric formula — the rank — sorts the register, highest first. */
+export const rankColumn = (table: DocTable): DocColumn | undefined =>
+	table.columns.find(
+		(c) =>
+			c.type === 'formula' &&
+			table.rows.some((r) => typeof r[c.key] === 'number')
+	)
+
+/**
+ * The dates the register lives by — next review, next report — from the
+ * fields of the blocks that add to it, with how far off they are.
+ */
+export function registerDates(
+	table: DocTable,
+	doc: DocumentData,
+	today: Date = new Date()
+): { key: string; title: string; value: string; days: number }[] {
+	const blocks = new Set(table.columns.map((c) => c.block))
+	const out = []
+	for (const block of doc.blocks) {
+		if (!blocks.has(block.key)) continue
+		for (const field of block.fields ?? []) {
+			const value = doc.fields[field.key]
+			if (field.type !== 'date' || typeof value !== 'string') continue
+			const day = new Date(`${value}T00:00:00`)
+			const start = new Date(
+				today.getFullYear(),
+				today.getMonth(),
+				today.getDate()
+			)
+			const days = Math.round((day.getTime() - start.getTime()) / 86400000)
+			out.push({ key: field.key, title: field.title, value, days })
+		}
+	}
+	return out
+}
+
+/** The rows and columns on screen as CSV, labels instead of scale numbers. */
+export function toCsv(
+	columns: DocColumn[],
+	rows: DocRow[],
+	tables: Record<string, DocTable>
+): string {
+	const quote = (text: string) =>
+		/[",;\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+	const cell = (column: DocColumn, row: DocRow) => {
+		const option = cellOptions(column, tables).find(
+			(o) => String(o.value) === String(row[column.key])
+		)
+		if (column.type === 'formula' && typeof row[column.key] === 'boolean')
+			return row[column.key] ? '✓' : ''
+		return option && column.type !== 'select'
+			? option.label
+			: formatCell(column, row[column.key])
+	}
+	const lines = [
+		['ID', ...columns.map((c) => c.title)],
+		...rows.map((r) => [r.id, ...columns.map((c) => cell(c, r))]),
+	]
+	return lines.map((l) => l.map((v) => quote(String(v))).join(',')).join('\n')
+}
+
+/** Tables whose rows point at this one: «Проблемы» at the register. */
+export const referringTables = (
+	table: DocTable,
+	tables: Record<string, DocTable>
+): { table: DocTable; column: DocColumn }[] =>
+	Object.values(tables).flatMap((other) =>
+		other.columns
+			.filter(
+				(c) =>
+					c.type === 'ref' && c.ref === table.name && c.block === other.owner
+			)
+			.map((column) => ({ table: other, column }))
+	)

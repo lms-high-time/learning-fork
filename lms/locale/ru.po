@@ -10448,3 +10448,55 @@ msgstr "Изменён {0} · версия {1}"
 #: frontend/src/components/Documents/StateBadge.vue
 msgid "Preset"
 msgstr "Заготовка"
+
+#: frontend/src/components/Documents/RegisterPanel.vue
+msgid "{0} rows"
+msgstr "Строк: {0}"
+
+#: frontend/src/components/Documents/RegisterPanel.vue
+msgid "overdue by {0} d"
+msgstr "просрочен на {0} дн."
+
+#: frontend/src/components/Documents/RegisterPanel.vue
+msgid "today"
+msgstr "сегодня"
+
+#: frontend/src/components/Documents/RegisterPanel.vue
+msgid "in {0} d"
+msgstr "через {0} дн."
+
+#: frontend/src/components/Documents/RegisterPanel.vue
+msgid "Show as"
+msgstr "Показать как"
+
+#: frontend/src/components/Documents/RegisterPanel.vue
+msgid "Table"
+msgstr "Таблица"
+
+#: frontend/src/components/Documents/RegisterPanel.vue
+msgid "Matrix"
+msgstr "Матрица"
+
+#: frontend/src/components/Documents/RegisterPanel.vue
+msgid "Filter by"
+msgstr "Фильтр"
+
+#: frontend/src/components/Documents/RegisterPanel.vue
+msgid "Filter by…"
+msgstr "Фильтр…"
+
+#: frontend/src/components/Documents/RegisterPanel.vue
+msgid "Any"
+msgstr "Любое"
+
+#: frontend/src/components/Documents/RegisterPanel.vue
+msgid "Download this view (CSV)"
+msgstr "Скачать этот вид (CSV)"
+
+#: frontend/src/components/Documents/RegisterPanel.vue
+msgid "Open {0}"
+msgstr "Открыть {0}"
+
+#: frontend/src/components/Documents/RegisterPanel.vue
+msgid "Add to «{0}»"
+msgstr "Добавить в «{0}»"
