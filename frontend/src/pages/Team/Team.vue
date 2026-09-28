@@ -63,108 +63,7 @@
 			/>
 			<TeamAssignments v-else-if="tab === 'assignments'" :team="team" />
 
-			<!-- Documents: one block at a time, everyone's entry side by side. -->
-			<div v-else-if="tab === 'documents'" class="space-y-5">
-				<p v-if="!documentChoices.length" class="text-p-base text-ink-gray-6">
-					{{ __('No course of this organization builds a document yet.') }}
-				</p>
-				<template v-else>
-					<div class="flex flex-wrap gap-2">
-						<FormControl
-							v-model="picked"
-							type="select"
-							:options="documentChoices"
-							:aria-label="__('Document')"
-						/>
-					</div>
-
-					<div
-						v-if="documents.loading && !compared"
-						class="flex justify-center p-6"
-					>
-						<LoadingIndicator class="size-5 text-ink-gray-5" />
-					</div>
-
-					<template v-else-if="compared">
-						<p
-							v-if="!compared.authors.length"
-							class="text-p-base text-ink-gray-6"
-						>
-							{{
-								__('Nobody has started this document in the organization yet.')
-							}}
-						</p>
-						<ul v-else class="flex flex-wrap gap-2" data-testid="team-authors">
-							<li
-								v-for="author in compared.authors"
-								:key="author.user"
-								class="rounded bg-surface-gray-2 px-2 py-1 text-p-sm text-ink-gray-7"
-							>
-								{{ author.full_name || author.user }} ·
-								{{ author.blocks_filled }}/{{ author.blocks_total }}
-								<span v-if="author.left" class="text-ink-gray-5">
-									· {{ __('left') }}</span
-								>
-							</li>
-						</ul>
-
-						<section
-							v-for="block in compared.blocks"
-							:key="block.key"
-							class="space-y-2"
-							:data-testid="`team-block-${block.key}`"
-						>
-							<h2 class="text-lg-semibold text-ink-gray-9">
-								{{ block.title }}
-							</h2>
-							<div class="grid gap-3 sm:grid-cols-2">
-								<article
-									v-for="entry in block.entries"
-									:key="entry.user"
-									class="rounded border p-3"
-									:class="isEmpty(entry) ? 'border-dashed' : ''"
-								>
-									<div class="mb-1 text-p-sm-medium text-ink-gray-7">
-										{{ entry.full_name || entry.user }}
-										<span v-if="entry.left" class="text-ink-gray-5">
-											· {{ __('left') }}</span
-										>
-									</div>
-									<p v-if="isEmpty(entry)" class="text-p-sm text-ink-gray-5">
-										{{ __('Not filled yet') }}
-									</p>
-									<template v-else>
-										<div
-											v-if="entry.content.trim()"
-											class="prose prose-sm max-w-none"
-											v-safe-html:rich="render(entry.content)"
-										/>
-										<div
-											v-if="entry.table_markdown"
-											class="prose prose-sm max-w-none overflow-x-auto"
-											v-safe-html:rich="render(entry.table_markdown)"
-										/>
-										<a
-											v-if="entry.file"
-											:href="safeUrl(entry.file.url)"
-											class="block text-p-sm underline"
-											v-external
-											>{{ entry.file.name }}</a
-										>
-										<a
-											v-if="entry.url"
-											:href="safeUrl(entry.url)"
-											class="block text-p-sm underline"
-											v-external
-											>{{ entry.url }}</a
-										>
-									</template>
-								</article>
-							</div>
-						</section>
-					</template>
-				</template>
-			</div>
+			<TeamDocuments v-else-if="tab === 'documents'" :team="team" />
 
 			<!-- Report: the manager's only; the same rows the agent gets. -->
 			<div
@@ -218,26 +117,17 @@
 // wrote in the organization's space, and — for a manager — how their study goes.
 // Access is the server's (`team_not_available`); the page only says so plainly.
 import { computed, onMounted, ref, watch } from 'vue'
-import {
-	createResource,
-	FormControl,
-	LoadingIndicator,
-	usePageMeta,
-} from 'frappe-ui'
-import MarkdownIt from 'markdown-it'
+import { createResource, LoadingIndicator, usePageMeta } from 'frappe-ui'
 import PageHeader from '@/components/Layouts/PageHeader.vue'
 import TeamMembers from '@/components/Team/TeamMembers.vue'
 import TeamAssignments from '@/components/Team/TeamAssignments.vue'
+import TeamDocuments from '@/components/Team/TeamDocuments.vue'
 import { useSpace } from '@/stores/space'
-import { safeUrl } from '@/utils/safeUrl'
 import {
-	firstDocument,
-	isEmpty,
 	percent,
 	statusLabel,
 	type ReportRow,
 	type TeamData,
-	type TeamDocuments,
 } from '@/utils/team'
 
 type Answer<T> = {
@@ -247,15 +137,9 @@ type Answer<T> = {
 }
 
 const space = useSpace()
-const markdown = new MarkdownIt({ html: false, linkify: true })
-const render = (text: string) => markdown.render(text)
 
 const teamResource = createResource({
 	url: 'lms_frappe_app.api.team.team',
-	auto: false,
-})
-const documents = createResource({
-	url: 'lms_frappe_app.api.team.team_documents',
 	auto: false,
 })
 const report = createResource({
@@ -295,31 +179,6 @@ const tabs = computed(() => [
 		? [{ value: 'report' as const, label: __('Progress report') }]
 		: []),
 ])
-
-// One picker for course and document together: "Course — Document".
-const documentChoices = computed(() =>
-	(team.value?.courses ?? []).flatMap((course) =>
-		course.documents.map((doc) => ({
-			label: `${course.title ?? course.id} — ${doc.title}`,
-			value: `${course.id}::${doc.artifact}`,
-		}))
-	)
-)
-const picked = ref('')
-watch(team, (value) => {
-	const first = value ? firstDocument(value.courses) : null
-	if (first && !picked.value)
-		picked.value = `${first.course}::${first.artifact}`
-})
-watch(picked, (value) => {
-	if (!value || !team.value) return
-	const [course, artifact] = value.split('::')
-	documents.reload({ organization: team.value.organization, course, artifact })
-})
-const compared = computed(() => {
-	const answer = documents.data as Answer<TeamDocuments> | null
-	return answer?.ok ? answer.data ?? null : null
-})
 
 watch(tab, (value) => {
 	if (value === 'report' && team.value && !report.data)

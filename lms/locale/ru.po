@@ -10799,3 +10799,31 @@ msgstr "Например, отдел продаж"
 #: frontend/src/pages/Team/NewTeam.vue
 msgid "Organization name"
 msgstr "Название"
+
+#: frontend/src/components/Team/TeamDocuments.vue
+msgid "{0} of {1} blocks"
+msgstr "заполнено {0} из {1}"
+
+#: frontend/src/components/Team/TeamDocuments.vue
+msgid "Hide blocks nobody has filled"
+msgstr "Скрыть блоки, которые никто не заполнил"
+
+#: frontend/src/components/Team/TeamDocuments.vue
+msgid "Blocks"
+msgstr "Блоки"
+
+#: frontend/src/components/Team/TeamDocuments.vue
+msgid "Nobody has filled any block yet."
+msgstr "Пока никто не заполнил ни одного блока."
+
+#: frontend/src/components/Team/TeamDocuments.vue
+msgid "The same for {0}"
+msgstr "Одинаково у: {0}"
+
+#: frontend/src/components/Team/TeamDocuments.vue
+msgid "Not filled yet: {0}"
+msgstr "Не заполнили: {0}"
+
+#: frontend/src/components/Team/TeamDocuments.vue
+msgid "Everyone"
+msgstr "Все участники"

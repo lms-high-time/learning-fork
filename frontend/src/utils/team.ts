@@ -141,3 +141,54 @@ export const audienceText = (
 	if (item.whole_team) return __('The whole team')
 	return item.members.map((user) => names[user] || user).join(', ')
 }
+
+// Who is still in the team comes first, who left after (learning-services#378).
+export const presentFirst = <T extends { left: boolean }>(items: T[]): T[] =>
+	[...items].sort((a, b) => Number(a.left) - Number(b.left))
+
+export const memberName = (item: {
+	user: string
+	full_name: string | null
+}): string => item.full_name || item.user
+
+export type BlockView = {
+	key: string
+	title: string
+	// What to draw: every filled entry, or one when they are all the same.
+	filled: TeamEntry[]
+	// Everyone whose entry is that same one — a preset nobody changed.
+	sameFor: TeamEntry[]
+	// Gaps go in a line of names, not in empty cards.
+	missing: TeamEntry[]
+}
+
+const sameText = (entry: TeamEntry): string =>
+	JSON.stringify([
+		entry.content.trim(),
+		entry.table_markdown ?? '',
+		entry.file?.url ?? '',
+		entry.url ?? '',
+	])
+
+// One block as the page draws it (learning-services#378): a block of thirteen
+// people repeated the same preset table thirteen times, and the gaps took as
+// much room as the answers.
+export const blockView = (
+	block: TeamDocuments['blocks'][number],
+	person: string | null
+): BlockView => {
+	const entries = presentFirst(
+		block.entries.filter((entry) => !person || entry.user === person)
+	)
+	const filled = entries.filter((entry) => !isEmpty(entry))
+	const same =
+		filled.length > 1 &&
+		filled.every((entry) => sameText(entry) === sameText(filled[0]))
+	return {
+		key: block.key,
+		title: block.title,
+		filled: same ? [filled[0]] : filled,
+		sameFor: same ? filled : [],
+		missing: entries.filter(isEmpty),
+	}
+}

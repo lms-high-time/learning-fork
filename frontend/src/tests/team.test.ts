@@ -41,7 +41,14 @@ const space = reactive({
 vi.mock('@/stores/space', () => ({ useSpace: () => space }))
 
 import Team from '@/pages/Team/Team.vue'
-import { firstDocument, isEmpty, percent, statusLabel } from '@/utils/team'
+import {
+	blockView,
+	firstDocument,
+	isEmpty,
+	percent,
+	presentFirst,
+	statusLabel,
+} from '@/utils/team'
 
 const TEAM = 'lms_frappe_app.api.team.team'
 const DOCUMENTS = 'lms_frappe_app.api.team.team_documents'
@@ -154,6 +161,44 @@ describe('team wording', () => {
 		expect(firstDocument([])).toBeNull()
 	})
 
+	it('puts who left after who is in the team', () => {
+		expect(
+			presentFirst([
+				{ user: 'g', left: true },
+				{ user: 'v', left: false },
+				{ user: 'b', left: false },
+			]).map((item) => item.user)
+		).toEqual(['v', 'b', 'g'])
+	})
+
+	it('draws a preset nobody changed once, and gaps as names', () => {
+		const preset = { ...entry('b@x', '| P1 | Редко |'), left: true }
+		const view = blockView(
+			{
+				key: 'scale',
+				title: 'Шкала',
+				entries: [preset, entry('a@x', '| P1 | Редко |'), entry('c@x', '')],
+			},
+			null
+		)
+		expect(view.filled).toHaveLength(1)
+		expect(view.sameFor.map((item) => item.user)).toEqual(['a@x', 'b@x'])
+		expect(view.missing.map((item) => item.user)).toEqual(['c@x'])
+	})
+
+	it('keeps different answers apart and narrows to one person', () => {
+		const block = {
+			key: 'goal',
+			title: 'Цель',
+			entries: [entry('a@x', 'Кофейня'), entry('b@x', 'Пекарня')],
+		}
+		expect(blockView(block, null).sameFor).toEqual([])
+		expect(blockView(block, null).filled).toHaveLength(2)
+		expect(blockView(block, 'b@x').filled.map((item) => item.user)).toEqual([
+			'b@x',
+		])
+	})
+
 	it('tells a gap from an entry', () => {
 		expect(isEmpty(entry('a', ''))).toBe(true)
 		expect(isEmpty(entry('a', 'текст'))).toBe(false)
@@ -191,6 +236,34 @@ describe('the team page', () => {
 		const block = wrapper.find('[data-testid="team-block-goal"]')
 		expect(block.text()).toContain('Открыть кофейню')
 		expect(block.text()).toContain('Not filled yet')
+	})
+
+	it('opens one person\'s document from the authors', async () => {
+		answers[TEAM] = team(false)
+		const wrapper = await open()
+		await wrapper.find('[data-testid="team-authors"] button').trigger('click')
+
+		const block = wrapper.find('[data-testid="team-block-goal"]')
+		expect(block.text()).toContain('Открыть кофейню')
+		expect(wrapper.find('[data-testid="team-missing"]').exists()).toBe(false)
+	})
+
+	it('hides blocks nobody has filled on request', async () => {
+		answers[TEAM] = team(false)
+		const documents = answers[DOCUMENTS] as {
+			data: { blocks: unknown[] }
+		}
+		documents.data.blocks.push({
+			key: 'risks',
+			title: 'Риски',
+			entries: [entry('a@x', ''), entry('b@x', '')],
+		})
+		const wrapper = await open()
+		expect(wrapper.find('[data-testid="team-block-risks"]').exists()).toBe(true)
+
+		await wrapper.find('[data-testid="team-only-filled"]').setValue(true)
+		expect(wrapper.find('[data-testid="team-block-risks"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="team-block-goal"]').exists()).toBe(true)
 	})
 
 	it('shows the report tab to a manager only', async () => {
