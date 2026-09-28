@@ -10654,3 +10654,7 @@ msgstr "Руководитель"
 #: frontend/src/utils/team.ts
 msgid "Not started"
 msgstr "Не начат"
+
+#: frontend/src/pages/Documents/Documents.vue
+msgid "The course is behind you, and the company's document is not complete yet. Fill it in here, or ask your agent: “let's fill in the document for the company”."
+msgstr "Курс пройден, а документ компании ещё не собран. Заполните его здесь или попросите своего агента: «давай заполним документ для компании»."
