@@ -10747,3 +10747,47 @@ msgstr "Приглашение"
 #: frontend/src/components/Team/TeamMembers.vue
 msgid "Copy"
 msgstr "Скопировать"
+
+#: frontend/src/components/Team/TeamAssignments.vue
+msgid "Assign a course"
+msgstr "Назначить курс"
+
+#: frontend/src/components/Team/TeamAssignments.vue
+msgid "The whole team, and whoever joins later"
+msgstr "Всей команде — и тем, кто вступит позже"
+
+#: frontend/src/components/Team/TeamAssignments.vue
+msgid "Mandatory"
+msgstr "Обязательный"
+
+#: frontend/src/components/Team/TeamAssignments.vue
+msgid "Everyone assigned gets an email, and a reminder a few days before the deadline if the course is not passed yet."
+msgstr "Каждому назначенному придёт письмо, а за несколько дней до срока — напоминание, если курс ещё не пройден."
+
+#: frontend/src/components/Team/TeamAssignments.vue
+msgid "Nothing is assigned yet."
+msgstr "Пока ничего не назначено."
+
+#: frontend/src/components/Team/TeamAssignments.vue
+msgid "Unassign"
+msgstr "Снять"
+
+#: frontend/src/components/Team/TeamAssignments.vue
+msgid "Assigned"
+msgstr "Назначено"
+
+#: frontend/src/components/Team/TeamAssignments.vue
+msgid "Taken by the member from the catalog"
+msgstr "Взял(а) сам(а) из каталога"
+
+#: frontend/src/components/Team/TeamAssignments.vue
+msgid "The whole team"
+msgstr "Вся команда"
+
+#: frontend/src/pages/Team/Team.vue
+msgid "Course assignments"
+msgstr "Назначения"
+
+#: frontend/src/components/Team/TeamAssignments.vue
+msgid "Assign the course"
+msgstr "Назначить"

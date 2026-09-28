@@ -120,3 +120,24 @@ export const readersBeforeJoining = (
 		: __(
 				'Your documents for the courses of {0} will be visible to its managers.'
 		  ).format(title)
+
+export type Allocation = {
+	id: string
+	course: string
+	title: string | null
+	whole_team: boolean
+	members: string[]
+	deadline: string | null
+	mandatory: boolean
+	chosen_by_member: boolean
+}
+
+// Who an assignment is for, in a line (learning-services#365).
+export const audienceText = (
+	item: Allocation,
+	names: Record<string, string>
+): string => {
+	if (item.chosen_by_member) return __('Taken by the member from the catalog')
+	if (item.whole_team) return __('The whole team')
+	return item.members.map((user) => names[user] || user).join(', ')
+}
