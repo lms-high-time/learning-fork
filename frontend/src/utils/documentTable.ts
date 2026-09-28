@@ -657,13 +657,23 @@ export interface CanvasLine {
 	flag?: boolean
 }
 
-/** A computed number reads rounded: 0.33, not 0.3333333. */
+// Four digits stay whole (1000, not 1 000), as Russian typesetting does.
+const NUMBER = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 })
+const SHORT = new Intl.NumberFormat('ru-RU', {
+	maximumFractionDigits: 2,
+	useGrouping: false,
+})
+
+/**
+ * A value to read, not to edit: numbers rounded and in groups of digits —
+ * 900 000, 33,33 — as a Russian reader counts money and people.
+ */
 export function formatValue(
 	field: { type: ColumnType },
 	value: CellValue
 ): string {
-	if (typeof value === 'number' && !Number.isInteger(value))
-		return String(Math.round(value * 100) / 100)
+	if (typeof value === 'number')
+		return (Math.abs(value) < 10000 ? SHORT : NUMBER).format(value)
 	return formatCell(field, value)
 }
 
@@ -768,7 +778,12 @@ function namedSummary(
 			(block.fields ?? []).find((f) => f.key === key) ??
 			(findColumn(key) ? undefined : others.find((f) => f.key === key))
 		if (field) {
-			const line = fieldLine(field, doc, false)
+			// A bare number says nothing in a cell: «10» of what.
+			const line = fieldLine(
+				field,
+				doc,
+				field.type === 'number' || field.type === 'formula'
+			)
 			if (line) parts.push(line)
 			continue
 		}

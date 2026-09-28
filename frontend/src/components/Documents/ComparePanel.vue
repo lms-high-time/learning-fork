@@ -6,7 +6,7 @@
 				{{ __('Before → after') }}
 			</h1>
 			<p class="text-p-base text-ink-gray-7">
-				{{ __('The first sketch from lesson 1 next to what it has become') }}
+				{{ __('The first sketch next to what it has become') }}
 			</p>
 		</header>
 
@@ -43,7 +43,7 @@ import {
 } from '@/utils/documentTable'
 
 // «Было → стало» (learning-services#351): the student's first sketch of each
-// cell from lesson 1 beside what the cell holds now. What the course taught
+// cell from its lesson beside what the cell holds now. What the course taught
 // shows as the distance between the two.
 
 defineProps<{

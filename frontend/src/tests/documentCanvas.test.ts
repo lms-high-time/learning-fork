@@ -10,6 +10,7 @@ import {
 	cellSummary,
 	CANVAS_VIEW,
 	defaultView,
+	formatValue,
 	outline,
 	plainExcerpt,
 	sketchValue,
@@ -209,10 +210,24 @@ describe('canvas helpers', () => {
 		])
 	})
 
+	it('titles a number the canvas names: a bare «10» says nothing', () => {
+		const named = { ...canvas, summary: { metrics: ['price', 'ratio'] } }
+		expect(cellSummary(blocks[4], doc, named)).toEqual([
+			{ text: '5000', label: 'Цена' },
+			{ text: '0,33', label: 'Доля' },
+		])
+	})
+
+	it('writes numbers in groups of digits, rounded', () => {
+		expect(formatValue({ type: 'number' }, 900000)).toBe('900\u00a0000')
+		expect(formatValue({ type: 'formula' }, 1000)).toBe('1000')
+		expect(formatValue({ type: 'formula' }, 33.333)).toBe('33,33')
+	})
+
 	it('summarises by default: fields, a yes/no formula as a flag, rows, text', () => {
 		expect(cellSummary(blocks[4], doc, canvas)).toEqual([
 			{ text: '5000', label: 'Цена' },
-			{ text: '0.33', label: 'Доля' },
+			{ text: '0,33', label: 'Доля' },
 			{ text: 'Сходится', flag: true },
 		])
 		expect(cellSummary(blocks[3], doc)).toEqual([
@@ -276,7 +291,7 @@ describe('BlockFields', () => {
 		const wrapper = fields({ price: 5000, ratio: 0.33333, fits: true })
 		expect(wrapper.findAll('input')).toHaveLength(1)
 		const ratio = wrapper.get('[data-testid="formula-ratio"]')
-		expect(ratio.text()).toBe('0.33')
+		expect(ratio.text()).toBe('0,33')
 		expect(wrapper.text()).toContain('Доля')
 		expect(wrapper.findAll('.is-missing')).toHaveLength(0)
 	})

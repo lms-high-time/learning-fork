@@ -229,8 +229,13 @@ const groups = computed(() =>
 )
 const ordered = computed(() => groups.value.flatMap((g) => g.blocks))
 
-const register = computed(
-	() => Object.values(doc.value?.tables ?? {}).find(isSharedTable) ?? null
+// A document with a canvas reads as the sheet, not as a register: its tables
+// are parts of cells, and «Реестр целиком» would name the risks course's
+// document in Lean Canvas (learning-services#351).
+const register = computed(() =>
+	doc.value?.canvas
+		? null
+		: Object.values(doc.value?.tables ?? {}).find(isSharedTable) ?? null
 )
 const hasReport = computed(() =>
 	Object.values(doc.value?.tables ?? {}).some((t) =>
