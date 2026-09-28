@@ -62,7 +62,8 @@ export function useDocument(course: Ref<string>, artifact: Ref<string>) {
 	)
 
 	const answer = computed(
-		() => resource.data as ContractAnswer<DocumentData & { space?: string }> | null
+		() =>
+			resource.data as ContractAnswer<DocumentData & { space?: string }> | null
 	)
 	// The space the read answered for. Writes, uploads and the download name it
 	// back, so the page never reads one space's document and writes another's.

@@ -1,5 +1,9 @@
 <template>
-	<div v-if="space.hasOrganizations" class="px-2 pb-1" data-testid="space-switcher">
+	<div
+		v-if="space.hasOrganizations"
+		class="px-2 pb-1"
+		data-testid="space-switcher"
+	>
 		<Dropdown :options="options">
 			<template v-slot="{ open }">
 				<button

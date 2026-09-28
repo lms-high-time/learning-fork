@@ -66,7 +66,9 @@ describe('the space store', () => {
 
 		expect(space.isOrganization).toBe(true)
 		expect(space.myCourseIds).toEqual(['assigned'])
-		expect(called.filter((c) => c.url === COURSES)[0].params).toEqual({ space: 'org-1' })
+		expect(called.filter((c) => c.url === COURSES)[0].params).toEqual({
+			space: 'org-1',
+		})
 		expect(space.paramFor('assigned')).toBe('org-1')
 		// Not the organization's: the server falls back to the personal space.
 		expect(space.paramFor('own')).toBeUndefined()
@@ -115,8 +117,8 @@ describe('space wording', () => {
 	it('says who else reads a document', () => {
 		expect(documentReaders(personal)).toBe('Visible only to you')
 		expect(documentReaders(company)).toBe('Visible to the managers of Кофейни')
-		expect(documentReaders({ ...company, documents_visible_to: 'members' })).toBe(
-			'Visible to everyone in Кофейни'
-		)
+		expect(
+			documentReaders({ ...company, documents_visible_to: 'members' })
+		).toBe('Visible to everyone in Кофейни')
 	})
 })

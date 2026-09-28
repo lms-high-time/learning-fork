@@ -6,7 +6,10 @@ import { reactive } from 'vue'
 // agent session on the next open lesson; without an answer from
 // lms_frappe_app the reader link stays.
 
-const entryResource = reactive<{ data: unknown; fetch: ReturnType<typeof vi.fn> }>({
+const entryResource = reactive<{
+	data: unknown
+	fetch: ReturnType<typeof vi.fn>
+}>({
 	data: null,
 	fetch: vi.fn(() => Promise.resolve()),
 })
@@ -38,7 +41,9 @@ vi.mock('frappe-ui', () => ({
 	Badge: { template: '<span><slot /></span>' },
 	Button: { template: '<button><slot name="prefix" /><slot /></button>' },
 }))
-vi.mock('frappe-ui/frappe', () => ({ useTelemetry: () => ({ capture: vi.fn() }) }))
+vi.mock('frappe-ui/frappe', () => ({
+	useTelemetry: () => ({ capture: vi.fn() }),
+}))
 vi.mock('vue-router', () => ({ useRouter: () => ({ push: vi.fn() }) }))
 
 import CourseCardOverlay from '@/components/CourseCardOverlay.vue'
@@ -97,7 +102,10 @@ describe('CourseCardOverlay for an enrolled student', () => {
 			data: {
 				title: 'Цели и источники',
 				completed: false,
-				study: { channel: 'web', url: 'https://lms.example.com/chat?lesson=l-2' },
+				study: {
+					channel: 'web',
+					url: 'https://lms.example.com/chat?lesson=l-2',
+				},
 			},
 		}
 		const wrapper = mountOverlay()

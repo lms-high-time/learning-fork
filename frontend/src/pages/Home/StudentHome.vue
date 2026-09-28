@@ -182,8 +182,8 @@ onMounted(async () => {
 	spaceCourses.reload({ filters: { name: ['in', ids] }, limit_page_length: 3 })
 })
 
-const homeCourses = computed<any[]>(() =>
-	(space.isOrganization ? spaceCourses.data : myCourses.data) ?? []
+const homeCourses = computed<any[]>(
+	() => (space.isOrganization ? spaceCourses.data : myCourses.data) ?? []
 )
 
 const myBatches = createResource({

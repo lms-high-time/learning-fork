@@ -95,7 +95,10 @@ vi.mock('@/stores/notifications', () => ({
 
 vi.mock('@/utils/theme', () => ({ setThemePreference, themePreference }))
 
-vi.mock('@/stores/space', () => ({ useSpace: () => spaceStore, PERSONAL: 'personal' }))
+vi.mock('@/stores/space', () => ({
+	useSpace: () => spaceStore,
+	PERSONAL: 'personal',
+}))
 
 import MobileYou from '@/pages/MobileYou.vue'
 

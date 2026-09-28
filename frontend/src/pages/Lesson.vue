@@ -584,7 +584,10 @@ const lessonEntry = createResource({
 	// GET-only on the server, like the course map; the default POST gets 403.
 	method: 'GET',
 	makeParams() {
-		return { lesson: lesson.data?.name, space: space.paramFor(props.courseName) }
+		return {
+			lesson: lesson.data?.name,
+			space: space.paramFor(props.courseName),
+		}
 	},
 	auto: false,
 })
