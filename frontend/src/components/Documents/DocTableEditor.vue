@@ -2,7 +2,7 @@
 	<div class="space-y-3" :data-testid="`doc-table-${table.name}`">
 		<!-- Toolbar: find, narrow down, pick which lessons' columns to see. -->
 		<div class="flex flex-wrap items-center gap-2">
-			<div class="relative w-full sm:w-56">
+			<div v-if="searchable" class="relative w-full sm:w-56">
 				<span
 					class="lucide-search pointer-events-none absolute start-2 top-1/2 size-4 -translate-y-1/2 text-ink-gray-5"
 				/>
@@ -14,8 +14,10 @@
 					:aria-label="__('Search the table')"
 				/>
 			</div>
+			<!-- A filter with nothing to show is noise: a zero hides the chip. -->
 			<button
 				v-for="flag in flags"
+				v-show="flagCount(flag.key) || flagFilter === flag.key"
 				:key="flag.key"
 				type="button"
 				class="chip"
@@ -29,13 +31,15 @@
 				}}</span>
 			</button>
 			<button
+				v-show="missingRows || onlyMissing"
 				type="button"
 				class="chip"
 				:class="{ 'is-on': onlyMissing }"
 				:aria-pressed="onlyMissing"
+				data-testid="show-unfilled"
 				@click="onlyMissing = !onlyMissing"
 			>
-				{{ __('Empty cells') }}
+				{{ __('Show unfilled') }}
 				<span class="tabular-nums text-ink-gray-5">{{ missingRows }}</span>
 			</button>
 			<div class="ms-auto text-p-sm text-ink-gray-5 tabular-nums">
@@ -82,11 +86,13 @@
 							:colspan="group.columns.length"
 						>
 							<a
+								v-if="group.block && !only"
 								:href="safeUrl(`#block-${group.block}`)"
 								class="hover:underline"
 								@click.prevent="$emit('focusBlock', group.block)"
 								>{{ group.title }}</a
 							>
+							<span v-else>{{ group.title }}</span>
 						</th>
 						<th v-if="canEditRows" class="group-head" rowspan="2">
 							<span class="sr-only">{{ __('Row actions') }}</span>
@@ -210,14 +216,23 @@
 					<span class="shrink-0 text-p-sm font-medium text-ink-gray-5">{{
 						row.id
 					}}</span>
-					<span class="min-w-0 flex-1 text-p-sm text-ink-gray-9">
-						{{ (title && row[title.key]) || __('Untitled') }}
+					<span class="min-w-0 flex-1">
+						<span class="block text-p-sm text-ink-gray-9">
+							{{ (title && row[title.key]) || __('Untitled') }}
+						</span>
+						<!-- A lesson's view shows its values without opening the row. -->
+						<span
+							v-if="only && rowSummary(row)"
+							class="mt-1 block text-p-sm text-ink-gray-6"
+							data-testid="row-summary"
+							>{{ rowSummary(row) }}</span
+						>
 					</span>
 					<span
 						v-if="rowMissing(row)"
-						class="shrink-0 rounded bg-surface-red-1 px-1.5 text-p-xs text-ink-red-5"
-						>{{ rowMissing(row) }}</span
-					>
+						class="size-2 shrink-0 translate-y-1.5 rounded-full bg-surface-amber-5"
+						:aria-label="__('Not filled')"
+					/>
 				</summary>
 				<div class="space-y-4 border-t border-outline-gray-1 p-3">
 					<section v-for="group in shownGroups" :key="group.block">
@@ -280,12 +295,16 @@ import TableCell from '@/components/Documents/TableCell.vue'
 import { safeUrl } from '@/utils/safeUrl'
 import { useScreenSize } from '@/utils/composables'
 import {
+	cellOptions,
 	columnGroups,
 	filterRows,
 	flagColumns,
+	formatCell,
+	isBlank,
 	isMissing,
 	sortRows,
 	titleColumn,
+	viewColumns,
 	type CellValue,
 	type DocBlock,
 	type DocColumn,
@@ -305,6 +324,8 @@ const props = defineProps<{
 	 * fills its own columns in place instead of in the whole register.
 	 */
 	only?: string
+	/** Search belongs to the whole register, not to a lesson's view. */
+	searchable?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -350,19 +371,21 @@ const flags = computed(() => flagColumns(props.table))
 
 const shownGroups = computed(() => {
 	if (props.only) {
-		const own = groups.value.filter((g) => g.block === props.only)
-		const name = title.value
-		// A row needs its name beside the block's columns.
-		return name && name.block !== props.only
-			? [
-					{
-						block: name.block,
-						title: props.table.title || name.title,
-						columns: [name],
-					},
-					...own,
-			  ]
-			: own
+		// A lesson's view: the row's name and the numbers it is read by, then
+		// the lesson's own columns (learning-services#342).
+		const columns = viewColumns(props.table, props.only)
+		const own = columns.filter((c) => c.block === props.only)
+		const lead = columns.filter((c) => c.block !== props.only)
+		const blockTitle =
+			props.blocks.find((b) => b.key === props.only)?.title ?? props.only
+		return [
+			...(lead.length
+				? [{ block: '', title: props.table.title || '', columns: lead }]
+				: []),
+			...(own.length
+				? [{ block: props.only, title: blockTitle, columns: own }]
+				: []),
+		]
 	}
 	return groups.value.filter((g) => !hidden.value.has(g.block))
 })
@@ -392,6 +415,24 @@ const rows = computed(() =>
 		sortDirection.value
 	)
 )
+
+// «4 — Вероятно · 5 — Критическое · 20»: a row's lesson values in a line.
+function rowSummary(row: DocRow): string {
+	return shownColumns.value
+		.filter((c) => c.key !== title.value?.key && !isBlank(row[c.key]))
+		.map((c) => {
+			const option = cellOptions(c, props.tables).find(
+				(o) => String(o.value) === String(row[c.key])
+			)
+			if (c.type === 'formula' && typeof row[c.key] === 'boolean')
+				return row[c.key] ? c.title : ''
+			return option && c.type !== 'select'
+				? option.label
+				: formatCell(c, row[c.key])
+		})
+		.filter(Boolean)
+		.join(' · ')
+}
 
 const rowMissing = (row: DocRow): number =>
 	scope.value.columns.filter((c) => isMissing(c, row)).length

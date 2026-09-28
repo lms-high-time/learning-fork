@@ -164,7 +164,9 @@ export const routes = [
 		redirect: { name: 'Documents' },
 	},
 	{
-		path: '/documents/:courseName/:artifact',
+		// `view` — a lesson's document by its key, `register` or `report`;
+		// without it the document opens where the student is (#342).
+		path: '/documents/:courseName/:artifact/:view?',
 		name: 'Document',
 		component: () => import('@/pages/Documents/Document.vue'),
 		props: true,
@@ -172,10 +174,14 @@ export const routes = [
 	},
 	{
 		path: '/documents/:courseName/:artifact/report/:table',
-		name: 'DocumentReport',
-		component: () => import('@/pages/Documents/DocumentReport.vue'),
-		props: true,
-		meta: { sidebarLink: 'artifacts-sidebar' },
+		redirect: (to) => ({
+			name: 'Document',
+			params: {
+				courseName: to.params.courseName,
+				artifact: to.params.artifact,
+				view: 'report',
+			},
+		}),
 	},
 	{
 		path: '/statistics',

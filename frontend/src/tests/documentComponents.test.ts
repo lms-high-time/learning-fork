@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import type { DocumentData, DocTable } from '@/utils/documentTable'
 
-// learning-services#331: the cell, the table and a block as the student meets
-// them on «Мои документы».
+// learning-services#331, #342: the cell, the table and a lesson's document as
+// the student meets them on «Мои документы».
 
 vi.mock('frappe-ui', () => ({
 	Button: {
@@ -12,6 +12,11 @@ vi.mock('frappe-ui', () => ({
 		template:
 			'<button type="button" :aria-label="label" @click="$emit(\'click\')"><slot name="prefix" /><slot name="icon" />{{ label }}</button>',
 	},
+	Dropdown: {
+		props: ['options'],
+		template:
+			'<div data-testid="menu"><button v-for="o in options" type="button" @click="o.onClick()">{{ o.label }}</button></div>',
+	},
 }))
 vi.mock('@/utils/composables', () => ({
 	useScreenSize: () => ({ isMobile: false }),
@@ -19,7 +24,7 @@ vi.mock('@/utils/composables', () => ({
 
 import TableCell from '@/components/Documents/TableCell.vue'
 import DocTableEditor from '@/components/Documents/DocTableEditor.vue'
-import DocumentBlock from '@/components/Documents/DocumentBlock.vue'
+import LessonDocument from '@/components/Documents/LessonDocument.vue'
 
 const __ = (message: string) => {
 	if (!/{\d+}/.test(message)) return message
@@ -206,7 +211,7 @@ describe('DocTableEditor', () => {
 	})
 })
 
-describe('DocumentBlock', () => {
+describe('LessonDocument', () => {
 	const document = {
 		course: 'c1',
 		artifact: 'risk_register',
@@ -224,44 +229,75 @@ describe('DocumentBlock', () => {
 		write: vi.fn(),
 		upload: vi.fn(),
 	}
+	const page = (block: typeof blocks[number], extra = {}) =>
+		mount(LessonDocument, {
+			props: { block, document, api: api as never, ...extra },
+			global,
+		})
 
-	it('draws the whole table at the block that starts its rows, the own columns elsewhere', () => {
-		const owner = mount(DocumentBlock, {
-			props: { block: blocks[0], document, api: api as never },
-			global,
-		})
-		const other = mount(DocumentBlock, {
-			props: { block: blocks[1], document, api: api as never },
-			global,
-		})
-		const heads = (w: typeof owner) =>
-			w.findAll('thead tr:first-child th').map((th) => th.text())
-		expect(heads(owner)).toEqual(['ID', 'Риски', 'Оценка', 'Row actions'])
-		// Another lesson's block: the row's name and its own columns, no rows to add.
-		expect(heads(other)).toEqual(['ID', 'Реестр', 'Оценка'])
-		expect(other.find('button[aria-label="Delete R1"]').exists()).toBe(false)
-		expect(other.text()).toContain('The whole table «Реестр»')
-		// Its empty cells are its own: R2 lacks a probability, nothing else counts.
-		expect(other.findAll('button.chip')[1].text()).toContain('1')
+	it('shows a lesson its own view of the register: name, computed columns, its columns', () => {
+		const heads = (w: ReturnType<typeof page>) =>
+			w
+				.findAll('thead tr:nth-child(2) th')
+				.map((th) => th.text().replace('*', '').trim())
+		// «Риски» starts the rows: it adds and deletes them.
+		const risks = page(blocks[0])
+		expect(heads(risks)).toEqual(['Событие'])
+		expect(risks.find('button[aria-label="Delete R1"]').exists()).toBe(true)
+		// «Оценка» fills its columns in place and adds no rows.
+		const assessment = page(blocks[1])
+		expect(heads(assessment)).toEqual([
+			'Событие',
+			'Ранг',
+			'В работе',
+			'Вероятность',
+		])
+		expect(assessment.find('button[aria-label="Delete R1"]').exists()).toBe(
+			false
+		)
+	})
+
+	it('has no search in a lesson view and hides a filter with nothing to show', () => {
+		const wrapper = page(blocks[1])
+		expect(wrapper.find('input[type="search"]').exists()).toBe(false)
+		expect(wrapper.get('[data-testid="show-unfilled"]').text()).toContain('1')
 	})
 
 	it('saves a field through the document api', async () => {
-		const wrapper = mount(DocumentBlock, {
-			props: { block: blocks[1], document, api: api as never },
-			global,
-		})
-		const input = wrapper.get('[data-testid="block-fields"] input')
+		const input = page(blocks[1]).get('[data-testid="block-fields"] input')
 		await input.setValue('12')
 		await input.trigger('change')
 		await flushPromises()
 		expect(api.setField).toHaveBeenCalledWith('assessment', 'threshold', '12')
 	})
 
-	it('says what the block lacks', () => {
-		const wrapper = mount(DocumentBlock, {
-			props: { block: blocks[1], document, api: api as never },
-			global,
+	it('says where it stands in one word, and «done» in a sentence', () => {
+		const wrapper = page({
+			...blocks[1],
+			hint: 'Длинно для агента. Готов, когда у каждого риска три оценки.',
 		})
-		expect(wrapper.get('[data-testid="block-status"]').text()).toBe('1 to fill')
+		expect(wrapper.get('[data-testid="block-status"]').text()).toBe('Started')
+		expect(wrapper.get('[data-testid="ready-line"]').text()).toBe(
+			'Готов, когда у каждого риска три оценки.'
+		)
+	})
+
+	it('keeps the note in the menu, not as a button of every document', () => {
+		const wrapper = page(blocks[1])
+		expect(wrapper.find('button[aria-label="Add a note"]').exists()).toBe(false)
+		expect(wrapper.get('[data-testid="menu"]').text()).toContain('Add a note')
+	})
+
+	it('leads to the documents before and after it', () => {
+		const wrapper = page(blocks[1], {
+			prev: { title: 'Риски', to: '/p' },
+			next: { title: 'Ответы', to: '/n' },
+		})
+		expect(wrapper.get('[data-testid="prev-document"]').text()).toContain(
+			'Риски'
+		)
+		expect(wrapper.get('[data-testid="next-document"]').text()).toContain(
+			'Ответы'
+		)
 	})
 })
