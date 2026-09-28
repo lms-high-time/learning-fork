@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { createResource, LoadingIndicator, usePageMeta } from 'frappe-ui'
 import PageHeader from '@/components/Layouts/PageHeader.vue'
@@ -107,6 +107,16 @@ const shown = computed(() =>
 		? courses.value.filter((c) => c.id === filtered.value)
 		: courses.value
 )
+
+// The agent writes to a document meanwhile: the counts follow without a
+// reload (learning-services#348).
+const socket = inject<{
+	on: (event: string, handler: () => void) => void
+	off: (event: string, handler: () => void) => void
+} | null>('$socket', null)
+const refresh = () => progress.reload()
+onMounted(() => socket?.on('artifact_updated', refresh))
+onBeforeUnmount(() => socket?.off('artifact_updated', refresh))
 
 usePageMeta(() => ({ title: __('My documents') }))
 </script>
