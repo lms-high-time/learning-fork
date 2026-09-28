@@ -165,6 +165,12 @@ export const routes = [
 		name: 'Team',
 		component: () => import('@/pages/Team/Team.vue'),
 	},
+	// Joining an organization by its link (learning-services#363).
+	{
+		path: '/join/:token',
+		name: 'JoinTeam',
+		component: () => import('@/pages/Team/Join.vue'),
+	},
 	{
 		path: '/artifacts-sidebar',
 		name: 'artifacts-sidebar',

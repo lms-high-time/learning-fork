@@ -20,6 +20,8 @@ export type TeamData = {
 	organization: string
 	title: string | null
 	can_see_report: boolean
+	can_manage: boolean
+	can_change_roles: boolean
 	members: TeamMember[]
 	courses: TeamCourse[]
 }
@@ -95,3 +97,26 @@ export const isEmpty = (entry: TeamEntry): boolean =>
 	!entry.file &&
 	!entry.url &&
 	!entry.table_markdown
+
+export const ROLE_VALUES = ['Member', 'Manager', 'Org Admin'] as const
+
+// Who marks whom as gone (learning-services#363): a manager marks members, an
+// administrator anyone. The server enforces it; the page offers no button
+// the server would refuse.
+export const canRemove = (member: TeamMember, team: TeamData): boolean =>
+	!member.left &&
+	team.can_manage &&
+	(member.role === 'Member' || team.can_change_roles)
+
+// What the invitation page tells before joining: who will read the documents.
+export const readersBeforeJoining = (
+	visibleTo: 'managers' | 'members' | 'only_me',
+	title: string
+): string =>
+	visibleTo === 'members'
+		? __(
+				'Your documents for the courses of {0} will be visible to everyone in it.'
+		  ).format(title)
+		: __(
+				'Your documents for the courses of {0} will be visible to its managers.'
+		  ).format(title)
