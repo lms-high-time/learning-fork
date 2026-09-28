@@ -45,8 +45,25 @@ vi.mock('frappe-ui', () => ({
 	usePageMeta: vi.fn(),
 }))
 
-const session = { isLoggedIn: true }
+const session = { isLoggedIn: true, user: 'admin@x' }
 vi.mock('@/stores/session', () => ({ sessionStore: () => session }))
+
+// A question before an irreversible action: the test answers it (#379).
+const dialogs: {
+	title: string
+	actions: { onClick: (a: { close: () => void }) => Promise<void> }[]
+}[] = []
+vi.mock('@/utils/dialogs', () => ({
+	createDialog: (options: (typeof dialogs)[number]) => dialogs.push(options),
+}))
+const confirm = async () => {
+	await dialogs[dialogs.length - 1].actions[0].onClick({ close: () => {} })
+	await flushPromises()
+}
+
+vi.mock('@/components/Layouts/PageHeader.vue', () => ({
+	default: { template: '<header />' },
+}))
 
 import TeamMembers from '@/components/Team/TeamMembers.vue'
 import Join from '@/pages/Team/Join.vue'
@@ -87,6 +104,7 @@ const team = (canManage: boolean, canChangeRoles: boolean): TeamData => ({
 
 beforeEach(() => {
 	calls.length = 0
+	dialogs.length = 0
 	for (const key of Object.keys(answers)) delete answers[key]
 	session.isLoggedIn = true
 })
@@ -119,12 +137,33 @@ describe('the members list', () => {
 		expect(wrapper.find('[data-testid="team-invite"]').exists()).toBe(true)
 		await wrapper.find('[data-testid="remove-m@x"]').trigger('click')
 		await flushPromises()
+		expect(calls).toEqual([])
+		expect(dialogs[0].title).toContain('as left?')
 
+		await confirm()
 		expect(calls[0]).toEqual({
 			method: 'lms_frappe_app.api.team.remove_member',
 			params: { organization: 'org-1', user: 'm@x' },
 		})
 		expect(wrapper.find('[data-testid="remove-b@x"]').exists()).toBe(false)
+	})
+
+	it('names leaving for the viewer\'s own row and counts the places', async () => {
+		const data = team(true, true)
+		data.members[0].user = 'admin@x'
+		data.member_limit = 25
+		const wrapper = mount(TeamMembers, {
+			props: { team: data },
+			global: { mocks },
+		})
+		await flushPromises()
+
+		expect(wrapper.find('[data-testid="remove-admin@x"]').text()).toBe(
+			'Leave the organization'
+		)
+		expect(wrapper.find('[data-testid="team-limit"]').text()).toContain(
+			'Members: 2 of'
+		)
 	})
 
 	it('offers nothing to manage to a member', async () => {
@@ -146,6 +185,7 @@ describe('joining by link', () => {
 			routes: [
 				{ path: '/join/:token', name: 'JoinTeam', component: Join },
 				{ path: '/team', name: 'Team', component: { template: '<div />' } },
+				{ path: '/', name: 'Home', component: { template: '<div />' } },
 			],
 		})
 		router.push('/join/k3')
@@ -185,6 +225,7 @@ describe('joining by link', () => {
 		const wrapper = await open()
 
 		expect(wrapper.find('[data-testid="join-invalid"]').exists()).toBe(true)
+		expect(wrapper.find('[data-testid="join-invalid"] a').exists()).toBe(true)
 	})
 })
 

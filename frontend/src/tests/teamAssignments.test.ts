@@ -35,6 +35,13 @@ vi.mock('frappe-ui', () => ({
 	},
 }))
 
+const dialogs: {
+	actions: { onClick: (a: { close: () => void }) => Promise<void> }[]
+}[] = []
+vi.mock('@/utils/dialogs', () => ({
+	createDialog: (options: (typeof dialogs)[number]) => dialogs.push(options),
+}))
+
 import TeamAssignments from '@/components/Team/TeamAssignments.vue'
 import { audienceText, type Allocation, type TeamData } from '@/utils/team'
 
@@ -75,7 +82,13 @@ const allocation = (overrides: Partial<Allocation> = {}): Allocation => ({
 	...overrides,
 })
 
-const mocks = { __: (t: string) => t }
+const mocks = {
+	__: (t: string) =>
+		Object.assign(new String(t), {
+			format: (...args: unknown[]) =>
+				t.replace(/\{(\d)\}/g, (_, i) => String(args[Number(i)])),
+		}),
+}
 
 beforeEach(() => {
 	calls.length = 0
@@ -139,7 +152,7 @@ describe('the assignments tab', () => {
 		expect(wrapper.text()).not.toContain('Борис')
 	})
 
-	it('unassigns', async () => {
+	it('unassigns after asking', async () => {
 		const wrapper = mount(TeamAssignments, {
 			props: { team },
 			global: { mocks },
@@ -148,7 +161,10 @@ describe('the assignments tab', () => {
 
 		await wrapper.find('[data-testid="unassign-ca-1"]').trigger('click')
 		await flushPromises()
+		expect(calls).toEqual([])
 
+		await dialogs[dialogs.length - 1].actions[0].onClick({ close: () => {} })
+		await flushPromises()
 		expect(calls[0]).toEqual({
 			method: 'lms_frappe_app.api.team.remove_allocation',
 			params: { allocation: 'ca-1' },

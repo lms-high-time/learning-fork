@@ -1,20 +1,23 @@
 <template>
+	<PageHeader :breadcrumbs="[{ label: __('Invitation') }]" />
 	<div class="mx-auto max-w-xl space-y-4 p-5">
 		<div v-if="info.loading && !invite" class="flex justify-center p-10">
 			<LoadingIndicator class="size-5 text-ink-gray-5" />
 		</div>
 
-		<p
-			v-else-if="!invite"
-			class="text-p-base text-ink-gray-6"
-			data-testid="join-invalid"
-		>
-			{{
-				__(
-					'This link is not valid: it was revoked or mistyped. Ask for a new one.'
-				)
-			}}
-		</p>
+		<div v-else-if="!invite" class="space-y-3" data-testid="join-invalid">
+			<p class="text-p-base text-ink-gray-6">
+				{{
+					__(
+						'This link is not valid: it was revoked or mistyped. Ask for a new one.'
+					)
+				}}
+			</p>
+			<!-- Not a dead end (#379). -->
+			<router-link :to="{ name: 'Home' }" class="text-p-base underline">
+				{{ __('Go to the home page') }}
+			</router-link>
+		</div>
 
 		<template v-else>
 			<h1 class="text-xl-semibold text-ink-gray-9">
@@ -109,6 +112,7 @@ import {
 	toast,
 	usePageMeta,
 } from 'frappe-ui'
+import PageHeader from '@/components/Layouts/PageHeader.vue'
 import { sessionStore } from '@/stores/session'
 import { readersBeforeJoining } from '@/utils/team'
 import { safeUrl } from '@/utils/safeUrl'

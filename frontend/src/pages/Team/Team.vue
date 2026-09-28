@@ -35,15 +35,25 @@
 		<div v-else-if="team" class="mx-auto max-w-5xl space-y-5 p-4 sm:p-5">
 			<h1 class="text-xl-semibold text-ink-gray-9">{{ team.title }}</h1>
 
-			<nav class="flex gap-1 border-b" role="tablist">
+			<!-- Tabs scroll sideways on a phone instead of wrapping and clipping;
+			     arrows move between them, as a tab list does (#379). -->
+			<nav
+				class="-mx-4 flex gap-1 overflow-x-auto overflow-y-hidden border-b px-4 sm:mx-0 sm:px-0"
+				role="tablist"
+				:aria-label="__('Team')"
+				@keydown="moveTab"
+			>
 				<button
 					v-for="item in tabs"
+					:id="`team-tab-${item.value}`"
 					:key="item.value"
 					type="button"
 					role="tab"
 					:aria-selected="tab === item.value"
+					:aria-controls="`team-panel-${item.value}`"
+					:tabindex="tab === item.value ? 0 : -1"
 					:data-testid="`team-tab-${item.value}`"
-					class="-mb-px border-b-2 px-3 py-2 text-p-base"
+					class="shrink-0 whitespace-nowrap border-b-2 px-3 py-2 text-p-base"
 					:class="
 						tab === item.value
 							? 'border-ink-gray-9 text-ink-gray-9'
@@ -55,58 +65,21 @@
 				</button>
 			</nav>
 
-			<!-- Members: the current ones, then who left and when. -->
-			<TeamMembers
-				v-if="tab === 'members'"
-				:team="team"
-				@changed="reloadTeam"
-			/>
-			<TeamAssignments v-else-if="tab === 'assignments'" :team="team" />
-
-			<TeamDocuments v-else-if="tab === 'documents'" :team="team" />
-
-			<!-- Report: the manager's only; the same rows the agent gets. -->
 			<div
-				v-else-if="tab === 'report'"
-				class="overflow-x-auto"
-				data-testid="team-report"
+				:id="`team-panel-${tab}`"
+				role="tabpanel"
+				:aria-labelledby="`team-tab-${tab}`"
 			>
-				<table class="w-full text-p-sm">
-					<thead class="text-ink-gray-5">
-						<tr class="border-b text-start">
-							<th class="py-2 text-start font-normal">{{ __('Member') }}</th>
-							<th class="py-2 text-start font-normal">{{ __('Course') }}</th>
-							<th class="py-2 text-start font-normal">{{ __('Status') }}</th>
-							<th class="py-2 text-start font-normal">{{ __('Progress') }}</th>
-							<th class="py-2 text-start font-normal">{{ __('Deadline') }}</th>
-							<th class="py-2 text-start font-normal">{{ __('Document') }}</th>
-							<th class="py-2 text-start font-normal">
-								{{ __('Passed first try') }}
-							</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr
-							v-for="row in reportRows"
-							:key="`${row.user}-${row.course}`"
-							class="border-b"
-						>
-							<td class="py-2">{{ row.full_name || row.user }}</td>
-							<td class="py-2">{{ courseTitle(row.course) }}</td>
-							<td class="py-2">{{ statusLabel(row.status) }}</td>
-							<td class="py-2">{{ percent(row.progress) }}</td>
-							<td class="py-2" :class="row.overdue ? 'text-ink-red-4' : ''">
-								{{ row.deadline || '—' }}
-							</td>
-							<td class="py-2">
-								{{ row.document.blocks_filled }}/{{ row.document.blocks_total }}
-							</td>
-							<td class="py-2">
-								{{ row.quiz.first_try }}/{{ row.quiz.passed }}
-							</td>
-						</tr>
-					</tbody>
-				</table>
+				<!-- Members: the current ones, then who left and when. -->
+				<TeamMembers
+					v-if="tab === 'members'"
+					:team="team"
+					@changed="reloadTeam"
+				/>
+				<TeamAssignments v-else-if="tab === 'assignments'" :team="team" />
+				<TeamDocuments v-else-if="tab === 'documents'" :team="team" />
+				<!-- Report: the manager's only; the same rows the agent gets. -->
+				<TeamReport v-else-if="tab === 'report'" :team="team" />
 			</div>
 		</div>
 	</div>
@@ -116,19 +89,15 @@
 // The organization's team (learning-services#358): who is in it, what they
 // wrote in the organization's space, and — for a manager — how their study goes.
 // Access is the server's (`team_not_available`); the page only says so plainly.
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { createResource, LoadingIndicator, usePageMeta } from 'frappe-ui'
 import PageHeader from '@/components/Layouts/PageHeader.vue'
 import TeamMembers from '@/components/Team/TeamMembers.vue'
 import TeamAssignments from '@/components/Team/TeamAssignments.vue'
 import TeamDocuments from '@/components/Team/TeamDocuments.vue'
+import TeamReport from '@/components/Team/TeamReport.vue'
 import { useSpace } from '@/stores/space'
-import {
-	percent,
-	statusLabel,
-	type ReportRow,
-	type TeamData,
-} from '@/utils/team'
+import type { TeamData } from '@/utils/team'
 
 type Answer<T> = {
 	ok: boolean
@@ -140,10 +109,6 @@ const space = useSpace()
 
 const teamResource = createResource({
 	url: 'lms_frappe_app.api.team.team',
-	auto: false,
-})
-const report = createResource({
-	url: 'lms_frappe_app.api.manager.org_report',
 	auto: false,
 })
 
@@ -180,16 +145,23 @@ const tabs = computed(() => [
 		: []),
 ])
 
-watch(tab, (value) => {
-	if (value === 'report' && team.value && !report.data)
-		report.reload({ organization: team.value.organization })
-})
-const reportRows = computed<ReportRow[]>(() => {
-	const answer = report.data as Answer<{ rows: ReportRow[] }> | null
-	return answer?.ok ? answer.data?.rows ?? [] : []
-})
-const courseTitle = (course: string) =>
-	team.value?.courses.find((item) => item.id === course)?.title ?? course
+// Left and right arrows, Home and End move between tabs (WAI-ARIA tabs).
+const moveTab = async (event: KeyboardEvent) => {
+	const values = tabs.value.map((item) => item.value)
+	const at = values.indexOf(tab.value)
+	const moves: Record<string, number> = {
+		ArrowRight: (at + 1) % values.length,
+		ArrowLeft: (at - 1 + values.length) % values.length,
+		Home: 0,
+		End: values.length - 1,
+	}
+	const next = moves[event.key]
+	if (next === undefined) return
+	event.preventDefault()
+	tab.value = values[next]
+	await nextTick()
+	document.getElementById(`team-tab-${tab.value}`)?.focus()
+}
 
 usePageMeta(() => ({ title: team.value?.title || __('Team') }))
 </script>

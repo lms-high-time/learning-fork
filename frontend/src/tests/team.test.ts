@@ -39,11 +39,21 @@ const space = reactive({
 	load: vi.fn(() => Promise.resolve()),
 })
 vi.mock('@/stores/space', () => ({ useSpace: () => space }))
+vi.mock('@/stores/session', () => ({
+	sessionStore: () => ({ user: 'a@x' }),
+}))
+vi.mock('@/utils/dialogs', () => ({ createDialog: vi.fn() }))
 
 import Team from '@/pages/Team/Team.vue'
 import {
 	blockView,
+	daysUntil,
+	deadlineText,
 	firstDocument,
+	formatDay,
+	reportSummary,
+	sortReport,
+	type ReportRow,
 	isEmpty,
 	percent,
 	presentFirst,
@@ -202,6 +212,64 @@ describe('team wording', () => {
 	it('tells a gap from an entry', () => {
 		expect(isEmpty(entry('a', ''))).toBe(true)
 		expect(isEmpty(entry('a', 'текст'))).toBe(false)
+	})
+})
+
+const row = (over: Partial<ReportRow>): ReportRow => ({
+	user: 'u@x',
+	full_name: null,
+	course: 'c-1',
+	status: 'in_progress',
+	progress: 0.5,
+	deadline: null,
+	overdue: false,
+	document: { blocks_total: 13, blocks_filled: 3 },
+	quiz: { passed: 2, first_try: 1 },
+	...over,
+})
+
+describe('the report in days, sorted, summed', () => {
+	const today = new Date(2026, 8, 29, 23, 30)
+
+	it('counts calendar days whatever the hour', () => {
+		expect(daysUntil('2026-10-04', today)).toBe(5)
+		expect(daysUntil('2026-09-27', today)).toBe(-2)
+	})
+
+	it('says the deadline as days left or overdue', () => {
+		expect(deadlineText(row({ deadline: '2026-09-29' }), today)).toBe(
+			'Due today'
+		)
+		expect(deadlineText(row({ deadline: null }), today)).toBe('—')
+		expect(formatDay('2026-10-04', 'ru')).toBe('4 октября 2026 г.')
+	})
+
+	it('sorts by a column, empty deadlines last', () => {
+		const rows = [
+			row({ user: 'a', deadline: null }),
+			row({ user: 'b', deadline: '2026-10-10' }),
+			row({ user: 'c', deadline: '2026-10-01' }),
+		]
+		expect(sortReport(rows, 'deadline', true).map((r) => r.user)).toEqual([
+			'c',
+			'b',
+			'a',
+		])
+		expect(sortReport(rows, 'deadline', false).map((r) => r.user)).toEqual([
+			'b',
+			'c',
+			'a',
+		])
+	})
+
+	it('sums what is done and what is overdue', () => {
+		expect(
+			reportSummary([
+				row({ status: 'completed' }),
+				row({ overdue: true }),
+				row({}),
+			])
+		).toEqual({ total: 3, completed: 1, overdue: 1 })
 	})
 })
 

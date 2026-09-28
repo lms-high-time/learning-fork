@@ -35,6 +35,11 @@
 				</button>
 			</template>
 		</Dropdown>
+		<!-- The team is a page of the organization's space: a sidebar item
+		     while that space is open, not only an entry in this menu (#379). -->
+		<nav v-if="space.isOrganization" class="mt-1" data-testid="team-link">
+			<SidebarLink :link="teamLink" :isCollapsed="isCollapsed" />
+		</nav>
 	</div>
 </template>
 
@@ -44,6 +49,7 @@
 import { computed, onMounted } from 'vue'
 import { Dropdown } from 'frappe-ui'
 import { useRouter } from 'vue-router'
+import SidebarLink from '@/components/Sidebar/SidebarLink.vue'
 import { useSpace, type Space } from '@/stores/space'
 import { spaceLabel } from '@/utils/space'
 
@@ -65,15 +71,18 @@ const options = computed(() => [
 		icon: item.id === space.current ? 'check' : undefined,
 		onClick: () => space.choose(item.id),
 	})),
-	// The organization's team lives in its space (learning-services#358).
-	...(space.isOrganization
-		? [
-				{
-					label: __('Team'),
-					icon: 'users',
-					onClick: () => router.push({ name: 'Team' }),
-				},
-		  ]
-		: []),
+	// Another workspace starts where one switches between them (#379).
+	{
+		label: __('Create an organization'),
+		icon: 'plus',
+		onClick: () => router.push({ name: 'NewTeam' }),
+	},
 ])
+
+const teamLink = {
+	label: 'Team',
+	icon: 'Users',
+	to: 'Team',
+	activeFor: ['Team'],
+}
 </script>
