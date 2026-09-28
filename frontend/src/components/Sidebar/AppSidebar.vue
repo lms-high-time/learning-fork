@@ -8,6 +8,10 @@
 			:class="sidebarStore.isSidebarCollapsed ? 'items-center' : ''"
 		>
 			<UserDropdown :isCollapsed="sidebarStore.isSidebarCollapsed" />
+			<SpaceSwitcher
+				v-if="userResource.data"
+				:isCollapsed="sidebarStore.isSidebarCollapsed"
+			/>
 			<div class="flex flex-col" v-if="sidebarSettings.data">
 				<div v-for="link in sidebarLinks" class="mx-2 my-2.5">
 					<div
@@ -300,6 +304,7 @@ import {
 } from 'frappe-ui/frappe'
 import InviteIcon from '@/components/Icons/InviteIcon.vue'
 import UserDropdown from '@/components/Sidebar/UserDropdown.vue'
+import SpaceSwitcher from '@/components/Sidebar/SpaceSwitcher.vue'
 import CollapseSidebar from '@/components/Icons/CollapseSidebar.vue'
 import SidebarLink from '@/components/Sidebar/SidebarLink.vue'
 import CommandPalette from '@/components/CommandPalette/CommandPalette.vue'

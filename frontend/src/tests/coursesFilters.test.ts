@@ -71,6 +71,23 @@ const { coursesResource, requests, mobile, countAborts } = vi.hoisted(() => ({
 	countAborts: { value: 0 },
 }))
 
+// The learner's space (learning-services#347): a personal space with no
+// organization, which is Learning as it was before spaces.
+vi.mock('@/stores/space', () => ({
+	PERSONAL: 'personal',
+	useSpace: () => ({
+		load: () => Promise.resolve(),
+		paramFor: () => 'personal',
+		enrolFor: () => 'personal',
+		isOrganization: false,
+		hasOrganizations: false,
+		current: 'personal',
+		spaces: [],
+		myCourseIds: [],
+		catalogIds: [],
+	}),
+}))
+
 vi.mock('frappe-ui', () => ({
 	call: vi.fn(() => Promise.resolve(0)),
 	usePageMeta: vi.fn(),

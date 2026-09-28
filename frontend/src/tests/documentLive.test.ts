@@ -7,6 +7,15 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 const reload = vi.fn()
 const call = vi.fn()
+// The learner's space (learning-services#347): a personal space, loaded.
+vi.mock('@/stores/space', () => ({
+	PERSONAL: 'personal',
+	useSpace: () => ({
+		load: () => Promise.resolve(),
+		paramFor: () => 'personal',
+	}),
+}))
+
 vi.mock('frappe-ui', () => ({
 	call: (...args: unknown[]) => call(...args),
 	toast: { error: vi.fn() },

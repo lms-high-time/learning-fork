@@ -1,0 +1,20 @@
+import { PERSONAL, type Space } from '@/stores/space'
+
+// How a space and its readers are named to the learner. Kept apart from the
+// store so the wording is tested without a server.
+
+export const spaceLabel = (space: Pick<Space, 'id' | 'title'>): string =>
+	space.id === PERSONAL ? __('Personal') : space.title || space.id
+
+// Who, besides the author, reads a document of this space. The learner is told
+// on the document itself — the transparency the owner asked for when managers
+// were given the documents (learning-services#132).
+export const documentReaders = (
+	space: Pick<Space, 'id' | 'title' | 'documents_visible_to'>
+): string => {
+	if (space.documents_visible_to === 'members')
+		return __('Visible to everyone in {0}').format(spaceLabel(space))
+	if (space.documents_visible_to === 'managers')
+		return __('Visible to the managers of {0}').format(spaceLabel(space))
+	return __('Visible only to you')
+}

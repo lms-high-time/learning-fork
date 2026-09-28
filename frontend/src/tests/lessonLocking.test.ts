@@ -20,6 +20,23 @@ const stub = vi.hoisted(() => (name: string) => ({
 	template: `<div><slot /></div>`,
 }))
 
+// The learner's space (learning-services#347): a personal space with no
+// organization, which is Learning as it was before spaces.
+vi.mock('@/stores/space', () => ({
+	PERSONAL: 'personal',
+	useSpace: () => ({
+		load: () => Promise.resolve(),
+		paramFor: () => 'personal',
+		enrolFor: () => 'personal',
+		isOrganization: false,
+		hasOrganizations: false,
+		current: 'personal',
+		spaces: [],
+		myCourseIds: [],
+		catalogIds: [],
+	}),
+}))
+
 vi.mock('vue-router', () => ({
 	useRoute: () => ({
 		params: { chapterNumber: '1', lessonNumber: '1' },

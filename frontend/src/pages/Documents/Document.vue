@@ -3,6 +3,13 @@
 		<PageHeader :breadcrumbs="breadcrumbs">
 			<template #actions>
 				<span
+					v-if="readers"
+					class="flex items-center gap-1 text-p-sm text-ink-gray-5"
+					data-testid="document-readers"
+				>
+					<span class="lucide-eye size-3.5 shrink-0" />{{ readers }}
+				</span>
+				<span
 					v-if="api.saving.value"
 					class="text-p-sm text-ink-gray-5"
 					data-testid="saving"
@@ -141,6 +148,8 @@ import LessonDocument from '@/components/Documents/LessonDocument.vue'
 import RegisterPanel from '@/components/Documents/RegisterPanel.vue'
 import ReportPanel from '@/components/Documents/ReportPanel.vue'
 import { useDocument } from '@/composables/useDocument'
+import { useSpace, type Space } from '@/stores/space'
+import { documentReaders } from '@/utils/space'
 import { sessionStore } from '@/stores/session'
 import { useScreenSize } from '@/utils/composables'
 import {
@@ -169,12 +178,25 @@ const router = useRouter()
 const api = useDocument(toRef(props, 'courseName'), toRef(props, 'artifact'))
 const doc = api.document
 
+// Who else reads this document — said on the document itself, so a learner in
+// a company knows before writing (learning-services#132, #347). Only to someone
+// with an organization: a private learner has nothing to be told.
+const spaces = useSpace()
+const readers = computed(() => {
+	if (!spaces.hasOrganizations || !api.space.value) return ''
+	const space = spaces.spaces.find((item: Space) => item.id === api.space.value)
+	return space ? documentReaders(space) : ''
+})
+
 // The course's lessons — titles, numbers, the one the student is on — come
 // from the course map; the document names lessons by id only.
 const courseMap = createResource({
 	url: 'lms_frappe_app.api.public.course_map',
 	method: 'GET',
-	makeParams: () => ({ course: props.courseName }),
+	makeParams: () => ({
+		course: props.courseName,
+		space: api.space.value ?? spaces.paramFor(props.courseName),
+	}),
 	auto: true,
 })
 type MapLesson = { id: string; number: number; title: string }

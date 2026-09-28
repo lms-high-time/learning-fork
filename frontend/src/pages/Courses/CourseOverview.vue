@@ -192,6 +192,7 @@ import CourseInstructors from '@/components/CourseInstructors.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import RelatedCourses from '@/components/RelatedCourses.vue'
 import type { ProgramData } from '@/utils/courseProgram'
+import { useSpace } from '@/stores/space'
 import { LESSONS, SECTIONS, STUDENTS, plural } from '@/utils/plural'
 
 const props = defineProps<{
@@ -226,6 +227,8 @@ watch(
 	{ immediate: true }
 )
 
+const space = useSpace()
+
 // The map comes from our own app: Learning knows nothing about objectives or
 // their coverage. Same timing rule as the outline above — `auto: false` plus a
 // watch, because firing before the course name arrives sends `undefined` and
@@ -236,7 +239,9 @@ const courseMap = createResource({
 	// answers 403 to anything else. It reads, so GET is also what it means.
 	method: 'GET',
 	makeParams() {
-		return { course: props.course.data?.name }
+		const course = props.course.data?.name
+		// The documents' fill is the chosen space's (learning-services#347).
+		return { course, space: space.paramFor(course) }
 	},
 	auto: false,
 }) as Resource<{ data: ProgramData } | null>
@@ -249,7 +254,11 @@ watch(
 		// lms_frappe_app answers AppNotInstalledError. Unhandled, it surfaces
 		// as an application error on every course page — which is exactly how
 		// it took down three Cypress specs. No app, no map, no noise.
-		if (name) courseMap.fetch().catch(() => {})
+		if (name)
+			space
+				.load()
+				.then(() => courseMap.fetch())
+				.catch(() => {})
 	},
 	{ immediate: true }
 )

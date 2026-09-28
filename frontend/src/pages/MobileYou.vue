@@ -55,6 +55,10 @@
 				</router-link>
 			</div>
 
+			<!-- A wrapper, not an attribute on the list: it renders a fragment. -->
+			<div v-if="space.hasOrganizations" data-testid="you-spaces">
+				<SettingsRowList :groups="spaceGroups" @action="space.choose" />
+			</div>
 			<SettingsRowList :groups="groups" @action="activate" />
 		</template>
 
@@ -106,6 +110,8 @@ import MobilePageLayout from '@/components/Layouts/MobilePageLayout.vue'
 import BottomSheet from '@/components/BottomSheet.vue'
 import SettingsRowList from '@/components/Settings/Mobile/SettingsRowList.vue'
 import { buildYouRows } from '@/components/Settings/youRows'
+import { useSpace, PERSONAL, type Space } from '@/stores/space'
+import { spaceLabel } from '@/utils/space'
 import {
 	buildAppearanceRows,
 	COLOUR_MODE_ACTION,
@@ -214,6 +220,27 @@ watch(
 // The count is stale the moment the panel is used from anywhere else, and this
 // page is where it is read; nothing else on a phone asks for it.
 onMounted(() => loadUnreadCount())
+
+// Personal or an organization (learning-services#347). The phone has no sidebar,
+// so the choice sits here, first, as a list with a check — the same shape as the
+// colour mode. Absent without an organization: nothing to choose from.
+const space = useSpace()
+onMounted(() => {
+	if (isSignedIn.value) space.load()
+})
+const spaceGroups = computed(() => [
+	{
+		key: 'Space',
+		label: 'Space',
+		rows: space.spaces.map((item: Space) => ({
+			key: item.id,
+			label: spaceLabel(item),
+			icon: item.id === PERSONAL ? 'lucide-user' : 'lucide-building-2',
+			action: item.id,
+			selected: item.id === space.current,
+		})),
+	},
+])
 
 const showColourMode = ref(false)
 

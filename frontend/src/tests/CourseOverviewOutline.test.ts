@@ -11,7 +11,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick, reactive } from 'vue'
-import { shallowMount } from '@vue/test-utils'
+import { flushPromises, shallowMount } from '@vue/test-utils'
 import CourseOverview from '@/pages/Courses/CourseOverview.vue'
 
 type ResourceOpts = {
@@ -29,6 +29,23 @@ const resources: Array<
 		reload: ReturnType<typeof vi.fn>
 	}
 > = []
+
+// The learner's space (learning-services#347): a personal space with no
+// organization, which is Learning as it was before spaces.
+vi.mock('@/stores/space', () => ({
+	PERSONAL: 'personal',
+	useSpace: () => ({
+		load: () => Promise.resolve(),
+		paramFor: () => 'personal',
+		enrolFor: () => 'personal',
+		isOrganization: false,
+		hasOrganizations: false,
+		current: 'personal',
+		spaces: [],
+		myCourseIds: [],
+		catalogIds: [],
+	}),
+}))
 
 vi.mock('frappe-ui', () => ({
 	Badge: { template: '<span><slot /></span>' },
@@ -167,9 +184,11 @@ describe('CourseOverview course map resource', () => {
 		course.data = { name: 'COURSE-1' }
 		await nextTick()
 
+		await flushPromises()
 		const map = mapResource()
 		expect(map.fetch).toHaveBeenCalledTimes(1)
-		expect(map.makeParams!()).toEqual({ course: 'COURSE-1' })
+		// The documents' fill is the chosen space's (learning-services#347).
+		expect(map.makeParams!()).toEqual({ course: 'COURSE-1', space: 'personal' })
 	})
 
 	it('handles a failing request, because the app it calls may not be installed', async () => {
@@ -179,23 +198,22 @@ describe('CourseOverview course map resource', () => {
 		// that unhandled rejection took down three Cypress specs — every one
 		// that opens a course page. A site without our app must show no map,
 		// quietly.
+		//
+		// The fetch runs after the space is loaded, inside a promise chain, so
+		// the failure arrives as a rejection of that chain. Left unhandled,
+		// vitest reports it and fails this test on its own.
 		const course = reactive<{ data: { name: string } | null }>({ data: null })
 		mountOverview(course)
 
-		let handled = false
 		const map = mapResource()
-		map.fetch.mockImplementationOnce(() => ({
-			catch: (handler: (error: unknown) => void) => {
-				handled = true
-				handler(new Error('AppNotInstalledError'))
-				return Promise.resolve()
-			},
-		}))
+		map.fetch.mockImplementationOnce(() =>
+			Promise.reject(new Error('AppNotInstalledError'))
+		)
 
 		course.data = { name: 'COURSE-1' }
-		await nextTick()
+		await flushPromises()
 
-		expect(handled).toBe(true)
+		expect(map.fetch).toHaveBeenCalledTimes(1)
 	})
 
 	it('asks over GET, which is the only verb the endpoint answers', () => {

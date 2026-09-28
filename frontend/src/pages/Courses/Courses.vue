@@ -100,6 +100,7 @@ import { canCreateCourse } from '@/utils'
 import CourseCard from '@/components/CourseCard.vue'
 import { useRouter } from 'vue-router'
 import { openFormRoute } from '@/composables/useFormRoute'
+import { useSpace } from '@/stores/space'
 
 const user = inject('$user')
 const dayjs = inject('$dayjs')
@@ -116,9 +117,13 @@ const filters = ref({})
 const currentTab = ref('live')
 const { brand } = sessionStore()
 const router = useRouter()
+const space = useSpace()
 
-onMounted(() => {
+onMounted(async () => {
 	setFiltersFromQuery()
+	// The organization's list is known only once the space is: fetching first
+	// would draw every course and then snap to the narrower list.
+	await space.load()
 	updateCourses()
 })
 
@@ -220,6 +225,7 @@ const updateFilters = () => {
 	updateCertificationFilter()
 	updateTabFilter()
 	updateStudentFilter()
+	updateSpaceFilter()
 	setQueryParams()
 }
 
@@ -284,6 +290,23 @@ const updateStudentFilter = () => {
 	if (!user.data || (user.data?.is_student && currentTab.value != 'enrolled')) {
 		filters.value['published'] = 1
 	}
+}
+
+// In an organization's space a student sees its courses: the Enrolled tab holds
+// the ones it gave them or they took from its catalog, the other tabs add what
+// it opened (learning-services#347). The personal space holds everything, so it
+// narrows nothing. Staff are not narrowed: they manage the catalog, not study it.
+const updateSpaceFilter = () => {
+	delete filters.value['name']
+	if (!user.data?.is_student || !space.isOrganization) return
+	const ids =
+		currentTab.value == 'enrolled'
+			? space.myCourseIds
+			: [...space.myCourseIds, ...space.catalogIds]
+	// `enrolled` would replace the list with every enrolment the learner has.
+	delete filters.value['enrolled']
+	// An empty `in` is invalid SQL; a name no course has matches nothing.
+	filters.value['name'] = ['in', ids.length ? ids : ['']]
 }
 
 const setQueryParams = () => {

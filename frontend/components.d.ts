@@ -174,6 +174,7 @@ declare module 'vue' {
     ShortcutTooltip: typeof import('./src/components/ShortcutTooltip.vue')['default']
     SidebarLink: typeof import('./src/components/Sidebar/SidebarLink.vue')['default']
     SkeletonLoader: typeof import('./src/components/SkeletonLoader.vue')['default']
+    SpaceSwitcher: typeof import('./src/components/Sidebar/SpaceSwitcher.vue')['default']
     StateBadge: typeof import('./src/components/Documents/StateBadge.vue')['default']
     StudentLessonSidebar: typeof import('./src/components/StudentLessonSidebar.vue')['default']
     TabbedDetailPage: typeof import('./src/components/Layouts/TabbedDetailPage.vue')['default']
