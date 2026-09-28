@@ -40,6 +40,7 @@
 						:position="index + 1"
 						:total="lessons.length"
 						:lessonUrl="lessonUrl(lesson)"
+						:courseName="courseName"
 					/>
 				</div>
 			</div>
