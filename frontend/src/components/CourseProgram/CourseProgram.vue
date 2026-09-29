@@ -23,6 +23,7 @@
 				class="slides"
 				data-testid="program-slides"
 				:style="height ? { height: `${height}px` } : undefined"
+				@scroll.passive="onScroll"
 			>
 				<div
 					v-for="(lesson, index) in lessons"
@@ -81,6 +82,7 @@ import { useScreenSize } from '@/utils/composables'
 import ProgramMap from '@/components/CourseProgram/ProgramMap.vue'
 import LessonSlide from '@/components/CourseProgram/LessonSlide.vue'
 import {
+	centeredIndex,
 	flattenLessons,
 	lessonStatus,
 	startIndex,
@@ -121,10 +123,49 @@ function scrollTo(index: number, smooth: boolean): void {
 	})
 }
 
+// Where an arrow, a dot or a key sent the slider: until it gets there, the
+// slides passing the middle are not the current lesson.
+let target: number | null = null
+let settle: ReturnType<typeof setTimeout> | null = null
+
 function select(index: number): void {
 	if (index < 0 || index >= lessons.value.length) return
 	current.value = index
+	target = index
 	scrollTo(index, true)
+	// A smooth scroll that never reports its end still lets a swipe count again.
+	if (settle) clearTimeout(settle)
+	settle = setTimeout(() => (target = null), 1000)
+}
+
+function centered(): number {
+	const box = scroller.value
+	if (!box) return -1
+	return centeredIndex(
+		slides.map((slide) => ({
+			left: slide?.offsetLeft ?? 0,
+			width: slide?.clientWidth ?? 0,
+		})),
+		box.scrollLeft + box.clientWidth / 2
+	)
+}
+
+// A swipe or a trackpad moves the slides without telling us: once the scroll
+// rests, the slide in the middle becomes the current one. A scroll we started
+// ourselves only ends where it was sent.
+let resting: ReturnType<typeof setTimeout> | null = null
+
+function onScroll(): void {
+	if (resting) clearTimeout(resting)
+	resting = setTimeout(() => {
+		const index = centered()
+		if (index < 0) return
+		if (target !== null) {
+			if (index === target) target = null
+			return
+		}
+		current.value = index
+	}, 120)
 }
 
 // The lesson page offers the way in, or a log-in or enrolment to someone who
@@ -142,7 +183,6 @@ function lessonUrl(lesson: { chapterIndex: number; id: string }): string {
 	}).href
 }
 
-let observer: IntersectionObserver | null = null
 let resizer: ResizeObserver | null = null
 
 // As tall as the card on screen, not the longest lesson: a short lesson
@@ -170,24 +210,12 @@ onMounted(async () => {
 			if (card) resizer?.observe(card)
 		})
 	}
-	if (typeof IntersectionObserver === 'undefined' || !scroller.value) return
-	// A swipe moves the slides without telling us; the slide that settles in the
-	// middle becomes the current one.
-	observer = new IntersectionObserver(
-		(entries) => {
-			for (const entry of entries) {
-				if (entry.isIntersecting && entry.intersectionRatio >= 0.6)
-					current.value = Number((entry.target as HTMLElement).dataset.index)
-			}
-		},
-		{ root: scroller.value, threshold: [0.6] }
-	)
-	slides.forEach((slide) => slide && observer?.observe(slide))
 })
 
 onBeforeUnmount(() => {
-	observer?.disconnect()
 	resizer?.disconnect()
+	if (settle) clearTimeout(settle)
+	if (resting) clearTimeout(resting)
 })
 </script>
 
@@ -205,7 +233,10 @@ onBeforeUnmount(() => {
 	scrollbar-width: none;
 	/* Room for the first and last slides to sit in the middle too. */
 	padding-inline: calc((100% - var(--slide-width)) / 2);
-	--slide-width: min(35rem, 85%);
+	/* The lesson in front takes most of the row, its neighbours only peek in
+	   (learning-services#402): at a fixed 35rem a wide screen showed three whole
+	   cards and no clear current one. */
+	--slide-width: 80%;
 	--edge: calc((100% - var(--slide-width)) / 2);
 	/* The neighbours fade out towards the edges rather than end in cut-off
 	   words (learning-services#326): enough to show there is more, no more. */
