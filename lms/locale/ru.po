@@ -11038,3 +11038,99 @@ msgstr "Перейти к курсу «{0}»"
 #: frontend/src/components/CourseCardOverlay.vue
 msgid "Course {0} of {1} in the program «{2}»"
 msgstr "Курс {0} из {1} в программе «{2}»"
+
+#: frontend/src/pages/Programs/ProgramDetail.vue
+msgid "in order: each course opens after the previous one"
+msgstr "по порядку: каждый курс открывается после предыдущего"
+
+#: frontend/src/pages/Programs/ProgramDetail.vue
+msgid "in any order"
+msgstr "в любом порядке"
+
+#: frontend/src/pages/Programs/ProgramDetail.vue
+msgid "You are in this program"
+msgstr "Вы в программе"
+
+#: frontend/src/pages/Programs/ProgramDetail.vue
+msgid "{0}% completed"
+msgstr "пройдено {0}%"
+
+#: frontend/src/pages/Programs/ProgramDetail.vue
+msgid "Continue: {0}"
+msgstr "Продолжить: {0}"
+
+#: frontend/src/pages/Programs/ProgramDetail.vue
+msgid "Join the program"
+msgstr "Вступить в программу"
+
+#: frontend/src/pages/Programs/ProgramDetail.vue
+msgid "Courses open one after another: the next one once the previous is passed."
+msgstr "Курсы открываются по очереди: следующий — после того, как пройден предыдущий."
+
+#: frontend/src/pages/Programs/ProgramDetail.vue
+msgid "Take the courses in any order."
+msgstr "Курсы можно проходить в любом порядке."
+
+#: frontend/src/pages/Programs/ProgramDetail.vue
+msgid "The courses are still in the works. Join, and we will write when the first one opens."
+msgstr "Курсы ещё в разработке. Вступите — и мы напишем, когда откроется первый."
+
+#: frontend/src/pages/Programs/ProgramDetail.vue
+msgid "This program is not available."
+msgstr "Эта программа недоступна."
+
+#: frontend/src/pages/Programs/ProgramDetail.vue
+msgid "All courses of the program are passed."
+msgstr "Все курсы программы пройдены."
+
+#: frontend/src/pages/Programs/ProgramDetail.vue
+msgid "The next course is still in the works. We will write when it opens."
+msgstr "Следующий курс ещё в разработке. Напишем, когда он откроется."
+
+#: frontend/src/pages/Programs/ProgramDetail.vue
+msgid "You are in the program"
+msgstr "Вы вступили в программу"
+
+#: frontend/src/pages/Programs/ProgramDetail.vue
+msgid "Could not join the program"
+msgstr "Не удалось вступить в программу"
+
+#: frontend/src/utils/learningProgram.ts
+msgid "Course passed"
+msgstr "Пройден"
+
+#: frontend/src/utils/learningProgram.ts
+msgid "Available to take"
+msgstr "Доступен"
+
+#: frontend/src/utils/learningProgram.ts
+msgid "Opens after course {0}"
+msgstr "Откроется после курса {0}"
+
+#: frontend/src/pages/Programs/StudentPrograms.vue
+msgid "My programs"
+msgstr "Мои программы"
+
+#: frontend/src/pages/Programs/StudentPrograms.vue
+msgid "Other programs"
+msgstr "Другие программы"
+
+#: frontend/src/pages/Forms/ProgramForm.vue
+msgid "One or two sentences: who the program is for and what they will have at the end."
+msgstr "Одно-два предложения: для кого программа и что будет у ученика в конце."
+
+#: frontend/src/utils/plural.ts
+msgid "{0} course"
+msgstr "{0} курс"
+
+#: frontend/src/utils/plural.ts
+msgid "{0} courses [few]"
+msgstr "{0} курса"
+
+#: frontend/src/utils/plural.ts
+msgid "{0} courses [many]"
+msgstr "{0} курсов"
+
+#: frontend/src/utils/plural.ts
+msgid "{0} courses"
+msgstr "{0} курса"

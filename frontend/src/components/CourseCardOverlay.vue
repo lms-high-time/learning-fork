@@ -364,11 +364,12 @@ const programs = computed<CourseProgram[]>(
 )
 const lock = computed(() => programs.value.find((item) => item.locked_by))
 
-// A member goes to the program's page, anyone else to joining it.
-const programRoute = (program: CourseProgram) =>
-	program.member
-		? { name: 'ProgramDetail', params: { programName: program.program } }
-		: { name: 'ProgramEnrollment', params: { programName: program.program } }
+// One program page for everyone: it shows the way in to whoever is not a
+// member yet (learning-services#417).
+const programRoute = (program: CourseProgram) => ({
+	name: 'ProgramDetail',
+	params: { programName: program.program },
+})
 
 // The next open lesson and where to study it, from lms_frappe_app
 // (learning-services#301). Learning's own `current_lesson` moves only with the
