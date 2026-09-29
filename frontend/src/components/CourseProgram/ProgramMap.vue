@@ -1,7 +1,8 @@
 <template>
 	<nav class="program-map" :aria-label="__('Lessons of the course')">
-		<!-- A chapter is a group of dots and a gap, not a heading: its title is on
-		the slide (learning-services#326). -->
+		<!-- A chapter is a group of dots, not a heading: its title is on the slide
+		(learning-services#326), and a hover names the group. No gap between the
+		groups: the dots are the lessons in a row (learning-services#402). -->
 		<div
 			v-for="chapter in chapters"
 			:key="chapter.index"
@@ -147,7 +148,6 @@ function dotClass(lesson: MapLesson): string[] {
 .program-map {
 	display: flex;
 	flex-wrap: wrap;
-	column-gap: 1.25rem;
 	row-gap: 0.5rem;
 }
 

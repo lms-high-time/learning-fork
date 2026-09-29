@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
-import type { ProgramData } from '@/utils/courseProgram'
+import { centeredIndex, type ProgramData } from '@/utils/courseProgram'
 
 // learning-services#322: the program's map, slide and slider as the student
 // meets them.
@@ -14,12 +14,16 @@ vi.mock('frappe-ui', () => ({
 }))
 vi.mock('vue-router', () => ({
 	useRouter: () => ({
-		resolve: (to: { params: { chapterNumber: number; lessonNumber: number } }) => ({
+		resolve: (to: {
+			params: { chapterNumber: number; lessonNumber: number }
+		}) => ({
 			href: `/lms/courses/course-1/learn/${to.params.chapterNumber}-${to.params.lessonNumber}`,
 		}),
 	}),
 }))
-vi.mock('@/utils/composables', () => ({ useScreenSize: () => ({ isMobile: false }) }))
+vi.mock('@/utils/composables', () => ({
+	useScreenSize: () => ({ isMobile: false }),
+}))
 
 import ProgramMap from '@/components/CourseProgram/ProgramMap.vue'
 import LessonSlide from '@/components/CourseProgram/LessonSlide.vue'
@@ -131,7 +135,10 @@ describe('ProgramMap', () => {
 			global,
 		})
 		const groups = wrapper.findAll('[data-testid="map-chapter"]')
-		expect(groups.map((g) => g.attributes('title'))).toEqual(['Рамка', 'Выявление'])
+		expect(groups.map((g) => g.attributes('title'))).toEqual([
+			'Рамка',
+			'Выявление',
+		])
 		expect(groups.map((g) => g.findAll('button').length)).toEqual([1, 2])
 		expect(wrapper.text()).not.toContain('Рамка')
 	})
@@ -172,12 +179,12 @@ describe('LessonSlide', () => {
 
 	it('counts covered topics and marks each one', () => {
 		const wrapper = slide({})
-		expect(wrapper.get('[data-testid="slide-count"]').text()).toContain('1 of 3 covered')
-		expect(wrapper.findAll('li').map((li) => li.attributes('data-status'))).toEqual([
-			'covered',
-			'touched',
-			'none',
-		])
+		expect(wrapper.get('[data-testid="slide-count"]').text()).toContain(
+			'1 of 3 covered'
+		)
+		expect(
+			wrapper.findAll('li').map((li) => li.attributes('data-status'))
+		).toEqual(['covered', 'touched', 'none'])
 	})
 
 	it('links to the lesson page, not a second button into the session', () => {
@@ -191,7 +198,11 @@ describe('LessonSlide', () => {
 	it('hides topics past six behind a count', async () => {
 		const many = Array.from({ length: 8 }, (_, i) => ({ text: `t${i}` }))
 		const wrapper = slide({
-			lesson: { ...enrolled.chapters[1].lessons[0], objectives: many, chapter: 'Выявление' },
+			lesson: {
+				...enrolled.chapters[1].lessons[0],
+				objectives: many,
+				chapter: 'Выявление',
+			},
 		})
 		expect(wrapper.findAll('li')).toHaveLength(6)
 		await wrapper.get('button').trigger('click')
@@ -223,10 +234,14 @@ describe('CourseProgram', () => {
 		})
 		await flushPromises()
 
-		expect(wrapper.get('[aria-current="step"]').attributes('aria-label')).toContain('Lesson 3')
-		expect(wrapper.get('.slide.is-current [data-testid="slide-action"]').attributes('href')).toBe(
-			'/lms/courses/course-1/learn/2-2'
-		)
+		expect(
+			wrapper.get('[aria-current="step"]').attributes('aria-label')
+		).toContain('Lesson 3')
+		expect(
+			wrapper
+				.get('.slide.is-current [data-testid="slide-action"]')
+				.attributes('href')
+		).toBe('/lms/courses/course-1/learn/2-2')
 		// Where to study is the course card's question now: no request per slide.
 		expect(fetchMock).not.toHaveBeenCalled()
 	})
@@ -241,9 +256,41 @@ describe('CourseProgram', () => {
 		await flushPromises()
 
 		expect(wrapper.get('.slide.is-current').attributes('data-index')).toBe('0')
-		expect(wrapper.get('.slide.is-current [data-testid="slide-action"]').attributes('href')).toBe(
-			'/lms/courses/course-1/learn/1-1'
+		expect(
+			wrapper
+				.get('.slide.is-current [data-testid="slide-action"]')
+				.attributes('href')
+		).toBe('/lms/courses/course-1/learn/1-1')
+	})
+
+	it('keeps the lesson an arrow chose while the slides pass the middle', async () => {
+		// learning-services#402: slides passing the middle during the smooth
+		// scroll took over, and the dots ran one ahead of the card in front.
+		vi.useFakeTimers()
+		const wrapper = mount(CourseProgram, {
+			props: { program: enrolled, courseName: 'course-1' },
+			global,
+		})
+		await flushPromises()
+		const before = Number(
+			wrapper.get('.slide.is-current').attributes('data-index')
 		)
+		// The key goes the same way as the arrow button: select(current - 1).
+		await wrapper
+			.get('[role="region"]')
+			.trigger('keydown', { key: 'ArrowLeft' })
+		// jsdom lays every slide at 0: the one «in the middle» is the first.
+		await wrapper.get('[data-testid="program-slides"]').trigger('scroll')
+		vi.advanceTimersByTime(200)
+		await flushPromises()
+
+		expect(wrapper.get('.slide.is-current').attributes('data-index')).toBe(
+			String(before - 1)
+		)
+		expect(
+			wrapper.get('[aria-current="step"]').attributes('aria-label')
+		).toContain(`Lesson ${before}`)
+		vi.useRealTimers()
 	})
 
 	it('points a visitor at the lesson page too', async () => {
@@ -253,8 +300,24 @@ describe('CourseProgram', () => {
 		})
 		await flushPromises()
 
-		expect(wrapper.get('.slide.is-current [data-testid="slide-action"]').attributes('href')).toBe(
-			'/lms/courses/course-1/learn/1-1'
-		)
+		expect(
+			wrapper
+				.get('.slide.is-current [data-testid="slide-action"]')
+				.attributes('href')
+		).toBe('/lms/courses/course-1/learn/1-1')
+	})
+})
+
+describe('centeredIndex', () => {
+	it('picks the slide whose centre is nearest to the middle', () => {
+		const slides = [
+			{ left: 0, width: 600 },
+			{ left: 616, width: 600 },
+			{ left: 1232, width: 600 },
+		]
+		expect(centeredIndex(slides, 916)).toBe(1)
+		expect(centeredIndex(slides, 1300)).toBe(2)
+		expect(centeredIndex(slides, 10)).toBe(0)
+		expect(centeredIndex([], 100)).toBe(-1)
 	})
 })

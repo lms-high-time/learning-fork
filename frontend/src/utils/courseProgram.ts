@@ -132,3 +132,25 @@ export function startIndex(
 	const index = lessons.findIndex((lesson) => lesson.id === nextLesson)
 	return index >= 0 ? index : 0
 }
+
+/**
+ * The slide under the middle of the slider: the one whose centre is nearest
+ * to the viewport's. Not «whichever is 60% visible» — on a wide screen the
+ * neighbours are visible whole, and the current lesson jumped one ahead of
+ * the card in the middle (learning-services#402).
+ */
+export function centeredIndex(
+	slides: { left: number; width: number }[],
+	viewportCenter: number
+): number {
+	let best = -1
+	let distance = Infinity
+	slides.forEach((slide, index) => {
+		const off = Math.abs(slide.left + slide.width / 2 - viewportCenter)
+		if (off < distance) {
+			distance = off
+			best = index
+		}
+	})
+	return best
+}
