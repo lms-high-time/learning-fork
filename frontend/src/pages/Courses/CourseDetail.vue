@@ -4,6 +4,7 @@
 		:tabs="tabs"
 		:breadcrumbs="breadcrumbs"
 		:published="Boolean(course.data?.published)"
+		:upcoming="Boolean(course.data?.upcoming)"
 		:loading="!course.data"
 		:doc="course"
 		doc-prop="course"

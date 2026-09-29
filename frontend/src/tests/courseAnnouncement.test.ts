@@ -8,6 +8,14 @@ import { flushPromises, mount, shallowMount } from '@vue/test-utils'
 import { reactive } from 'vue'
 
 const mapData: { value: unknown } = { value: null }
+const route = { query: {} as Record<string, string> }
+const replace = vi.fn()
+const call = vi.fn(() => Promise.resolve({ ok: true }))
+
+vi.mock('vue-router', () => ({
+	useRoute: () => route,
+	useRouter: () => ({ replace }),
+}))
 
 vi.mock('@/stores/space', () => ({
 	PERSONAL: 'personal',
@@ -25,6 +33,7 @@ vi.mock('@/stores/space', () => ({
 }))
 
 vi.mock('frappe-ui', () => ({
+	call: (...args: unknown[]) => call(...(args as [])),
 	Badge: { template: '<span><slot /></span>' },
 	Tooltip: { template: '<span><slot /></span>' },
 	createResource: (opts: { url: string }) =>
@@ -125,13 +134,51 @@ describe('CourseOverview of an announced course', () => {
 		).toContain('true')
 	})
 
-	it('hides the outline before the map arrives', async () => {
+	it('holds a placeholder, not an empty state, until the map arrives', async () => {
 		mapData.value = null
 		const wrapper = mountOverview({ name: 'ops', title: 'Стыки', upcoming: 1 })
 		await flushPromises()
 
-		expect(wrapper.find('[data-testid="course-announcement"]').exists()).toBe(true)
+		expect(wrapper.find('[data-testid="course-announcement-loading"]').exists()).toBe(true)
+		expect(wrapper.text()).not.toContain('The course is in the works.')
 		expect(wrapper.find('[data-testid="outline"]').exists()).toBe(false)
+	})
+
+	it('drops «About» when it only repeats the introduction', async () => {
+		mapData.value = null
+		const same = mountOverview({
+			name: 'ops',
+			title: 'Стыки',
+			upcoming: 1,
+			short_introduction: 'Найдите стыки.',
+			description: '<p>Найдите стыки.</p>',
+		})
+		const other = mountOverview({
+			name: 'ops',
+			title: 'Стыки',
+			upcoming: 1,
+			short_introduction: 'Найдите стыки.',
+			description: '<p>Курс для руководителей отделов.</p>',
+		})
+		await flushPromises()
+
+		expect(same.find('[data-testid="course-about"]').exists()).toBe(false)
+		expect(other.find('[data-testid="course-about"]').exists()).toBe(true)
+	})
+
+	it('subscribes a guest who came back from the login page', async () => {
+		mapData.value = { data: { upcoming: true, notify: false, objectives: [], chapters: [], documents: [] } }
+		route.query = { notify: '1' }
+		call.mockClear()
+		replace.mockClear()
+		mountOverview({ name: 'ops', title: 'Стыки', upcoming: 1 })
+		await flushPromises()
+
+		expect(call).toHaveBeenCalledWith('lms_frappe_app.api.student.notify_when_released', {
+			course: 'ops',
+		})
+		expect(replace).toHaveBeenCalledWith({ query: {} })
+		route.query = {}
 	})
 
 	it('keeps the outline for the course author', async () => {

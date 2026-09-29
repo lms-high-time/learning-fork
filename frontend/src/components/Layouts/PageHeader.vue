@@ -17,7 +17,12 @@
 			</template>
 			<template v-else>
 				<Breadcrumbs class="h-7 min-w-0" :items="breadcrumbs" />
-				<Badge v-if="published" theme="green">{{ __('Published') }}</Badge>
+				<!-- An announcement is published only in the database sense: to
+				the reader it is in the works (learning-services#391). -->
+				<Badge v-if="upcoming" theme="orange" class="!text-ink-gray-8">
+					{{ __('In the works') }}
+				</Badge>
+				<Badge v-else-if="published" theme="green">{{ __('Published') }}</Badge>
 			</template>
 		</div>
 		<div class="flex shrink-0 items-center gap-2">
@@ -38,9 +43,10 @@ const props = withDefaults(
 	defineProps<{
 		breadcrumbs: Breadcrumb[]
 		published?: boolean
+		upcoming?: boolean
 		loading?: boolean
 	}>(),
-	{ published: false, loading: false }
+	{ published: false, upcoming: false, loading: false }
 )
 
 const { isMobile } = useScreenSize()

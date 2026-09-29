@@ -48,7 +48,12 @@
 			</div>
 		</div>
 		<div class="flex flex-col flex-auto p-4 border-x-2 border-b-2 rounded-b-md">
-			<div class="flex items-center justify-between mb-2">
+			<!-- An announcement has no lessons, students or rating yet
+			(learning-services#391). -->
+			<div
+				v-if="!course.upcoming"
+				class="flex items-center justify-between mb-2"
+			>
 				<div v-if="course.lessons">
 					<Tooltip :text="__('Lessons')">
 						<span class="flex items-center">
@@ -89,7 +94,7 @@
 				data-testid="course-card-upcoming"
 				theme="orange"
 				size="md"
-				class="w-fit mb-2"
+				class="w-fit mb-2 !text-ink-gray-8"
 			>
 				{{ __('In the works') }}
 			</Badge>

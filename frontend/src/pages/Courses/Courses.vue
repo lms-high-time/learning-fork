@@ -267,8 +267,9 @@ const updateTabFilter = () => {
 		delete filters.value['enrolled']
 
 		if (currentTab.value == 'live') {
+			// Announcements belong here too, after the open courses: on a tab of
+			// their own nobody found them (learning-services#391).
 			filters.value['published'] = 1
-			filters.value['upcoming'] = 0
 			filters.value['live'] = 1
 		} else if (currentTab.value == 'upcoming') {
 			filters.value['upcoming'] = 1
@@ -349,7 +350,7 @@ const courseTabs = computed(() => {
 			value: 'live',
 		},
 		{
-			label: __('Upcoming'),
+			label: __('Being prepared'),
 			value: 'upcoming',
 		},
 	]

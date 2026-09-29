@@ -5,7 +5,15 @@
 			:fallback-image="course.data?.image"
 		/>
 		<div class="p-5">
-			<div class="text-3xl-semibold text-ink-gray-9 mb-4">
+			<!-- An announcement has no price to lead with yet: its state does
+			(learning-services#391). -->
+			<div
+				v-if="course.data?.upcoming && !isAdmin"
+				class="text-2xl-semibold text-ink-gray-9 mb-2"
+			>
+				{{ __('Course in the works') }}
+			</div>
+			<div v-else class="text-3xl-semibold text-ink-gray-9 mb-4">
 				{{ priceLabel }}
 			</div>
 			<div v-if="!readOnlyMode">
@@ -62,16 +70,35 @@
 					data-testid="course-upcoming"
 					class="space-y-3"
 				>
-					<Badge theme="orange" size="lg">{{ __('In the works') }}</Badge>
 					<p class="text-p-sm text-ink-gray-7">
 						{{ __('Enrollment opens when the course is released.') }}
 					</p>
 					<div
 						v-if="subscribed"
 						data-testid="course-notify-done"
-						class="text-p-sm text-ink-gray-7"
+						class="space-y-2"
 					>
-						{{ __("We'll email you when the course is released.") }}
+						<div class="flex items-start gap-2 text-p-sm text-ink-gray-8">
+							<span
+								class="lucide-circle-check size-4 shrink-0 mt-0.5 text-ink-green-6"
+							/>
+							<span>
+								{{
+									__(
+										"You're on the list. We'll write to {0} when it is out."
+									).format(userEmail)
+								}}
+							</span>
+						</div>
+						<button
+							type="button"
+							data-testid="course-unnotify"
+							class="text-p-sm text-ink-gray-6 underline underline-offset-2 hover:text-ink-gray-8"
+							:disabled="notifying"
+							@click="stopNotify()"
+						>
+							{{ __('Unsubscribe') }}
+						</button>
 					</div>
 					<Button
 						v-else
@@ -191,8 +218,11 @@ watch(
 function notifyWhenReleased() {
 	if (!user.data) {
 		toast.warning(__('You need to login first to get notified'))
+		// Back to this page with the wish in hand: the course page subscribes
+		// once the guest has logged in (learning-services#391).
+		const back = `${window.location.pathname}?notify=1`
 		setTimeout(() => {
-			window.location.href = `/login?redirect-to=${window.location.pathname}`
+			window.location.href = `/login?redirect-to=${encodeURIComponent(back)}`
 		}, 500)
 		return
 	}
@@ -209,6 +239,34 @@ function notifyWhenReleased() {
 			}
 			subscribed.value = true
 			capture('asked_for_course_release', { course: courseName })
+		})
+		.catch((err: { messages?: string[] } | string) => {
+			const msg = typeof err === 'string' ? err : err.messages?.[0] ?? 'Error'
+			toast.warning(__(msg))
+		})
+		.finally(() => {
+			notifying.value = false
+		})
+}
+
+const userEmail = computed<string>(
+	() => user.data?.email || user.data?.name || ''
+)
+
+function stopNotify() {
+	const courseName = props.course.data?.name
+	if (!courseName) return
+	notifying.value = true
+	call('lms_frappe_app.api.student.notify_when_released', {
+		course: courseName,
+		notify: false,
+	})
+		.then((result: { ok: boolean; error?: { message: string } }) => {
+			if (!result?.ok) {
+				toast.warning(result?.error?.message ?? __('Could not unsubscribe'))
+				return
+			}
+			subscribed.value = false
 		})
 		.catch((err: { messages?: string[] } | string) => {
 			const msg = typeof err === 'string' ? err : err.messages?.[0] ?? 'Error'

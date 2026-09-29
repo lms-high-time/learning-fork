@@ -6,6 +6,7 @@
 		<PageHeader
 			:breadcrumbs="breadcrumbs"
 			:published="published"
+			:upcoming="upcoming"
 			:loading="loading"
 		>
 			<template #actions>
@@ -88,9 +89,11 @@ const props = withDefaults(
 		doc: unknown
 		docProp: string
 		published?: boolean
+		/** An announced course: in the catalog, not open yet (learning-services#391). */
+		upcoming?: boolean
 		loading?: boolean
 	}>(),
-	{ published: false, loading: false }
+	{ published: false, upcoming: false, loading: false }
 )
 
 defineSlots<{

@@ -490,6 +490,28 @@ class TestListEndpointPaging(BaseTestUtils):
 	def _page(self, start, size):
 		return get_courses(filters=self._filters(), start=start, limit_page_length=size)
 
+	def test_an_announcement_follows_the_open_courses_on_the_live_tab(self):
+		"""learning-services#391: an announced course is published and upcoming;
+		on a tab of its own nobody found it, so the live tab shows it last."""
+		course = frappe.new_doc("LMS Course")
+		course.update(
+			{
+				"title": "Paging Announced",
+				"short_introduction": "Paging fixture",
+				"description": "Paging fixture",
+				"category": self.CATEGORY,
+				"published": 1,
+				"upcoming": 1,
+				"instructors": [{"instructor": "Administrator"}],
+			}
+		)
+		course.insert(ignore_permissions=True)
+		self.cleanup_items.append(("LMS Course", course.name))
+
+		titles = [row.title for row in self._page(0, 10)]
+		self.assertEqual(titles[-1], "Paging Announced")
+		self.assertEqual(get_course_count(filters=self._filters()), len(titles))
+
 	def test_featured_courses_come_out_of_the_page_budget(self):
 		# The regression: two featured courses were prepended to an already-full
 		# page, so asking for three returned four.
