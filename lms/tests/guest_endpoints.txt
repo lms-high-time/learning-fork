@@ -31,5 +31,6 @@ lms.lms.utils.get_course_details
 lms.lms.utils.get_course_outline
 lms.lms.utils.get_courses
 lms.lms.utils.get_lesson
+lms.lms.utils.get_program_details
 lms.lms.utils.get_related_courses
 lms.lms.utils.get_reviews
