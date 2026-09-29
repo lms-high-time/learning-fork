@@ -199,7 +199,9 @@ function notifyWhenReleased() {
 	const courseName = props.course.data?.name
 	if (!courseName) return
 	notifying.value = true
-	call('lms_frappe_app.api.student.notify_when_released', { course: courseName })
+	call('lms_frappe_app.api.student.notify_when_released', {
+		course: courseName,
+	})
 		.then((result: { ok: boolean; error?: { message: string } }) => {
 			if (!result?.ok) {
 				toast.warning(result?.error?.message ?? __('Could not subscribe'))
