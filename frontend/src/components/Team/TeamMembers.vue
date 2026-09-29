@@ -22,12 +22,28 @@
 					<Button variant="subtle" @click="copy(link.url)">
 						{{ __('Copy') }}
 					</Button>
-					<Button variant="ghost" @click="revoke(link.token)">
+					<Button
+						variant="ghost"
+						:data-testid="`revoke-${link.token}`"
+						@click="revoke(link.token)"
+					>
 						{{ __('Revoke') }}
 					</Button>
 				</li>
 			</ul>
 		</section>
+
+		<p
+			v-if="team.member_limit"
+			class="text-p-sm text-ink-gray-5"
+			data-testid="team-limit"
+		>
+			{{
+				__(
+					'Members: {0} of {1} while we have not verified the organization.'
+				).format(activeCount, team.member_limit)
+			}}
+		</p>
 
 		<ul class="divide-y" data-testid="team-members">
 			<li
@@ -43,24 +59,31 @@
 				</span>
 				<span class="flex items-center gap-2 text-p-sm text-ink-gray-5">
 					<template v-if="member.left">
-						{{ __('Left {0}').format(member.left_on || '') }}
+						{{ __('Left {0}').format(formatDay(member.left_on)) }}
 					</template>
 					<FormControl
 						v-else-if="team.can_change_roles"
 						type="select"
 						:modelValue="member.role"
 						:options="roleOptions"
-						:aria-label="__('Role')"
+						:aria-label="__('Role of {0}').format(memberName(member))"
 						@update:modelValue="(role: string) => setRole(member.user, role)"
 					/>
 					<template v-else>{{ roleLabel(member.role) }}</template>
 					<Button
 						v-if="canRemove(member, team)"
 						variant="ghost"
+						:aria-label="
+							isMe(member)
+								? __('Leave the organization')
+								: __('Mark {0} as left').format(memberName(member))
+						"
 						:data-testid="`remove-${member.user}`"
-						@click="remove(member.user)"
+						@click="remove(member)"
 					>
-						{{ __('Mark as left') }}
+						{{
+							isMe(member) ? __('Leave the organization') : __('Mark as left')
+						}}
 					</Button>
 				</span>
 			</li>
@@ -74,7 +97,17 @@
 // said as it came, and the list is read again after a change.
 import { computed, onMounted, ref } from 'vue'
 import { Button, call, createResource, FormControl, toast } from 'frappe-ui'
-import { canRemove, roleLabel, ROLE_VALUES, type TeamData } from '@/utils/team'
+import { sessionStore } from '@/stores/session'
+import { confirmAction } from '@/utils/confirm'
+import {
+	canRemove,
+	formatDay,
+	memberName,
+	roleLabel,
+	ROLE_VALUES,
+	type TeamData,
+	type TeamMember,
+} from '@/utils/team'
 
 type Answer<T> = {
 	ok: boolean
@@ -98,6 +131,13 @@ const links = computed<Invite[]>(() => {
 	const answer = invites.data as Answer<{ invites: Invite[] }> | null
 	return answer?.ok ? answer.data?.invites ?? [] : []
 })
+
+// The store unwraps its refs: `session.user` is the address itself.
+const session = sessionStore()
+const isMe = (member: TeamMember) => member.user === session.user
+const activeCount = computed(
+	() => props.team.members.filter((member) => !member.left).length
+)
 
 const roleOptions = ROLE_VALUES.map((value) => ({
 	value,
@@ -143,9 +183,19 @@ async function copy(url: string) {
 	}
 }
 
-async function revoke(token: string) {
-	if (await act('revoke_invite', { token }))
-		invites.reload({ organization: props.team.organization })
+// A revoked link stops working for whoever has it: asked first (#379).
+function revoke(token: string) {
+	confirmAction({
+		title: __('Revoke the link?'),
+		message: __(
+			'Whoever has it will not be able to join. People who joined stay.'
+		),
+		label: __('Revoke'),
+		onConfirm: async () => {
+			if (await act('revoke_invite', { token }))
+				invites.reload({ organization: props.team.organization })
+		},
+	})
 }
 
 async function setRole(user: string, role: string) {
@@ -157,10 +207,32 @@ async function setRole(user: string, role: string) {
 	emit('changed')
 }
 
-async function remove(user: string) {
-	if (
-		await act('remove_member', { organization: props.team.organization, user })
-	)
-		emit('changed')
+// Leaving closes the organization's documents to the person at once; the
+// question says so before, not after (#379).
+function remove(member: TeamMember) {
+	const self = isMe(member)
+	confirmAction({
+		title: self
+			? __('Leave the organization?')
+			: __('Mark {0} as left?').format(memberName(member)),
+		message: self
+			? __(
+					'You will lose access to its documents and team. Your documents stay with the organization.'
+			  )
+			: __(
+					'They will lose access to the organization. Their documents stay with it, marked as a former member.'
+			  ),
+		label: self ? __('Leave') : __('Mark as left'),
+		onConfirm: async () => {
+			const done = await act('remove_member', {
+				organization: props.team.organization,
+				user: member.user,
+			})
+			if (!done) return
+			// Who left has no team page to stay on.
+			if (self) window.location.href = '/lms'
+			else emit('changed')
+		},
+	})
 }
 </script>

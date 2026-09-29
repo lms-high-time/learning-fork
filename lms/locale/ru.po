@@ -10799,3 +10799,163 @@ msgstr "Например, отдел продаж"
 #: frontend/src/pages/Team/NewTeam.vue
 msgid "Organization name"
 msgstr "Название"
+
+#: frontend/src/components/Team/TeamDocuments.vue
+msgid "{0} of {1} blocks"
+msgstr "заполнено {0} из {1}"
+
+#: frontend/src/components/Team/TeamDocuments.vue
+msgid "Hide blocks nobody has filled"
+msgstr "Скрыть блоки, которые никто не заполнил"
+
+#: frontend/src/components/Team/TeamDocuments.vue
+msgid "Blocks"
+msgstr "Блоки"
+
+#: frontend/src/components/Team/TeamDocuments.vue
+msgid "Nobody has filled any block yet."
+msgstr "Пока никто не заполнил ни одного блока."
+
+#: frontend/src/components/Team/TeamDocuments.vue
+msgid "The same for {0}"
+msgstr "Одинаково у: {0}"
+
+#: frontend/src/components/Team/TeamDocuments.vue
+msgid "Not filled yet: {0}"
+msgstr "Не заполнили: {0}"
+
+#: frontend/src/components/Team/TeamDocuments.vue
+msgid "Everyone"
+msgstr "Все участники"
+
+#: frontend/src/components/Team/TeamMembers.vue
+msgid "Members: {0} of {1} while we have not verified the organization."
+msgstr "Участников: {0} из {1}, пока мы не подтвердили организацию."
+
+#: frontend/src/components/Team/TeamMembers.vue
+msgid "Role of {0}"
+msgstr "Роль: {0}"
+
+#: frontend/src/components/Team/TeamMembers.vue
+msgid "Leave the organization"
+msgstr "Выйти из организации"
+
+#: frontend/src/components/Team/TeamMembers.vue
+msgid "Mark {0} as left"
+msgstr "Отметить уход: {0}"
+
+#: frontend/src/components/Team/TeamMembers.vue
+msgid "Revoke the link?"
+msgstr "Отозвать ссылку?"
+
+#: frontend/src/components/Team/TeamMembers.vue
+msgid "Whoever has it will not be able to join. People who joined stay."
+msgstr "По ней больше нельзя будет вступить. Кто уже вступил, останется."
+
+#: frontend/src/components/Team/TeamMembers.vue
+msgid "Leave the organization?"
+msgstr "Выйти из организации?"
+
+#: frontend/src/components/Team/TeamMembers.vue
+msgid "Mark {0} as left?"
+msgstr "Отметить уход: {0}?"
+
+#: frontend/src/components/Team/TeamMembers.vue
+msgid "You will lose access to its documents and team. Your documents stay with the organization."
+msgstr "Вы потеряете доступ к её документам и команде. Ваши документы останутся у организации."
+
+#: frontend/src/components/Team/TeamMembers.vue
+msgid "They will lose access to the organization. Their documents stay with it, marked as a former member."
+msgstr "Человек потеряет доступ к организации. Его документы останутся у неё с пометкой «бывший участник»."
+
+#: frontend/src/components/Team/TeamMembers.vue
+msgid "Leave"
+msgstr "Выйти"
+
+#: frontend/src/components/Team/TeamAssignments.vue
+msgid "Deadline for {0}"
+msgstr "Срок: {0}"
+
+#: frontend/src/components/Team/TeamAssignments.vue
+msgid "Unassign {0}"
+msgstr "Снять назначение: {0}"
+
+#: frontend/src/components/Team/TeamAssignments.vue
+msgid "Unassign {0}?"
+msgstr "Снять назначение: {0}?"
+
+#: frontend/src/components/Team/TeamAssignments.vue
+msgid "The course leaves the report and nobody gets reminders about it. Progress stays with the people."
+msgstr "Курс уйдёт из отчёта, напоминаний о нём не будет. Прогресс останется у людей."
+
+#: frontend/src/components/Team/TeamReport.vue
+msgid "Nobody is assigned a course yet."
+msgstr "Пока никому не назначен курс."
+
+#: frontend/src/components/Team/TeamReport.vue
+msgid "Assignments: {0} · completed: {1} · overdue: {2}"
+msgstr "Назначений: {0} · пройдено: {1} · просрочено: {2}"
+
+#: frontend/src/components/Team/TeamReport.vue
+msgid "{0} of {1}"
+msgstr "{0} из {1}"
+
+#: frontend/src/components/Team/TeamReport.vue
+msgid "First try"
+msgstr "С первой попытки"
+
+#: frontend/src/components/Team/TeamReport.vue
+msgid "filled blocks in all documents of the course, in this organization."
+msgstr "заполненные блоки во всех документах курса в этой организации."
+
+#: frontend/src/components/Team/TeamReport.vue
+msgid "lessons whose quiz passed on the first attempt, of lessons passed."
+msgstr "уроки, квиз которых сдан с первой попытки, из сданных уроков."
+
+#: frontend/src/utils/team.ts
+msgid "Due today"
+msgstr "срок сегодня"
+
+#: frontend/src/utils/team.ts
+msgid "in {0} day"
+msgstr "через {0} день"
+
+#: frontend/src/utils/team.ts
+msgid "in {0} days [few]"
+msgstr "через {0} дня"
+
+#: frontend/src/utils/team.ts
+msgid "in {0} days [many]"
+msgstr "через {0} дней"
+
+#: frontend/src/utils/team.ts
+msgid "in {0} days"
+msgstr "через {0} дня"
+
+#: frontend/src/utils/team.ts
+msgid "{0} day overdue"
+msgstr "просрочено на {0} день"
+
+#: frontend/src/utils/team.ts
+msgid "{0} days overdue [few]"
+msgstr "просрочено на {0} дня"
+
+#: frontend/src/utils/team.ts
+msgid "{0} days overdue [many]"
+msgstr "просрочено на {0} дней"
+
+#: frontend/src/utils/team.ts
+msgid "{0} days overdue"
+msgstr "просрочено на {0} дня"
+
+#: frontend/src/pages/Team/Join.vue
+msgid "Go to the home page"
+msgstr "На главную"
+
+#: frontend/src/pages/Team/NewTeam.vue
+msgid "Until we verify it, it holds up to {0} members."
+msgstr "Пока мы её не подтвердили, в ней может быть до {0} участников."
+
+#: frontend/src/pages/Team/NewTeam.vue
+msgid "You have as many unverified organizations as one person may start. Write to us to verify one of them."
+msgstr "У вас уже столько неподтверждённых организаций, сколько можно создать одному человеку. Напишите нам, чтобы подтвердить одну из них."

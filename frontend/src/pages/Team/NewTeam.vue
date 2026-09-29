@@ -1,4 +1,5 @@
 <template>
+	<PageHeader :breadcrumbs="[{ label: __('Create an organization') }]" />
 	<div class="mx-auto max-w-xl space-y-4 p-5">
 		<h1 class="text-xl-semibold text-ink-gray-9">
 			{{ __('Create an organization') }}
@@ -14,10 +15,29 @@
 					)
 				}}
 			</li>
-			<li>
-				{{ __('Until we verify it, it holds a limited number of members.') }}
+			<li data-testid="new-team-limit">
+				{{
+					terms?.member_limit
+						? __('Until we verify it, it holds up to {0} members.').format(
+								terms.member_limit
+						  )
+						: __('Until we verify it, it holds a limited number of members.')
+				}}
 			</li>
 		</ul>
+		<!-- The limit of one's own organizations, said before typing a name,
+		     not as a refusal after (#379). -->
+		<p
+			v-if="noneLeft"
+			class="rounded bg-surface-amber-1 p-3 text-p-sm text-ink-amber-3"
+			data-testid="new-team-none-left"
+		>
+			{{
+				__(
+					'You have as many unverified organizations as one person may start. Write to us to verify one of them.'
+				)
+			}}
+		</p>
 		<form class="space-y-3" data-testid="new-team" @submit.prevent="create">
 			<FormControl
 				v-model="title"
@@ -28,7 +48,7 @@
 			<Button
 				variant="solid"
 				type="submit"
-				:disabled="title.trim().length < 2"
+				:disabled="noneLeft || title.trim().length < 2"
 				:loading="saving"
 				data-testid="create-team"
 			>
@@ -42,14 +62,36 @@
 // Starting one's own organization (learning-services#366): the creator is its
 // administrator and lands in its space. Limits are the server's; a refusal is
 // said as it came.
-import { ref } from 'vue'
-import { Button, call, FormControl, toast, usePageMeta } from 'frappe-ui'
+import { computed, ref } from 'vue'
+import {
+	Button,
+	call,
+	createResource,
+	FormControl,
+	toast,
+	usePageMeta,
+} from 'frappe-ui'
+import PageHeader from '@/components/Layouts/PageHeader.vue'
 
 type Answer<T> = {
 	ok: boolean
 	data?: T
 	error?: { code: string; message: string }
 }
+
+// The numbers are the platform's settings; the page says them (#379).
+const termsResource = createResource({
+	url: 'lms_frappe_app.api.team.organization_terms',
+	auto: true,
+})
+const terms = computed(() => {
+	const answer = termsResource.data as Answer<{
+		member_limit: number | null
+		organizations_left: number | null
+	}> | null
+	return answer?.ok ? answer.data ?? null : null
+})
+const noneLeft = computed(() => terms.value?.organizations_left === 0)
 
 const title = ref('')
 const saving = ref(false)
