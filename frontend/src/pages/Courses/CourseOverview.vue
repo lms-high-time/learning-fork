@@ -51,7 +51,7 @@
 							<span class="lucide-dot size-5 text-ink-gray-7" />
 						</template>
 						<div
-							v-if="course.data.instructors?.length"
+							v-if="SHOW_COURSE_AUTHORS && course.data.instructors?.length"
 							class="flex items-center"
 						>
 							<span
@@ -256,6 +256,7 @@ import CourseInstructors from '@/components/CourseInstructors.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import RelatedCourses from '@/components/RelatedCourses.vue'
 import type { ProgramData } from '@/utils/courseProgram'
+import { SHOW_COURSE_AUTHORS } from '@/utils/courseAuthors'
 import { useSpace } from '@/stores/space'
 import { withSpace } from '@/utils/space'
 import { LESSONS, SECTIONS, STUDENTS, plural } from '@/utils/plural'
