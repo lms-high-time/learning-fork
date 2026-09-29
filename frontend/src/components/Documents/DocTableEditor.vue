@@ -54,6 +54,8 @@
 
 		<div
 			v-if="!only && !columnKeys && groups.length > 1"
+			v-show="!columnsFolded"
+			:id="columnsId"
 			class="flex flex-wrap items-center gap-1.5"
 		>
 			<span class="text-p-xs text-ink-gray-5">{{ __('Columns') }}:</span>
@@ -310,7 +312,7 @@ import {
 	columnGroups,
 	filterRows,
 	flagColumns,
-	formatCell,
+	formatValue,
 	isBlank,
 	isMissing,
 	sortRows,
@@ -347,6 +349,13 @@ const props = defineProps<{
 	openable?: boolean
 	/** The summary's «in work» turns the flag filter on from outside. */
 	flagOn?: boolean
+	/**
+	 * The column groups are folded away: the whole table on a phone keeps
+	 * them behind one button until asked (learning-services#386).
+	 */
+	columnsFolded?: boolean
+	/** The column groups' id, for the button that unfolds them. */
+	columnsId?: string
 }>()
 
 const emit = defineEmits<{
@@ -458,7 +467,7 @@ function rowSummary(row: DocRow): string {
 				return row[c.key] ? c.title : ''
 			return option && c.type !== 'select'
 				? option.label
-				: formatCell(c, row[c.key])
+				: formatValue(c, row[c.key])
 		})
 		.filter(Boolean)
 		.join(' · ')

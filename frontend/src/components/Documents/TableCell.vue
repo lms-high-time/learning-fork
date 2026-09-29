@@ -113,7 +113,7 @@
 import { computed, nextTick, ref } from 'vue'
 import {
 	cellOptions,
-	formatCell,
+	formatValue,
 	isMissing,
 	isToClarify,
 	type CellValue,
@@ -142,12 +142,14 @@ const missing = computed(() => isMissing(props.column, props.row))
 const clarify = computed(() => isToClarify(value.value))
 
 // A scale cell shows its label too: «4 — Вероятно» says more than «4».
+// A number is read in groups of digits, «900 000», as the canvas writes it;
+// its input keeps the bare number (learning-services#386).
 const shown = computed(() => {
 	const option = options.value.find(
 		(o) => String(o.value) === String(value.value)
 	)
 	if (option && props.column.type !== 'select') return option.label
-	return formatCell(props.column, value.value)
+	return formatValue(props.column, value.value)
 })
 
 async function startEditing() {

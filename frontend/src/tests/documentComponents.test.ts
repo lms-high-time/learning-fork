@@ -130,6 +130,16 @@ const blocks = [
 	},
 ] as DocumentData['blocks']
 
+const rankCell = (rank: number) =>
+	mount(TableCell, {
+		props: {
+			row: { ...register.rows[0], rank },
+			column: register.columns[2],
+			tables: {},
+		},
+		global,
+	})
+
 describe('TableCell', () => {
 	it('shows a formula read-only and a blank required cell as one to fill', () => {
 		const rank = mount(TableCell, {
@@ -158,6 +168,43 @@ describe('TableCell', () => {
 		await cell.get('button').trigger('click')
 		await cell.get('select').setValue('5')
 		expect(cell.emitted('save')?.[0]).toEqual([5])
+	})
+
+	// learning-services#386: «900 000» on the canvas, «900000» in the table.
+	it('reads a number in groups of digits and edits it bare', async () => {
+		const cell = mount(TableCell, {
+			props: {
+				row: { id: 'R1', budget: 900000 },
+				column: {
+					key: 'budget',
+					title: 'Бюджет',
+					type: 'number',
+					block: 'assessment',
+				},
+				tables: {},
+			},
+			global,
+		})
+		expect(cell.get('button').text()).toBe('900\u00a0000')
+		await cell.get('button').trigger('click')
+		expect((cell.get('input').element as HTMLInputElement).value).toBe('900000')
+
+		const total = mount(TableCell, {
+			props: {
+				row: { id: 'R1', total: 1234567.891 },
+				column: {
+					key: 'total',
+					title: 'Итого',
+					type: 'formula',
+					block: 'assessment',
+				},
+				tables: {},
+			},
+			global,
+		})
+		expect(total.text()).toBe('1\u00a0234\u00a0567,89')
+		// Four digits stay whole, as the canvas writes them.
+		expect(rankCell(1000).text()).toBe('1000')
 	})
 
 	it('marks «уточнить у …»', () => {

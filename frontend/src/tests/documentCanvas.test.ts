@@ -36,6 +36,7 @@ vi.mock('@/utils/composables', () => ({
 }))
 
 import BlockFields from '@/components/Documents/BlockFields.vue'
+import CanvasSummary from '@/components/Documents/CanvasSummary.vue'
 import CanvasPanel from '@/components/Documents/CanvasPanel.vue'
 import ComparePanel from '@/components/Documents/ComparePanel.vue'
 
@@ -364,6 +365,41 @@ describe('CanvasPanel', () => {
 		expect(styles()[before].textContent).toContain('A4 landscape')
 		wrapper.unmount()
 		expect(styles()).toHaveLength(before)
+	})
+})
+
+describe('CanvasSummary', () => {
+	// learning-services#386: «✗ Сходится» read as a contradiction.
+	it('says a false yes/no formula in words, a true one with a tick', () => {
+		const wrapper = mount(CanvasSummary, {
+			props: {
+				lines: [
+					{ text: 'Сходится', flag: true },
+					{ text: 'В работе', flag: false },
+				],
+			},
+			global,
+		})
+		const [yes, no] = wrapper.findAll('[data-flag]')
+		expect(yes.text()).toBe('✓ Сходится')
+		expect(yes.classes()).toContain('text-ink-green-8')
+		expect(no.text()).toBe('В работе: no')
+		expect(no.text()).not.toContain('✗')
+		expect(no.classes()).toContain('text-ink-red-7')
+	})
+
+	it('shows a false flag on the canvas by its title and «no»', () => {
+		const wrapper = mount(CanvasPanel, {
+			props: {
+				document: { ...doc, fields: { ...doc.fields, fits: false } },
+				canvas,
+				courseTitle: 'Lean-старт',
+			},
+			global,
+		})
+		expect(
+			wrapper.get('[data-testid="canvas-cell-metrics"] [data-flag]').text()
+		).toBe('Сходится: no')
 	})
 })
 

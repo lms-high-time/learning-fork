@@ -596,7 +596,11 @@ export function reportOf(
 	return null
 }
 
-/** The rows and columns on screen as CSV, labels instead of scale numbers. */
+/**
+ * The rows and columns on screen as CSV, labels instead of scale numbers.
+ * Numbers stay bare, not in groups of digits: a spreadsheet would read
+ * «900 000» as text (learning-services#386).
+ */
 export function toCsv(
 	columns: DocColumn[],
 	rows: DocRow[],
@@ -688,7 +692,10 @@ export interface CanvasLine {
 	text: string
 	/** The field's title, where the line would not say what it is. */
 	label?: string
-	/** A yes/no formula: shown as ✓ or ✗ with its title as the text. */
+	/**
+	 * A yes/no formula, its title as the text: «✓ Title» when true, «Title: no»
+	 * when false (learning-services#386).
+	 */
 	flag?: boolean
 }
 
