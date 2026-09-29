@@ -238,6 +238,20 @@ describe('the course author', () => {
 		expect(wrapper.find('[data-testid="instructors"]').exists()).toBe(false)
 	})
 
+	it('leaves no separator hanging after the last item', async () => {
+		mapData.value = null
+		const wrapper = mountOverview({
+			name: 'p3',
+			title: 'P3',
+			upcoming: 0,
+			rating: 4.5,
+			instructors: [{ name: 'admin@example.com' }],
+		})
+		await flushPromises()
+
+		expect(wrapper.findAll('.lucide-dot')).toHaveLength(0)
+	})
+
 	it('is not named on the catalog card', () => {
 		const wrapper = mount(CourseCard, {
 			props: {
