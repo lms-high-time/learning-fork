@@ -477,7 +477,9 @@ watch(course, () => {
 
 const isInstructor = (): boolean => {
 	let user_is_instructor = false
-	course.data?.instructors.forEach((instructor: CourseInstructorInfo) => {
+	// A course the viewer may not see comes back as `{}`, without instructors;
+	// throwing here kept the page from sending them back to the catalog.
+	course.data?.instructors?.forEach((instructor: CourseInstructorInfo) => {
 		if (!user_is_instructor && instructor.name == user.data?.name) {
 			user_is_instructor = true
 		}

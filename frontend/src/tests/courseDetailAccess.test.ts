@@ -89,6 +89,10 @@ describe('an unpublished course page', () => {
 		expect(await open({ published: 0, upcoming: 0, membership: null })).toBe('Courses')
 	})
 
+	it('sends back someone the server shows nothing, a revoked tester', async () => {
+		expect(await open({ name: undefined, instructors: undefined })).toBe('Courses')
+	})
+
 	it('stays open to a tester enrolled in it', async () => {
 		expect(
 			await open({ published: 0, upcoming: 0, membership: { name: 'enr-1' } })
