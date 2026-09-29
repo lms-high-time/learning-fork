@@ -61,13 +61,6 @@
 				:placeholder="__('Category')"
 				@update:modelValue="updateCourses()"
 			/>
-			<ToggleFilter
-				:modelValue="certification"
-				:label="__('Certification')"
-				:mobileLabel="__('Certification available')"
-				:tooltip="__('Only show courses that offer a certificate')"
-				@update:modelValue="setCertification"
-			/>
 		</template>
 
 		<template #card="{ row }">
@@ -92,7 +85,6 @@ import {
 	usePageMeta,
 } from 'frappe-ui'
 import ClearableCombobox from '@/components/Controls/ClearableCombobox.vue'
-import ToggleFilter from '@/components/Controls/ToggleFilter.vue'
 import ListPage from '@/components/Layouts/ListPage.vue'
 import { computed, inject, onMounted, ref, watch } from 'vue'
 import { sessionStore } from '@/stores/session'
@@ -107,12 +99,6 @@ const dayjs = inject('$dayjs')
 const start = ref(0)
 const currentCategory = ref(null)
 const title = ref('')
-const certification = ref(false)
-
-const setCertification = (value) => {
-	certification.value = value
-	updateCourses()
-}
 const filters = ref({})
 const currentTab = ref('live')
 const { brand } = sessionStore()
@@ -131,8 +117,6 @@ const setFiltersFromQuery = () => {
 	let queries = new URLSearchParams(location.search)
 	title.value = queries.get('title') || ''
 	currentCategory.value = queries.get('category') || null
-	// `|| false` would keep the raw string, so ?certification=false read as on.
-	certification.value = queries.get('certification') === 'true'
 	const tab = queries.get('tab')
 	if (tab) currentTab.value = tab
 	// Compatibility shim: ?newCourse=1 was this page's ad-hoc deep link before
@@ -222,7 +206,6 @@ const updateCourses = () => {
 const updateFilters = () => {
 	updateCategoryFilter()
 	updateTitleFilter()
-	updateCertificationFilter()
 	updateTabFilter()
 	updateStudentFilter()
 	updateSpaceFilter()
@@ -245,14 +228,6 @@ const updateTitleFilter = () => {
 	}
 }
 
-const updateCertificationFilter = () => {
-	if (certification.value) {
-		filters.value['certification'] = 1
-	} else {
-		delete filters.value['certification']
-	}
-}
-
 const updateTabFilter = () => {
 	delete filters.value['live']
 	delete filters.value['created']
@@ -267,9 +242,10 @@ const updateTabFilter = () => {
 		delete filters.value['enrolled']
 
 		if (currentTab.value == 'live') {
-			// Announcements belong here too, after the open courses: on a tab of
-			// their own nobody found them (learning-services#391).
+			// Open courses only: announcements have their own tab
+			// (learning-services#397).
 			filters.value['published'] = 1
+			filters.value['upcoming'] = 0
 			filters.value['live'] = 1
 		} else if (currentTab.value == 'upcoming') {
 			filters.value['upcoming'] = 1
@@ -315,7 +291,6 @@ const setQueryParams = () => {
 	let filterKeys = {
 		title: title.value,
 		category: currentCategory.value,
-		certification: certification.value,
 	}
 
 	Object.keys(filterKeys).forEach((key) => {
@@ -346,9 +321,7 @@ watch(currentTab, () => {
 const courseTabs = computed(() => {
 	let tabs = [
 		{
-			// Open courses and announcements alike (learning-services#391), so
-			// not «Published»: an announcement there read as a contradiction
-			// (learning-services#396).
+			// «Все», matching the page heading «Все курсы» (learning-services#396).
 			label: __('All'),
 			value: 'live',
 		},
