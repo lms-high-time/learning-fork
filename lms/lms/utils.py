@@ -2735,7 +2735,10 @@ def get_programs():
 	for program in enrolled_programs:
 		program.update(
 			frappe.db.get_value(
-				"LMS Program", program.name, ["name", "course_count", "member_count"], as_dict=True
+				"LMS Program",
+				program.name,
+				["name", "title", "description", "course_count", "member_count"],
+				as_dict=True,
 			)
 		)
 
@@ -2744,7 +2747,7 @@ def get_programs():
 		{
 			"published": 1,
 		},
-		["name", "course_count", "member_count"],
+		["name", "title", "description", "course_count", "member_count"],
 	)
 
 	programs_to_remove = []
@@ -2776,6 +2779,8 @@ def get_program_details(program_name: str) -> dict:
 		program_name,
 		[
 			"name",
+			"title",
+			"description",
 			"member_count",
 			"course_count",
 			"published",
@@ -2783,6 +2788,9 @@ def get_program_details(program_name: str) -> dict:
 		],
 		as_dict=1,
 	)
+	# The page is one for everyone: a member sees the path and where they are,
+	# anyone else the path and the way in (learning-services#417).
+	program.is_member = bool(is_member)
 	program_courses = frappe.get_all(
 		"LMS Program Course", {"parent": program_name}, ["course"], order_by="idx"
 	)
@@ -2820,11 +2828,26 @@ def enroll_in_program(program: str):
 			{
 				"parent": program,
 				"parenttype": "LMS Program",
-				"parentfield": "members",
+				# The table's field, not "members": under any other name the row
+				# is invisible to the program document — its form does not list the
+				# member and member_count stays 0 (learning-services#417).
+				"parentfield": "program_members",
 				"member": frappe.session.user,
 			}
 		)
 		program_member.save(ignore_permissions=True)
+		update_program_member_count(program)
+
+
+def update_program_member_count(program: str):
+	"""member_count is kept by LMS Program.validate, which a row saved on its own skips."""
+	frappe.db.set_value(
+		"LMS Program",
+		program,
+		"member_count",
+		frappe.db.count("LMS Program Member", {"parent": program, "parenttype": "LMS Program"}),
+		update_modified=False,
+	)
 
 
 def validate_program_enrollment(program: str):

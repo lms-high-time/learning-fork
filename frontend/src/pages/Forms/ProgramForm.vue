@@ -37,6 +37,22 @@
 						/>
 					</div>
 				</div>
+				<!-- What the program page says under its title (#417). -->
+				<div class="pb-5">
+					<FormControl
+						v-model="program.description"
+						:label="__('Description')"
+						:description="
+							__(
+								'One or two sentences: who the program is for and what they will have at the end.'
+							)
+						"
+						type="textarea"
+						:rows="3"
+						data-testid="program-description-input"
+						@change="dirty = true"
+					/>
+				</div>
 
 				<div class="pb-5">
 					<div class="flex items-center justify-between mt-5 mb-4">
@@ -308,6 +324,7 @@ const canManageProgram = computed(() => {
 const program = ref<Program>({
 	name: '',
 	title: '',
+	description: '',
 	published: false,
 	enforce_course_order: false,
 	program_courses: [],
@@ -390,6 +407,7 @@ const fetchMembers = () => {
 const applyDoc = (doc: Program) => {
 	program.value.name = doc.name
 	program.value.title = doc.title
+	program.value.description = doc.description ?? ''
 	program.value.published = Boolean(doc.published)
 	program.value.enforce_course_order = Boolean(doc.enforce_course_order)
 	dirty.value = false

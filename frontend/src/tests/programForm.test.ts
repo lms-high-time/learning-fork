@@ -222,7 +222,7 @@ const MEMBER_ROWS = [
 
 // Every label the form is meant to collect. Pin the set: a field lost in the
 // modal→page move is otherwise invisible to the rest of the suite.
-const FIELD_LABELS = ['Title', 'Published', 'Enforce Course Order']
+const FIELD_LABELS = ['Title', 'Published', 'Enforce Course Order', 'Description']
 
 beforeEach(() => {
 	resources.lists.length = 0

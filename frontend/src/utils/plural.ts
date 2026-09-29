@@ -79,3 +79,11 @@ export const SECTIONS: PluralForms = {
 	many: '{0} sections [many]',
 	other: '{0} sections',
 }
+
+// A program's size (learning-services#417).
+export const COURSES: PluralForms = {
+	one: '{0} course',
+	few: '{0} courses [few]',
+	many: '{0} courses [many]',
+	other: '{0} courses',
+}

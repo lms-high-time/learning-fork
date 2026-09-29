@@ -1,6 +1,8 @@
 export interface Program {
     name: string;
     title: string;
+    // What the program page says under its title (learning-services#417).
+    description?: string | null;
     published: boolean;
     enforce_course_order: boolean;
     program_courses: ProgramCourse[];
