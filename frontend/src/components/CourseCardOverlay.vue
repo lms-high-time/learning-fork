@@ -55,6 +55,39 @@
 					</router-link>
 					<CertificationLinks :courseName="course.data.name" class="w-full" />
 				</div>
+				<!-- An announced course takes no enrolments; the one thing to do is
+				ask to hear when it opens (learning-services#389). -->
+				<div
+					v-else-if="course.data?.upcoming && !isAdmin"
+					data-testid="course-upcoming"
+					class="space-y-3"
+				>
+					<Badge theme="orange" size="lg">{{ __('In the works') }}</Badge>
+					<p class="text-p-sm text-ink-gray-7">
+						{{ __('Enrollment opens when the course is released.') }}
+					</p>
+					<div
+						v-if="subscribed"
+						data-testid="course-notify-done"
+						class="text-p-sm text-ink-gray-7"
+					>
+						{{ __("We'll email you when the course is released.") }}
+					</div>
+					<Button
+						v-else
+						data-testid="course-notify"
+						variant="solid"
+						size="md"
+						class="w-full"
+						:loading="notifying"
+						@click="notifyWhenReleased()"
+					>
+						<template #prefix>
+							<span class="lucide-bell size-4" />
+						</template>
+						<span>{{ __('Notify me when it is out') }}</span>
+					</Button>
+				</div>
 				<router-link
 					v-else-if="course.data?.paid_course && !isAdmin"
 					:to="{
@@ -112,7 +145,7 @@
 	</div>
 </template>
 <script setup lang="ts">
-import { computed, inject, watch } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
 import { Badge, Button, call, createResource, toast } from 'frappe-ui'
 import { useRouter } from 'vue-router'
 import CertificationLinks from '@/components/CertificationLinks.vue'
@@ -139,9 +172,52 @@ const { capture } = useTelemetry()
 const props = withDefaults(
 	defineProps<{
 		course: Resource<CourseDetails | null>
+		/** Whether the viewer already asked to hear of the release of an
+		 * announced course; the page reads it from the course map. */
+		notify?: boolean
 	}>(),
-	{}
+	{ notify: false }
 )
+
+const subscribed = ref<boolean>(props.notify)
+const notifying = ref<boolean>(false)
+watch(
+	() => props.notify,
+	(value) => {
+		if (value) subscribed.value = true
+	}
+)
+
+function notifyWhenReleased() {
+	if (!user.data) {
+		toast.warning(__('You need to login first to get notified'))
+		setTimeout(() => {
+			window.location.href = `/login?redirect-to=${window.location.pathname}`
+		}, 500)
+		return
+	}
+	const courseName = props.course.data?.name
+	if (!courseName) return
+	notifying.value = true
+	call('lms_frappe_app.api.student.notify_when_released', {
+		course: courseName,
+	})
+		.then((result: { ok: boolean; error?: { message: string } }) => {
+			if (!result?.ok) {
+				toast.warning(result?.error?.message ?? __('Could not subscribe'))
+				return
+			}
+			subscribed.value = true
+			capture('asked_for_course_release', { course: courseName })
+		})
+		.catch((err: { messages?: string[] } | string) => {
+			const msg = typeof err === 'string' ? err : err.messages?.[0] ?? 'Error'
+			toast.warning(__(msg))
+		})
+		.finally(() => {
+			notifying.value = false
+		})
+}
 
 // The next open lesson and where to study it, from lms_frappe_app
 // (learning-services#301). Learning's own `current_lesson` moves only with the

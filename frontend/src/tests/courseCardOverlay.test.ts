@@ -47,6 +47,7 @@ vi.mock('frappe-ui/frappe', () => ({
 vi.mock('vue-router', () => ({ useRouter: () => ({ push: vi.fn() }) }))
 
 import CourseCardOverlay from '@/components/CourseCardOverlay.vue'
+import { call } from 'frappe-ui'
 
 const __ = (message: string) => {
 	if (!/{\d+}/.test(message)) return message
@@ -143,5 +144,82 @@ describe('CourseCardOverlay for an enrolled student', () => {
 
 		expect(wrapper.find('[data-testid="course-study"]').exists()).toBe(false)
 		expect(wrapper.find('[data-testid="reader"]').exists()).toBe(true)
+	})
+})
+
+// learning-services#389: an announced course takes no enrolment; the card
+// offers to write when it opens instead.
+const mountAnnounced = (
+	props: { notify?: boolean } = {},
+	user: { data: { name: string } | null } = {
+		data: { name: 'pupil@example.com' },
+	}
+) =>
+	mount(CourseCardOverlay, {
+		props: {
+			course: {
+				data: {
+					name: 'course-ops',
+					upcoming: 1,
+					membership: null,
+					instructors: [],
+				},
+			} as never,
+			...props,
+		},
+		global: {
+			mocks: { __ },
+			provide: { $user: user },
+			stubs: {
+				VideoPreview: true,
+				CertificationLinks: true,
+				RouterLink: { template: '<a><slot /></a>' },
+			},
+		},
+	})
+
+describe('CourseCardOverlay for an announced course', () => {
+	beforeEach(() => {
+		vi.mocked(call).mockReset()
+	})
+
+	it('offers to notify instead of enrolling', () => {
+		const wrapper = mountAnnounced()
+
+		expect(wrapper.find('[data-testid="course-upcoming"]').exists()).toBe(true)
+		expect(wrapper.text()).toContain('In the works')
+		expect(wrapper.text()).not.toContain('Enroll Now')
+		expect(wrapper.find('[data-testid="course-notify"]').exists()).toBe(true)
+	})
+
+	it('subscribes through the contract and says so', async () => {
+		vi.mocked(call).mockResolvedValue({ ok: true, data: { notify: true } })
+		const wrapper = mountAnnounced()
+
+		await wrapper.get('[data-testid="course-notify"]').trigger('click')
+		await flushPromises()
+
+		expect(call).toHaveBeenCalledWith(
+			'lms_frappe_app.api.student.notify_when_released',
+			{ course: 'course-ops' }
+		)
+		expect(wrapper.find('[data-testid="course-notify"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="course-notify-done"]').exists()).toBe(true)
+	})
+
+	it('shows the subscription the viewer already has', () => {
+		const wrapper = mountAnnounced({ notify: true })
+
+		expect(wrapper.find('[data-testid="course-notify"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="course-notify-done"]').exists()).toBe(true)
+	})
+
+	it('sends a guest to log in rather than calling the server', async () => {
+		const wrapper = mountAnnounced({}, { data: null })
+
+		await wrapper.get('[data-testid="course-notify"]').trigger('click')
+		await flushPromises()
+
+		expect(call).not.toHaveBeenCalled()
 	})
 })
