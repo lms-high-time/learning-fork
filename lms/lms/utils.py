@@ -916,7 +916,9 @@ def get_courses(filters: dict = None, start: int = 0, limit_page_length: int | s
 			filters=filters,
 			fields=fields,
 			or_filters=or_filters,
-			order_by="enrollments desc",
+			# Announcements share the live tab and follow the open courses
+			# (learning-services#391).
+			order_by="upcoming asc, enrollments desc",
 			start=max(start - len(featured), 0),
 			page_length=remaining,
 		)

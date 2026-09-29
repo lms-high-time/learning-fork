@@ -187,7 +187,8 @@ describe('CourseCardOverlay for an announced course', () => {
 		const wrapper = mountAnnounced()
 
 		expect(wrapper.find('[data-testid="course-upcoming"]').exists()).toBe(true)
-		expect(wrapper.text()).toContain('In the works')
+		expect(wrapper.text()).toContain('Course in the works')
+		expect(wrapper.text()).not.toContain('Free')
 		expect(wrapper.text()).not.toContain('Enroll Now')
 		expect(wrapper.find('[data-testid="course-notify"]').exists()).toBe(true)
 	})
@@ -204,7 +205,23 @@ describe('CourseCardOverlay for an announced course', () => {
 			{ course: 'course-ops' }
 		)
 		expect(wrapper.find('[data-testid="course-notify"]').exists()).toBe(false)
-		expect(wrapper.find('[data-testid="course-notify-done"]').exists()).toBe(true)
+		expect(wrapper.get('[data-testid="course-notify-done"]').text()).toContain(
+			'pupil@example.com'
+		)
+	})
+
+	it('unsubscribes and offers the button again', async () => {
+		vi.mocked(call).mockResolvedValue({ ok: true, data: { notify: false } })
+		const wrapper = mountAnnounced({ notify: true })
+
+		await wrapper.get('[data-testid="course-unnotify"]').trigger('click')
+		await flushPromises()
+
+		expect(call).toHaveBeenCalledWith(
+			'lms_frappe_app.api.student.notify_when_released',
+			{ course: 'course-ops', notify: false }
+		)
+		expect(wrapper.find('[data-testid="course-notify"]').exists()).toBe(true)
 	})
 
 	it('shows the subscription the viewer already has', () => {

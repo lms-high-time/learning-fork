@@ -101,8 +101,24 @@
 					<h2 class="text-3xl-semibold text-ink-gray-9 mb-4">
 						{{ __('After the course you will be able to') }}
 					</h2>
+					<!-- Until the map answers, a placeholder: «the course is in the
+					works» in its place read as a course with nothing in it
+					(learning-services#391). -->
+					<div
+						v-if="!mapLoaded"
+						data-testid="course-announcement-loading"
+						class="space-y-3"
+						aria-hidden="true"
+					>
+						<div
+							v-for="width in ['w-11/12', 'w-9/12', 'w-10/12']"
+							:key="width"
+							class="h-4 rounded bg-surface-gray-2 animate-pulse"
+							:class="width"
+						/>
+					</div>
 					<ul
-						v-if="objectives.length"
+						v-else-if="objectives.length"
 						class="list-disc ps-5 space-y-2 text-ink-gray-8 leading-6"
 					>
 						<li v-for="objective in objectives" :key="objective">
@@ -156,7 +172,13 @@
 					</div>
 				</section>
 
-				<section v-if="course.data.description" class="space-y-3">
+				<!-- A description that only repeats the introduction above says it
+				twice; an announcement page is short enough for that to show. -->
+				<section
+					v-if="course.data.description && !descriptionRepeatsIntro"
+					data-testid="course-about"
+					class="space-y-3"
+				>
 					<h2 class="text-3xl-semibold text-ink-gray-9">
 						{{ __('About this course') }}
 					</h2>
@@ -193,7 +215,8 @@
 
 <script setup lang="ts">
 import { computed, inject, watch } from 'vue'
-import { createResource, Badge } from 'frappe-ui'
+import { useRoute, useRouter } from 'vue-router'
+import { call, createResource, Badge } from 'frappe-ui'
 import { formatAmount, formatRating } from '@/utils/'
 import type {
 	CourseDetails,
@@ -301,6 +324,42 @@ const objectives = computed<string[]>(
 	() => courseMap.data?.data?.objectives ?? []
 )
 const notify = computed<boolean>(() => Boolean(courseMap.data?.data?.notify))
+const mapLoaded = computed<boolean>(() => Boolean(courseMap.data))
+
+const plainText = (html: string): string =>
+	html
+		.replace(/<[^>]*>/g, ' ')
+		.replace(/&nbsp;/g, ' ')
+		.replace(/\s+/g, ' ')
+		.trim()
+const descriptionRepeatsIntro = computed<boolean>(() => {
+	const intro = props.course.data?.short_introduction?.trim()
+	const description = props.course.data?.description
+	return Boolean(intro && description && plainText(description) === intro)
+})
+
+// A guest who asked to hear of the release comes back from the login page
+// with `notify=1`; the wish is carried out here, once — the card is mounted
+// twice, for the phone and for the desktop (learning-services#391).
+const route = useRoute()
+const router = useRouter()
+const releaseWish = computed<boolean>(() => route?.query?.notify === '1')
+
+watch(
+	() => [releaseWish.value, mapLoaded.value, Boolean(user?.data)],
+	([wish, loaded, loggedIn]) => {
+		if (!wish || !loaded || !upcoming.value) return
+		const { notify: _, ...rest } = route.query
+		router?.replace({ query: rest })
+		if (!loggedIn || notify.value) return
+		call('lms_frappe_app.api.student.notify_when_released', {
+			course: props.course.data?.name,
+		})
+			.then(() => courseMap.fetch())
+			.catch(() => {})
+	},
+	{ immediate: true }
+)
 
 const program = computed<ProgramData | null>(() => {
 	const data = courseMap.data?.data

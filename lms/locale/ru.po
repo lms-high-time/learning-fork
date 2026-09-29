@@ -10969,7 +10969,7 @@ msgid "You have as many unverified organizations as one person may start. Write 
 msgstr "У вас уже столько неподтверждённых организаций, сколько можно создать одному человеку. Напишите нам, чтобы подтвердить одну из них."
 
 #: frontend/src/components/CourseCard.vue
-#: frontend/src/components/CourseCardOverlay.vue
+#: frontend/src/components/Layouts/PageHeader.vue
 msgid "In the works"
 msgstr "Готовится"
 
@@ -10978,8 +10978,8 @@ msgid "Enrollment opens when the course is released."
 msgstr "Запись откроется, когда курс выйдет."
 
 #: frontend/src/components/CourseCardOverlay.vue
-msgid "We'll email you when the course is released."
-msgstr "Напишем вам на почту, когда курс выйдет."
+msgid "You're on the list. We'll write to {0} when it is out."
+msgstr "Вы в списке. Напишем на {0}, когда курс выйдет."
 
 #: frontend/src/components/CourseCardOverlay.vue
 msgid "Notify me when it is out"
@@ -11000,3 +11000,19 @@ msgstr "После курса вы сможете"
 #: frontend/src/pages/Courses/CourseOverview.vue
 msgid "The course is in the works."
 msgstr "Курс готовится."
+
+#: frontend/src/components/CourseCardOverlay.vue
+msgid "Course in the works"
+msgstr "Курс готовится"
+
+#: frontend/src/components/CourseCardOverlay.vue
+msgid "Unsubscribe"
+msgstr "Отписаться"
+
+#: frontend/src/components/CourseCardOverlay.vue
+msgid "Could not unsubscribe"
+msgstr "Не удалось отписаться"
+
+#: frontend/src/pages/Courses/Courses.vue
+msgid "Being prepared"
+msgstr "Готовятся"
