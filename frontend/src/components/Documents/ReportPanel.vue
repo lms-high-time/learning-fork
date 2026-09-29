@@ -51,7 +51,7 @@
 					<span class="font-medium text-ink-gray-5">{{ row.id }}</span>
 					{{ name(row) }}
 					<span v-if="report.rank" class="text-ink-gray-5"
-						>· {{ row[report.rank.key] }}</span
+						>· {{ formatValue(report.rank, row[report.rank.key]) }}</span
 					>
 				</li>
 			</ol>
@@ -98,6 +98,7 @@ import type { DocumentApi } from '@/composables/useDocument'
 import {
 	cellOptions,
 	formatCell,
+	formatValue,
 	rankColumn,
 	reportOf,
 	reportRows,
@@ -142,14 +143,15 @@ const report = computed(() => {
 	}
 })
 
-// A scale or a reference reads better by its label than by its number.
+// A scale or a reference reads better by its label than by its number; a
+// number, in groups of digits (learning-services#386).
 function cell(column: DocColumn, row: DocRow): string {
 	const option = cellOptions(column, props.document.tables).find(
 		(o) => String(o.value) === String(row[column.key])
 	)
 	return option && column.type !== 'select'
 		? option.label
-		: formatCell(column, row[column.key])
+		: formatValue(column, row[column.key])
 }
 
 const print = () => window.print()

@@ -10577,6 +10577,14 @@ msgstr "Было"
 msgid "After"
 msgstr "Стало"
 
+#: frontend/src/components/Documents/CanvasSummary.vue
+msgid "{0}: no"
+msgstr "{0}: нет"
+
+#: frontend/src/components/Documents/TablePanel.vue
+msgid "Columns and download"
+msgstr "Колонки и выгрузка"
+
 #: frontend/src/pages/Team/Team.vue
 #: frontend/src/components/Sidebar/SpaceSwitcher.vue
 #: frontend/src/pages/MobileYou.vue

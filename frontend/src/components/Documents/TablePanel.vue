@@ -19,7 +19,7 @@
 					{{ flag.title }}: {{ flagCount }}
 				</button>
 				<span v-for="field in flagFields" :key="field.key">
-					{{ field.title }}: {{ field.value }}
+					{{ field.title }}: {{ formatValue(field, field.value) }}
 				</span>
 				<span
 					v-for="date in dates"
@@ -65,8 +65,30 @@
 				</button>
 			</div>
 			<template v-if="mode === 'table'">
+				<!-- On a phone the columns and the download fold behind one
+				button: unfolded, they took most of the screen before the first
+				row (learning-services#386). -->
+				<Button
+					v-if="isMobile"
+					variant="subtle"
+					:label="__('Columns and download')"
+					:aria-expanded="toolsOpen"
+					:aria-controls="toolsIds"
+					data-testid="table-tools"
+					@click="toolsOpen = !toolsOpen"
+				>
+					<template #suffix>
+						<span
+							:class="toolsOpen ? 'lucide-chevron-up' : 'lucide-chevron-down'"
+							class="size-4"
+							aria-hidden="true"
+						/>
+					</template>
+				</Button>
 				<div
 					v-if="columnViews.length"
+					v-show="!folded"
+					:id="`${toolsId}-views`"
 					class="segmented"
 					role="group"
 					:aria-label="__('Columns')"
@@ -113,6 +135,8 @@
 					<option v-for="v in filterValues" :key="v" :value="v">{{ v }}</option>
 				</select>
 				<Button
+					v-show="!folded"
+					:id="`${toolsId}-csv`"
 					variant="ghost"
 					:label="__('Download this view (CSV)')"
 					@click="downloadCsv"
@@ -137,6 +161,8 @@
 			:defaultSort="rank?.key ?? null"
 			:openable="true"
 			:flagOn="flagOn"
+			:columnsFolded="folded"
+			:columnsId="`${toolsId}-groups`"
 			@setCell="
 				(b, row, column, value) =>
 					api.setCell(b, table.name, row, column, value)
@@ -166,17 +192,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, unref, watch } from 'vue'
 import { Button } from 'frappe-ui'
 import DocTableEditor from '@/components/Documents/DocTableEditor.vue'
 import MatrixView from '@/components/Documents/MatrixView.vue'
 import RowCard from '@/components/Documents/RowCard.vue'
 import type { DocumentApi } from '@/composables/useDocument'
+import { useScreenSize } from '@/utils/composables'
 import {
+	columnGroups,
 	columnValues,
 	filterableColumns,
 	flagColumns,
 	formatCell,
+	formatValue,
 	rankColumn,
 	tableDates,
 	toCsv,
@@ -221,6 +250,7 @@ const flagFields = computed(() => {
 		.map((f) => ({
 			key: f.key,
 			title: f.title,
+			type: f.type,
 			value: props.document.fields[f.key],
 		}))
 })
@@ -269,6 +299,26 @@ const filterBy = computed(() =>
 	filterColumn.value && filterValue.value
 		? { column: filterColumn.value, value: filterValue.value }
 		: null
+)
+
+// Folded on a phone until asked; the desktop shows them all as before
+// (learning-services#386). Search and the flag filters stay in view.
+const { isMobile } = useScreenSize()
+const toolsOpen = ref(false)
+const folded = computed(() => Boolean(unref(isMobile)) && !toolsOpen.value)
+const toolsId = computed(() => `table-tools-${props.table.name}`)
+// What the button unfolds, as the editor decides it: its column groups show
+// when no named view picks the columns and there is more than one group.
+const toolsIds = computed(() =>
+	[
+		columnViews.value.length && `${toolsId.value}-views`,
+		`${toolsId.value}-csv`,
+		!columnKeys.value &&
+			columnGroups(props.table, props.document.blocks).length > 1 &&
+			`${toolsId.value}-groups`,
+	]
+		.filter(Boolean)
+		.join(' ')
 )
 
 const openId = ref<string | null>(null)

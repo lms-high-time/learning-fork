@@ -5,7 +5,9 @@
 		data-testid="canvas-summary"
 	>
 		<li v-for="(line, i) in lines" :key="i">
-			<!-- ✓ and ✗ as characters, not icons: they print. -->
+			<!-- ✓ as a character, not an icon: it prints. A false flag says
+			«Title: no» — «✗ Title» read as a contradiction
+			(learning-services#386). -->
 			<span
 				v-if="line.flag !== undefined"
 				class="flag inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-p-xs font-medium"
@@ -15,7 +17,9 @@
 						: 'bg-surface-red-2 text-ink-red-7'
 				"
 				:data-flag="String(line.flag)"
-				>{{ line.flag ? '✓' : '✗' }} {{ line.text }}</span
+				>{{
+					line.flag ? `✓ ${line.text}` : __('{0}: no').format(line.text)
+				}}</span
 			>
 			<template v-else>
 				<span v-if="line.label" class="text-ink-gray-5"

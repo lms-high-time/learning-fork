@@ -27,8 +27,10 @@ vi.mock('frappe-ui', () => ({
 			'<button type="button" :aria-label="label" @click="$emit(\'click\')">{{ label }}<slot name="prefix" /><slot name="icon" /></button>',
 	},
 }))
+// A phone or a desktop, per test (learning-services#386).
+const { mobile } = vi.hoisted(() => ({ mobile: { value: false } }))
 vi.mock('@/utils/composables', () => ({
-	useScreenSize: () => ({ isMobile: false }),
+	useScreenSize: () => ({ isMobile: mobile.value }),
 }))
 
 import TablePanel from '@/components/Documents/TablePanel.vue'
@@ -46,6 +48,7 @@ const global = { mocks: { __ } }
 beforeEach(() => {
 	vi.stubGlobal('__', __)
 	push.mockReset()
+	mobile.value = false
 	try {
 		localStorage.clear()
 	} catch {
@@ -249,6 +252,26 @@ describe('whole table helpers', () => {
 		])
 	})
 
+	// learning-services#386: the page groups digits, a spreadsheet would not
+	// read «900 000» as a number.
+	it('keeps numbers bare in the CSV', () => {
+		const budget = {
+			key: 'budget',
+			title: 'Бюджет',
+			type: 'number',
+			block: 'risks',
+		} as const
+		expect(
+			toCsv(
+				[budget, register.columns[3]],
+				[{ id: 'R1', budget: 900000, rank: 12500.5 }],
+				{
+					register,
+				}
+			).split('\n')
+		).toEqual(['ID,Бюджет,Ранг', 'R1,900000,12500.5'])
+	})
+
 	it('finds the tables that point at this one', () => {
 		expect(
 			referringTables(register, { register, issues }).map((r) => [
@@ -284,6 +307,23 @@ describe('TablePanel', () => {
 		)
 	})
 
+	it("writes the summary's numbers in groups of digits", () => {
+		const wrapper = mount(TablePanel, {
+			props: {
+				table: register,
+				document: {
+					...document,
+					fields: { ...document.fields, threshold: 12000 },
+				},
+				api: api as never,
+			},
+			global,
+		})
+		expect(wrapper.get('[data-testid="table-summary"]').text()).toContain(
+			'Порог: 12\u00a0000'
+		)
+	})
+
 	it('is named by the table, and neutrally when the table has no title', () => {
 		expect(panel().get('h1').text()).toBe('Реестр рисков')
 		expect(
@@ -313,6 +353,60 @@ describe('TablePanel', () => {
 		await wrapper.get('select[aria-label="Filter by"]').setValue('owner')
 		await wrapper.get('[data-testid="filter-value"]').setValue('Игорь')
 		expect(rowIds(wrapper)).toEqual(['R2'])
+	})
+
+	// learning-services#386: on a phone the columns and the download fold
+	// behind one button; search and the flag filters stay.
+	it('folds the columns and the download behind one button on a phone', async () => {
+		mobile.value = true
+		const wrapper = panel()
+		const hidden = (selector: string) =>
+			(wrapper.get(selector).attributes('style') ?? '').includes(
+				'display: none'
+			)
+		const toggle = wrapper.get('[data-testid="table-tools"]')
+		expect(toggle.text()).toContain('Columns and download')
+		expect(toggle.attributes('aria-expanded')).toBe('false')
+		expect(toggle.attributes('aria-controls')?.split(' ')).toEqual([
+			'table-tools-register-views',
+			'table-tools-register-csv',
+			'table-tools-register-groups',
+		])
+		const views = '#table-tools-register-views'
+		const csv = 'button[aria-label="Download this view (CSV)"]'
+		const groups = '#table-tools-register-groups'
+		expect([hidden(views), hidden(csv), hidden(groups)]).toEqual([
+			true,
+			true,
+			true,
+		])
+		expect(hidden('input[type="search"]')).toBe(false)
+		const flagChip = wrapper
+			.findAll('button.chip')
+			.find((b) => b.text().startsWith('В работе'))
+		expect(flagChip).toBeDefined()
+		expect(flagChip?.attributes('style') ?? '').not.toContain('display: none')
+
+		await toggle.trigger('click')
+		expect(toggle.attributes('aria-expanded')).toBe('true')
+		expect([hidden(views), hidden(csv), hidden(groups)]).toEqual([
+			false,
+			false,
+			false,
+		])
+	})
+
+	it('keeps the desktop toolbar as it was', () => {
+		const wrapper = panel()
+		expect(wrapper.find('[data-testid="table-tools"]').exists()).toBe(false)
+		expect(
+			wrapper.get('#table-tools-register-views').attributes('style') ?? ''
+		).not.toContain('display: none')
+		expect(
+			wrapper
+				.get('button[aria-label="Download this view (CSV)"]')
+				.attributes('style') ?? ''
+		).not.toContain('display: none')
 	})
 
 	it('opens a row card and carries a triggered risk into «Проблемы»', async () => {
