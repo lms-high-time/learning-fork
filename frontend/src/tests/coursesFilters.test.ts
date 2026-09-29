@@ -8,9 +8,8 @@
  * the wrong rows. That is the bug behind "Unpublished shows nothing, then a few
  * seconds later it is full of published courses".
  *
- * The page no longer picks its own filter controls (ListPage and ToggleFilter
- * do), so ListPage is stubbed here and the real ToggleFilter is kept, to prove
- * one click still reaches the resource exactly once.
+ * The page no longer picks its own filter controls (ListPage does), so
+ * ListPage is stubbed here.
  */
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { defineComponent, nextTick, reactive } from 'vue'
@@ -110,8 +109,9 @@ vi.mock('frappe-ui', () => ({
 	Button: { template: '<button><slot /></button>' },
 	Dropdown: { template: '<div><slot :open="false" /></div>' },
 	Tooltip: { template: '<div><slot /></div>' },
-	// frappe-ui's Checkbox reports one click twice: onChange assigns its
-	// defineModel and then re-emits update:modelValue (Checkbox.vue:76-77).
+	// The catalog has no checkbox filter (learning-services#397); this stub is
+	// what one would render as, so the tests can tell it is absent. Like
+	// frappe-ui's Checkbox it reports one click twice (Checkbox.vue:76-77).
 	Checkbox: defineComponent({
 		props: {
 			modelValue: Boolean,
@@ -290,27 +290,27 @@ describe('Courses list filters', () => {
 		expect(requests.current).toHaveLength(requestsAfterTabChange)
 	})
 
-	it('sends one request with the new value from the desktop certification checkbox', async () => {
-		const wrapper = await mountCourses({ data: { ...MODERATOR } })
+	// learning-services#397: no certification filter in the catalog, desktop
+	// or mobile, and a leftover ?certification=true link filters nothing.
+	it('has no certification filter', async () => {
+		for (const onPhone of [false, true]) {
+			mobile.value = onPhone
+			window.history.replaceState({}, '', '/lms/courses?certification=true')
+			const wrapper = await mountCourses({ data: { ...MODERATOR } })
 
-		await wrapper.find('[data-testid="toggle-checkbox"]').trigger('change')
-		await nextTick()
-
-		expect(requests.current).toHaveLength(2)
-		expect(requests.current[1].filters).toMatchObject({ certification: 1 })
+			expect(wrapper.find('[data-testid="toggle-checkbox"]').exists()).toBe(false)
+			expect(requests.current.at(-1)!.filters).not.toHaveProperty('certification')
+		}
 	})
 
-	// Same filter, same request, from the checkbox now inside the mobile
-	// filters sheet — the chip it replaced is gone.
-	it('sends the same request from the mobile certification checkbox', async () => {
-		mobile.value = true
-		const wrapper = await mountCourses({ data: { ...MODERATOR } })
+	it('keeps announcements off the «All» tab', async () => {
+		await mountCourses({ data: { ...MODERATOR } })
 
-		await wrapper.find('[data-testid="toggle-checkbox"]').trigger('change')
-		await nextTick()
-
-		expect(requests.current).toHaveLength(2)
-		expect(requests.current[1].filters).toMatchObject({ certification: 1 })
+		expect(requests.current[0].filters).toMatchObject({
+			published: 1,
+			live: 1,
+			upcoming: 0,
+		})
 	})
 
 	// The page's two form child routes decide whether close() pops a history
@@ -333,16 +333,5 @@ describe('Courses list filters', () => {
 		})
 		// and it did rewrite: the query survived the round trip.
 		expect(window.location.search).toBe('?title=vue')
-	})
-
-	it('reads certification=false from the query string as off', async () => {
-		mobile.value = true
-		window.history.replaceState({}, '', '/lms/courses?certification=false')
-		const wrapper = await mountCourses({ data: { ...MODERATOR } })
-
-		expect(requests.current[0].filters).not.toHaveProperty('certification')
-		expect(
-			wrapper.find('[data-testid="toggle-checkbox"]').attributes('checked')
-		).toBeUndefined()
 	})
 })
