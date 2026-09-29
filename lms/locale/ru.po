@@ -10959,3 +10959,36 @@ msgstr "Пока мы её не подтвердили, в ней может б�
 #: frontend/src/pages/Team/NewTeam.vue
 msgid "You have as many unverified organizations as one person may start. Write to us to verify one of them."
 msgstr "У вас уже столько неподтверждённых организаций, сколько можно создать одному человеку. Напишите нам, чтобы подтвердить одну из них."
+
+#: frontend/src/components/CourseCard.vue
+#: frontend/src/components/CourseCardOverlay.vue
+msgid "In the works"
+msgstr "Готовится"
+
+#: frontend/src/components/CourseCardOverlay.vue
+msgid "Enrollment opens when the course is released."
+msgstr "Запись откроется, когда курс выйдет."
+
+#: frontend/src/components/CourseCardOverlay.vue
+msgid "We'll email you when the course is released."
+msgstr "Напишем вам на почту, когда курс выйдет."
+
+#: frontend/src/components/CourseCardOverlay.vue
+msgid "Notify me when it is out"
+msgstr "Сообщить, когда выйдет"
+
+#: frontend/src/components/CourseCardOverlay.vue
+msgid "You need to login first to get notified"
+msgstr "Войдите, чтобы получить письмо о выходе курса"
+
+#: frontend/src/components/CourseCardOverlay.vue
+msgid "Could not subscribe"
+msgstr "Не удалось подписаться"
+
+#: frontend/src/pages/Courses/CourseOverview.vue
+msgid "After the course you will be able to"
+msgstr "После курса вы сможете"
+
+#: frontend/src/pages/Courses/CourseOverview.vue
+msgid "The course is in the works."
+msgstr "Курс готовится."

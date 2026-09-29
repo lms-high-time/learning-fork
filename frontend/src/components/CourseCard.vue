@@ -83,6 +83,17 @@
 				</Tooltip>
 			</div>
 
+			<!-- Announced: in the catalog, not yet open (learning-services#389). -->
+			<Badge
+				v-if="course.upcoming"
+				data-testid="course-card-upcoming"
+				theme="orange"
+				size="md"
+				class="w-fit mb-2"
+			>
+				{{ __('In the works') }}
+			</Badge>
+
 			<div
 				v-if="course.image"
 				class="font-semibold leading-6"
@@ -137,7 +148,7 @@
 </template>
 <script setup>
 import { sessionStore } from '@/stores/session'
-import { Tooltip } from 'frappe-ui'
+import { Badge, Tooltip } from 'frappe-ui'
 import { formatAmount, formatRating } from '@/utils'
 import { theme } from '@/utils/theme'
 import { computed, watch } from 'vue'

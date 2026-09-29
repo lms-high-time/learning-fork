@@ -86,7 +86,7 @@
 						{{ course.data.short_introduction }}
 					</p>
 					<div class="md:hidden space-y-4">
-						<CourseCardOverlay :course="course" />
+						<CourseCardOverlay :course="course" :notify="notify" />
 						<CourseDocumentCard
 							:documents="documents"
 							:courseName="course.data.name"
@@ -95,10 +95,29 @@
 					</div>
 				</section>
 
+				<!-- An announced course shows what it will teach, not how: its
+				programme is still being built (learning-services#389). -->
+				<section v-if="upcoming" data-testid="course-announcement">
+					<h2 class="text-3xl-semibold text-ink-gray-9 mb-4">
+						{{ __('After the course you will be able to') }}
+					</h2>
+					<ul
+						v-if="objectives.length"
+						class="list-disc ps-5 space-y-2 text-ink-gray-8 leading-6"
+					>
+						<li v-for="objective in objectives" :key="objective">
+							{{ objective }}
+						</li>
+					</ul>
+					<p v-else class="text-ink-gray-5">
+						{{ __('The course is in the works.') }}
+					</p>
+				</section>
+
 				<!-- The program replaces both the old honeycomb map and the outline:
 				the same lessons, once, with each one's status and topics
 				(learning-services#322). Without lms_frappe_app the outline stays. -->
-				<section v-if="program" data-testid="course-program-section">
+				<section v-else-if="program" data-testid="course-program-section">
 					<h2 class="text-3xl-semibold text-ink-gray-9 mb-4">
 						{{ __('Course program') }}
 					</h2>
@@ -159,7 +178,7 @@
 			>
 				<!-- The way in, and what the course leaves you with (#340); the
 				author is in the header already (learning-services#326). -->
-				<CourseCardOverlay :course="course" />
+				<CourseCardOverlay :course="course" :notify="notify" />
 				<CourseDocumentCard
 					:documents="documents"
 					:courseName="course.data.name"
@@ -268,6 +287,20 @@ watch(
 // its slide, just without the topics. No lessons — the outline's own empty state.
 // The documents the course builds, from the same map (#340).
 const documents = computed(() => courseMap.data?.data?.documents ?? [])
+
+// An announced course, for anyone not enrolled in it and not managing it:
+// Learning knows the flag before the map arrives, so the outline never
+// flashes the lessons. Its authors keep the outline and its editor links.
+const upcoming = computed<boolean>(
+	() =>
+		Boolean(props.course.data?.upcoming) &&
+		!props.course.data?.membership &&
+		!isCourseAdmin.value
+)
+const objectives = computed<string[]>(
+	() => courseMap.data?.data?.objectives ?? []
+)
+const notify = computed<boolean>(() => Boolean(courseMap.data?.data?.notify))
 
 const program = computed<ProgramData | null>(() => {
 	const data = courseMap.data?.data

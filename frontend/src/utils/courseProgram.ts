@@ -55,6 +55,12 @@ export type ProgramData = {
 	/** Present only for an enrolled student; null once every lesson is closed. */
 	next_lesson?: string | null
 	documents?: ProgramDocument[]
+	/** An announced course (learning-services#389): no programme, only the
+	 * course objectives, and whether the viewer asked to hear of its release. */
+	upcoming?: boolean
+	objectives?: string[]
+	/** Absent for a guest. */
+	notify?: boolean
 }
 
 export type LessonStatus =
