@@ -461,7 +461,14 @@ watch(
 )
 
 watch(course, () => {
-	if (!isAdmin.value && !course.data?.published && !course.data?.upcoming) {
+	// An unpublished course stays open to whoever is enrolled in it: a tester
+	// the author let in before publication (learning-services#393).
+	if (
+		!isAdmin.value &&
+		!course.data?.published &&
+		!course.data?.upcoming &&
+		!course.data?.membership
+	) {
 		router.push({
 			name: 'Courses',
 		})
@@ -470,7 +477,9 @@ watch(course, () => {
 
 const isInstructor = (): boolean => {
 	let user_is_instructor = false
-	course.data?.instructors.forEach((instructor: CourseInstructorInfo) => {
+	// A course the viewer may not see comes back as `{}`, without instructors;
+	// throwing here kept the page from sending them back to the catalog.
+	course.data?.instructors?.forEach((instructor: CourseInstructorInfo) => {
 		if (!user_is_instructor && instructor.name == user.data?.name) {
 			user_is_instructor = true
 		}

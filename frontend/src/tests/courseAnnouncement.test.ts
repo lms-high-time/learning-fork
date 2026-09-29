@@ -203,6 +203,26 @@ describe('CourseOverview of an announced course', () => {
 	})
 })
 
+describe('CourseOverview for a tester', () => {
+	it('says the course is tested before publication', async () => {
+		mapData.value = { data: { tester: true, chapters: [], documents: [] } }
+		const wrapper = mountOverview({ name: 'draft', title: 'Черновик', published: 0 })
+		await flushPromises()
+
+		expect(wrapper.get('[data-testid="course-tester-note"]').text()).toContain(
+			'The course is not published yet'
+		)
+	})
+
+	it('says nothing to anyone else', async () => {
+		mapData.value = { data: { chapters: [], documents: [] } }
+		const wrapper = mountOverview({ name: 'p3', title: 'P3', published: 1 })
+		await flushPromises()
+
+		expect(wrapper.find('[data-testid="course-tester-note"]').exists()).toBe(false)
+	})
+})
+
 describe('CourseCard of an announced course', () => {
 	const mountCard = (course: Record<string, unknown>) =>
 		shallowMount(CourseCard, {
