@@ -121,7 +121,7 @@
 			</div>
 
 			<div class="flex items-center justify-between mt-auto">
-				<div class="flex avatar-group overlap">
+				<div v-if="SHOW_COURSE_AUTHORS" class="flex avatar-group overlap">
 					<div
 						class="h-6 me-1"
 						:class="{ 'avatar-group overlap': course.instructors.length > 1 }"
@@ -160,6 +160,7 @@ import { computed, watch } from 'vue'
 import CourseInstructors from '@/components/CourseInstructors.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import ProgressBar from '@/components/ProgressBar.vue'
+import { SHOW_COURSE_AUTHORS } from '@/utils/courseAuthors'
 
 const { user } = sessionStore()
 

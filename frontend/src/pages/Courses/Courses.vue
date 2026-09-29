@@ -346,7 +346,10 @@ watch(currentTab, () => {
 const courseTabs = computed(() => {
 	let tabs = [
 		{
-			label: __('Published'),
+			// Open courses and announcements alike (learning-services#391), so
+			// not «Published»: an announcement there read as a contradiction
+			// (learning-services#396).
+			label: __('All'),
 			value: 'live',
 		},
 		{

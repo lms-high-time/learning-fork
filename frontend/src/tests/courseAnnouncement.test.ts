@@ -76,7 +76,7 @@ vi.mock('@/components/CourseReviews.vue', () => ({
 	default: { template: '<div />' },
 }))
 vi.mock('@/components/CourseInstructors.vue', () => ({
-	default: { template: '<div />' },
+	default: { template: '<div data-testid="instructors" />' },
 }))
 vi.mock('@/components/UserAvatar.vue', () => ({
 	default: { template: '<div />' },
@@ -220,6 +220,50 @@ describe('CourseOverview for a tester', () => {
 		await flushPromises()
 
 		expect(wrapper.find('[data-testid="course-tester-note"]').exists()).toBe(false)
+	})
+})
+
+describe('the course author', () => {
+	// learning-services#396: one author for every course says nothing yet.
+	it('is not named on the course page', async () => {
+		mapData.value = null
+		const wrapper = mountOverview({
+			name: 'p3',
+			title: 'P3',
+			upcoming: 0,
+			instructors: [{ name: 'admin@example.com', full_name: 'Administrator' }],
+		})
+		await flushPromises()
+
+		expect(wrapper.find('[data-testid="instructors"]').exists()).toBe(false)
+	})
+
+	it('leaves no separator hanging after the last item', async () => {
+		mapData.value = null
+		const wrapper = mountOverview({
+			name: 'p3',
+			title: 'P3',
+			upcoming: 0,
+			rating: 4.5,
+			instructors: [{ name: 'admin@example.com' }],
+		})
+		await flushPromises()
+
+		expect(wrapper.findAll('.lucide-dot')).toHaveLength(0)
+	})
+
+	it('is not named on the catalog card', () => {
+		const wrapper = mount(CourseCard, {
+			props: {
+				course: {
+					title: 'P3',
+					instructors: [{ name: 'admin@example.com', full_name: 'Administrator' }],
+				},
+			},
+			global: { mocks: { __: (s: string) => s } },
+		})
+
+		expect(wrapper.find('[data-testid="instructors"]').exists()).toBe(false)
 	})
 })
 

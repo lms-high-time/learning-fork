@@ -23,7 +23,10 @@
 								<span class="lucide-tag size-4" />
 								<span>{{ course.data.category }}</span>
 							</router-link>
-							<span class="lucide-dot size-5 text-ink-gray-7" />
+							<span
+								v-if="hasRating || hasEnrollments || showAuthors"
+								class="lucide-dot size-5 text-ink-gray-7"
+							/>
 						</template>
 						<template v-if="Number(course.data.rating) > 0">
 							<div class="flex items-center gap-1">
@@ -35,7 +38,10 @@
 									({{ formatAmount(course.data.rating_count) }})
 								</span>
 							</div>
-							<span class="lucide-dot size-5 text-ink-gray-7" />
+							<span
+								v-if="hasEnrollments || showAuthors"
+								class="lucide-dot size-5 text-ink-gray-7"
+							/>
 						</template>
 						<template v-if="course.data.enrollments">
 							<div class="flex items-center gap-1.5">
@@ -48,12 +54,12 @@
 									)
 								}}</span>
 							</div>
-							<span class="lucide-dot size-5 text-ink-gray-7" />
+							<span
+								v-if="showAuthors"
+								class="lucide-dot size-5 text-ink-gray-7"
+							/>
 						</template>
-						<div
-							v-if="course.data.instructors?.length"
-							class="flex items-center"
-						>
+						<div v-if="showAuthors" class="flex items-center">
 							<span
 								class="h-6 me-1"
 								:class="{
@@ -256,6 +262,7 @@ import CourseInstructors from '@/components/CourseInstructors.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import RelatedCourses from '@/components/RelatedCourses.vue'
 import type { ProgramData } from '@/utils/courseProgram'
+import { SHOW_COURSE_AUTHORS } from '@/utils/courseAuthors'
 import { useSpace } from '@/stores/space'
 import { withSpace } from '@/utils/space'
 import { LESSONS, SECTIONS, STUDENTS, plural } from '@/utils/plural'
@@ -347,6 +354,16 @@ const objectives = computed<string[]>(
 )
 const notify = computed<boolean>(() => Boolean(courseMap.data?.data?.notify))
 const mapLoaded = computed<boolean>(() => Boolean(courseMap.data))
+
+// The meta line: a dot goes between items, so each item's dot shows only when
+// a later item does — hiding the author left one hanging (learning-services#396).
+const hasRating = computed<boolean>(() => Number(props.course.data?.rating) > 0)
+const hasEnrollments = computed<boolean>(() =>
+	Boolean(props.course.data?.enrollments)
+)
+const showAuthors = computed<boolean>(
+	() => SHOW_COURSE_AUTHORS && Boolean(props.course.data?.instructors?.length)
+)
 const isTester = computed<boolean>(() => Boolean(courseMap.data?.data?.tester))
 
 const plainText = (html: string): string =>
