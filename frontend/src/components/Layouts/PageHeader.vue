@@ -19,7 +19,7 @@
 				<Breadcrumbs class="h-7 min-w-0" :items="breadcrumbs" />
 				<!-- An announcement is published only in the database sense: to
 				the reader it is in the works (learning-services#391). -->
-				<Badge v-if="upcoming" theme="orange" class="!text-ink-amber-8">
+				<Badge v-if="upcoming" theme="orange" class="!text-ink-gray-8">
 					{{ __('In the works') }}
 				</Badge>
 				<Badge v-else-if="published" theme="green">{{ __('Published') }}</Badge>

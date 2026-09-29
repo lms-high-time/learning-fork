@@ -94,7 +94,7 @@
 				data-testid="course-card-upcoming"
 				theme="orange"
 				size="md"
-				class="w-fit mb-2 !text-ink-amber-8"
+				class="w-fit mb-2 !text-ink-gray-8"
 			>
 				{{ __('In the works') }}
 			</Badge>

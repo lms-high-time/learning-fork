@@ -80,7 +80,7 @@
 					>
 						<div class="flex items-start gap-2 text-p-sm text-ink-gray-8">
 							<span
-								class="lucide-circle-check size-4 shrink-0 mt-0.5 text-ink-green-3"
+								class="lucide-circle-check size-4 shrink-0 mt-0.5 text-ink-green-6"
 							/>
 							<span>
 								{{
