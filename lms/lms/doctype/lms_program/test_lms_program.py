@@ -33,7 +33,7 @@ class TestLMSProgram(BaseTestUtils):
 				"enforce_course_order": 1,
 				"program_courses": [{"course": course.name}],
 			}
-		).insert(ignore_permissions=True)
+		).insert()
 		self.cleanup_items.clear()
 
 	def test_joining_lands_in_the_members_table_and_is_counted(self):
@@ -64,7 +64,7 @@ class TestLMSProgram(BaseTestUtils):
 				"parentfield": "members",
 				"member": self.student,
 			}
-		).insert(ignore_permissions=True)
+		).insert()
 
 		fix_parentfield()
 
