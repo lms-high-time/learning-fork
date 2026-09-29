@@ -321,8 +321,7 @@ watch(currentTab, () => {
 const courseTabs = computed(() => {
 	let tabs = [
 		{
-			// «Все», matching the page heading «Все курсы» (learning-services#396).
-			label: __('All'),
+			label: __('Published'),
 			value: 'live',
 		},
 		{
