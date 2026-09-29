@@ -193,6 +193,7 @@ import UserAvatar from '@/components/UserAvatar.vue'
 import RelatedCourses from '@/components/RelatedCourses.vue'
 import type { ProgramData } from '@/utils/courseProgram'
 import { useSpace } from '@/stores/space'
+import { withSpace } from '@/utils/space'
 import { LESSONS, SECTIONS, STUDENTS, plural } from '@/utils/plural'
 
 const props = defineProps<{
@@ -241,7 +242,7 @@ const courseMap = createResource({
 	makeParams() {
 		const course = props.course.data?.name
 		// The documents' fill is the chosen space's (learning-services#347).
-		return { course, space: space.paramFor(course) }
+		return withSpace({ course }, space.paramFor(course))
 	},
 	auto: false,
 }) as Resource<{ data: ProgramData } | null>

@@ -121,6 +121,7 @@ import { useTelemetry } from 'frappe-ui/frappe'
 import { openExternal } from '@/utils/openExternal'
 import { safeUrl } from '@/utils/safeUrl'
 import { useSpace } from '@/stores/space'
+import { withSpace } from '@/utils/space'
 import type {
 	CourseDetails,
 	CourseInstructorInfo,
@@ -158,7 +159,7 @@ const courseEntry = createResource({
 	method: 'GET',
 	makeParams() {
 		const course = props.course.data?.name
-		return { course, space: space.paramFor(course) }
+		return withSpace({ course }, space.paramFor(course))
 	},
 	auto: false,
 })

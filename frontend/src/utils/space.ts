@@ -3,6 +3,15 @@ import { PERSONAL, type Space } from '@/stores/space'
 // How a space and its readers are named to the learner. Kept apart from the
 // store so the wording is tested without a server.
 
+// GET parameters with the space only when there is one. frappe-ui writes GET
+// parameters with String(), so an absent space would reach the server as the
+// word «undefined» and be refused as a space the learner does not have — the
+// page then lost its course (learning-services#382).
+export const withSpace = <T extends Record<string, unknown>>(
+	params: T,
+	space?: string | null
+): T & { space?: string } => (space ? { ...params, space } : params)
+
 export const spaceLabel = (space: Pick<Space, 'id' | 'title'>): string =>
 	space.id === PERSONAL ? __('Personal') : space.title || space.id
 

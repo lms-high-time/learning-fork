@@ -24,7 +24,12 @@ vi.mock('frappe-ui', () => ({
 }))
 
 import { PERSONAL, useSpace } from '@/stores/space'
-import { documentReaders, documentToFill, spaceLabel } from '@/utils/space'
+import {
+	documentReaders,
+	documentToFill,
+	spaceLabel,
+	withSpace,
+} from '@/utils/space'
 
 const SPACES = 'lms_frappe_app.api.student.my_spaces'
 const COURSES = 'lms_frappe_app.api.student.list_my_courses'
@@ -137,5 +142,24 @@ describe('a document to fill (learning-services#361)', () => {
 		expect(documentToFill(course(0.5, 0), true)).toBe(false)
 		expect(documentToFill(course(1, 3), true)).toBe(false)
 		expect(documentToFill(course(1, 0), false)).toBe(false)
+	})
+})
+
+describe('the space as a GET parameter (learning-services#382)', () => {
+	it('is left out when unknown, never sent as the word «undefined»', () => {
+		expect(withSpace({ course: 'c1' }, undefined)).toEqual({ course: 'c1' })
+		expect(withSpace({ course: 'c1' }, null)).toEqual({ course: 'c1' })
+		expect(withSpace({ course: 'c1' }, '')).toEqual({ course: 'c1' })
+		const params = new URLSearchParams(
+			withSpace({ course: 'c1' }, undefined) as Record<string, string>
+		)
+		expect(params.toString()).toBe('course=c1')
+	})
+
+	it('is passed when known', () => {
+		expect(withSpace({ course: 'c1' }, 'org-1')).toEqual({
+			course: 'c1',
+			space: 'org-1',
+		})
 	})
 })
