@@ -456,6 +456,7 @@ import { parseStoredEditorJs } from '@/utils/lessonForm'
 import { getLmsRoute } from '@/utils/basePath'
 import { provideStudentView } from '@/composables/useStudentView'
 import { useSpace } from '@/stores/space'
+import { withSpace } from '@/utils/space'
 
 const router = useRouter()
 const route = useRoute()
@@ -584,10 +585,10 @@ const lessonEntry = createResource({
 	// GET-only on the server, like the course map; the default POST gets 403.
 	method: 'GET',
 	makeParams() {
-		return {
-			lesson: lesson.data?.name,
-			space: space.paramFor(props.courseName),
-		}
+		return withSpace(
+			{ lesson: lesson.data?.name },
+			space.paramFor(props.courseName)
+		)
 	},
 	auto: false,
 })

@@ -165,7 +165,7 @@ import ReportPanel from '@/components/Documents/ReportPanel.vue'
 import TablePanel from '@/components/Documents/TablePanel.vue'
 import { useDocument } from '@/composables/useDocument'
 import { useSpace, type Space } from '@/stores/space'
-import { documentReaders } from '@/utils/space'
+import { documentReaders, withSpace } from '@/utils/space'
 import { sessionStore } from '@/stores/session'
 import { useScreenSize } from '@/utils/composables'
 import {
@@ -212,12 +212,25 @@ const readers = computed(() => {
 const courseMap = createResource({
 	url: 'lms_frappe_app.api.public.course_map',
 	method: 'GET',
-	makeParams: () => ({
-		course: props.courseName,
-		space: api.space.value ?? spaces.paramFor(props.courseName),
-	}),
-	auto: true,
+	makeParams: () =>
+		withSpace(
+			{ course: props.courseName },
+			api.space.value ?? spaces.paramFor(props.courseName)
+		),
+	auto: false,
 })
+// Once the spaces are known, as the document itself waits for them: asked
+// earlier, the map went out without the chosen space (learning-services#382).
+watch(
+	() => props.courseName,
+	() => {
+		spaces
+			.load()
+			.then(() => courseMap.fetch())
+			.catch(() => {})
+	},
+	{ immediate: true }
+)
 type MapLesson = { id: string; number: number; title: string }
 const mapData = computed(
 	() =>
