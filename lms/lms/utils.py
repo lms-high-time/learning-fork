@@ -2762,7 +2762,11 @@ def get_programs():
 	}
 
 
-@frappe.whitelist()
+# A guest reads a published program the way they read a published course: its
+# page is the way in, and a course page links to it (learning-services#417).
+# Unpublished programs stay members-only by the check below.
+@frappe.whitelist(allow_guest=True)  # nosemgrep: frappe-semgrep-rules.rules.security.guest-whitelisted-method
+@rate_limit(limit=500, seconds=60 * 60)
 def get_program_details(program_name: str) -> dict:
 	if not guest_access_allowed():
 		frappe.throw(_("Please login to view program details."))

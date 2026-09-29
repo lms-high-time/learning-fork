@@ -136,8 +136,19 @@
 			</div>
 		</aside>
 	</div>
-	<div v-else-if="program.error" class="p-5 text-p-base text-ink-gray-6">
-		{{ __('This program is not available.') }}
+	<div
+		v-else-if="program.error"
+		class="space-y-3 p-5 text-p-base text-ink-gray-6"
+	>
+		<p>{{ __('This program is not available.') }}</p>
+		<!-- An unpublished program opens to its members only: a guest may be one. -->
+		<a
+			v-if="!user?.data"
+			:href="safeUrl(loginUrl)"
+			class="underline"
+			data-testid="program-unavailable-login"
+			>{{ __('Log in') }}</a
+		>
 	</div>
 </template>
 
