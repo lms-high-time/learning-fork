@@ -11024,3 +11024,17 @@ msgstr "Курс ещё не опубликован: вы проверяете �
 #: frontend/src/pages/Courses/CourseOverview.vue
 msgid "You test this course. What seems wrong or awkward, tell the tutor during the session: it reaches the author."
 msgstr "Вы тестируете этот курс. Что покажется неверным или неудобным, скажите наставнику на занятии: он передаст это автору."
+
+#: frontend/src/components/CourseCardOverlay.vue
+#: frontend/src/components/LessonEntry.vue
+msgid "The program «{0}» goes in order: first pass «{1}»."
+msgstr "Программа «{0}» идёт по порядку: сначала пройдите курс «{1}»."
+
+#: frontend/src/components/CourseCardOverlay.vue
+#: frontend/src/components/LessonEntry.vue
+msgid "Go to «{0}»"
+msgstr "Перейти к курсу «{0}»"
+
+#: frontend/src/components/CourseCardOverlay.vue
+msgid "Course {0} of {1} in the program «{2}»"
+msgstr "Курс {0} из {1} в программе «{2}»"

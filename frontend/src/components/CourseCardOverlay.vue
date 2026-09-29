@@ -17,7 +17,34 @@
 				{{ priceLabel }}
 			</div>
 			<div v-if="!readOnlyMode">
-				<div v-if="course.data?.membership" class="space-y-2">
+				<!-- A program in set order keeps this course shut until the previous
+				one is passed; the server refuses it too (learning-services#405). -->
+				<div
+					v-if="lock && !isAdmin"
+					data-testid="course-program-lock"
+					class="space-y-3"
+				>
+					<p class="text-p-sm text-ink-gray-7">
+						{{
+							__('The program «{0}» goes in order: first pass «{1}».').format(
+								lock.title,
+								lock.locked_by?.title
+							)
+						}}
+					</p>
+					<router-link
+						:to="{
+							name: 'CourseDetail',
+							params: { courseName: lock.locked_by?.id },
+						}"
+						class="block"
+					>
+						<Button variant="solid" size="md" class="w-full">
+							{{ __('Go to «{0}»').format(lock.locked_by?.title) }}
+						</Button>
+					</router-link>
+				</div>
+				<div v-else-if="course.data?.membership" class="space-y-2">
 					<!-- One click into the agent session on the next open lesson; the
 					reader stays as the fallback for a site without lms_frappe_app. -->
 					<template v-if="entry">
@@ -168,6 +195,27 @@
 					{{ __('Get Certificate') }}
 				</Button>
 			</div>
+			<!-- Where this course stands in a chain of courses (#405). -->
+			<ul
+				v-if="programs.length"
+				data-testid="course-programs"
+				class="mt-4 space-y-1 border-t pt-3"
+			>
+				<li v-for="program in programs" :key="program.program">
+					<router-link
+						:to="programRoute(program)"
+						class="text-p-sm text-ink-gray-7 underline-offset-2 hover:underline"
+					>
+						{{
+							__('Course {0} of {1} in the program «{2}»').format(
+								program.number,
+								program.total,
+								program.title
+							)
+						}}
+					</router-link>
+				</li>
+			</ul>
 		</div>
 	</div>
 </template>
@@ -276,6 +324,49 @@ function stopNotify() {
 			notifying.value = false
 		})
 }
+
+// The programs this course is in, and whether one keeps it shut
+// (learning-services#405). A guest sees the published ones.
+interface CourseProgram {
+	program: string
+	title: string
+	number: number
+	total: number
+	member: boolean
+	locked_by: { id: string; title: string } | null
+}
+
+const programsResource = createResource({
+	url: 'lms_frappe_app.api.public.course_programs',
+	// GET-only on the server, like the course map.
+	method: 'GET',
+	makeParams() {
+		return { course: props.course.data?.name }
+	},
+	auto: false,
+})
+
+watch(
+	() => props.course.data?.name,
+	(name) => {
+		// A site without lms_frappe_app answers an error: no programs shown.
+		if (name) programsResource.fetch().catch(() => {})
+	},
+	{ immediate: true }
+)
+
+const programs = computed<CourseProgram[]>(
+	() =>
+		(programsResource.data as { data?: { programs: CourseProgram[] } } | null)
+			?.data?.programs ?? []
+)
+const lock = computed(() => programs.value.find((item) => item.locked_by))
+
+// A member goes to the program's page, anyone else to joining it.
+const programRoute = (program: CourseProgram) =>
+	program.member
+		? { name: 'ProgramDetail', params: { programName: program.program } }
+		: { name: 'ProgramEnrollment', params: { programName: program.program } }
 
 // The next open lesson and where to study it, from lms_frappe_app
 // (learning-services#301). Learning's own `current_lesson` moves only with the

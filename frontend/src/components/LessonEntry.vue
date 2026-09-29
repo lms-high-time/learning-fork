@@ -23,7 +23,34 @@
 				{{ entry.hook }}
 			</p>
 
-			<div class="mt-8 flex flex-col items-start gap-2">
+			<!-- The course is shut by a program in set order: the way on is the
+			previous course, not a session the server would refuse (#405). -->
+			<div
+				v-if="entry.program_lock"
+				data-testid="lesson-program-lock"
+				class="mt-8 flex flex-col items-start gap-2"
+			>
+				<div class="text-p-base text-ink-gray-8">
+					{{
+						__('The program «{0}» goes in order: first pass «{1}».').format(
+							entry.program_lock.program_title,
+							entry.program_lock.previous.title
+						)
+					}}
+				</div>
+				<router-link
+					:to="{
+						name: 'CourseDetail',
+						params: { courseName: entry.program_lock.previous.id },
+					}"
+				>
+					<Button variant="solid" size="md">
+						{{ __('Go to «{0}»').format(entry.program_lock.previous.title) }}
+					</Button>
+				</router-link>
+			</div>
+
+			<div v-else class="mt-8 flex flex-col items-start gap-2">
 				<a :href="safeUrl(entry.study.url)" data-testid="lesson-study">
 					<Button variant="solid" size="md">
 						{{ primaryLabel }}
@@ -81,6 +108,12 @@ export interface LessonEntryData {
 	}
 	/** The document blocks this lesson builds (#340). */
 	blocks?: ProgramBlock[]
+	/** A program in set order that keeps this course shut (#405). */
+	program_lock?: {
+		program: string
+		program_title: string
+		previous: { id: string; title: string }
+	} | null
 }
 
 const props = defineProps<{

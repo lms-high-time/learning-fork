@@ -31,7 +31,10 @@ const mountEntry = (data: LessonEntryData) =>
 		props: { entry: data, title: data.title },
 		global: {
 			mocks: { __ },
-			stubs: { Button: { template: '<button><slot /></button>' } },
+			stubs: {
+				Button: { template: '<button><slot /></button>' },
+				RouterLink: { template: '<a data-testid="to-course"><slot /></a>' },
+			},
 		},
 	})
 
@@ -40,6 +43,28 @@ beforeEach(() => {
 })
 
 describe('LessonEntry', () => {
+	it('sends to the previous course when a program keeps this one shut', () => {
+		// learning-services#405: the session would be refused, so no button to it.
+		const wrapper = mountEntry(
+			entry({
+				program_lock: {
+					program: 'p-1',
+					program_title: 'Работа между отделами',
+					previous: { id: 'c-1', title: 'Где теряется работа' },
+				},
+			})
+		)
+
+		expect(wrapper.find('[data-testid="lesson-study"]').exists()).toBe(false)
+		expect(wrapper.get('[data-testid="lesson-program-lock"]').text()).toContain(
+			'first pass «Где теряется работа»'
+		)
+		expect(wrapper.get('[data-testid="to-course"]').text()).toContain(
+			'Go to «Где теряется работа»'
+		)
+	})
+
+
 	it('leads into the web chat on this lesson while trial lessons last', () => {
 		const wrapper = mountEntry(entry())
 

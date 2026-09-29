@@ -31,10 +31,20 @@ vi.mock('@/stores/space', () => ({
 	}),
 }))
 
+const programsResource = reactive<{
+	data: unknown
+	fetch: ReturnType<typeof vi.fn>
+}>({
+	data: null,
+	fetch: vi.fn(() => Promise.resolve()),
+})
+
 vi.mock('frappe-ui', () => ({
 	createResource: (config: { url: string }) =>
 		config.url === 'lms_frappe_app.api.public.lesson_entry'
 			? entryResource
+			: config.url === 'lms_frappe_app.api.public.course_programs'
+			? programsResource
 			: reactive({ data: null, fetch: vi.fn() }),
 	call: vi.fn(() => Promise.resolve()),
 	toast: { success: vi.fn(), warning: vi.fn() },
@@ -87,6 +97,55 @@ beforeEach(() => {
 	vi.stubGlobal('__', __)
 	entryResource.data = null
 	entryResource.fetch.mockClear()
+	programsResource.data = null
+})
+
+describe('CourseCardOverlay in a program (#405)', () => {
+	const program = (locked: boolean) => ({
+		ok: true,
+		data: {
+			programs: [
+				{
+					program: 'p-1',
+					title: 'Работа между отделами',
+					number: 2,
+					total: 3,
+					member: true,
+					locked_by: locked ? { id: 'c-0', title: 'Где теряется работа' } : null,
+				},
+			],
+		},
+	})
+
+	it('shows where the course stands in the program', async () => {
+		programsResource.data = program(false)
+		const wrapper = mountOverlay()
+		await flushPromises()
+
+		expect(wrapper.get('[data-testid="course-programs"]').text()).toContain(
+			'Course 2 of 3 in the program «Работа между отделами»'
+		)
+		expect(wrapper.find('[data-testid="course-program-lock"]').exists()).toBe(false)
+	})
+
+	it('sends to the previous course instead of studying a shut one', async () => {
+		programsResource.data = program(true)
+		entryResource.data = {
+			ok: true,
+			data: {
+				title: 'Цели',
+				completed: false,
+				study: { channel: 'web', url: 'https://lms.example.com/chat?lesson=l-2' },
+			},
+		}
+		const wrapper = mountOverlay()
+		await flushPromises()
+
+		expect(wrapper.get('[data-testid="course-program-lock"]').text()).toContain(
+			'first pass «Где теряется работа»'
+		)
+		expect(wrapper.find('[data-testid="course-study"]').exists()).toBe(false)
+	})
 })
 
 describe('CourseCardOverlay for an enrolled student', () => {
