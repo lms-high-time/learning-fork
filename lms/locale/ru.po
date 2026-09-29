@@ -10971,7 +10971,7 @@ msgstr "У вас уже столько неподтверждённых орг�
 #: frontend/src/components/CourseCard.vue
 #: frontend/src/components/Layouts/PageHeader.vue
 msgid "In the works"
-msgstr "Готовится"
+msgstr "В разработке"
 
 #: frontend/src/components/CourseCardOverlay.vue
 msgid "Enrollment opens when the course is released."
@@ -10999,11 +10999,11 @@ msgstr "После курса вы сможете"
 
 #: frontend/src/pages/Courses/CourseOverview.vue
 msgid "The course is in the works."
-msgstr "Курс готовится."
+msgstr "Курс в разработке."
 
 #: frontend/src/components/CourseCardOverlay.vue
 msgid "Course in the works"
-msgstr "Курс готовится"
+msgstr "Курс в разработке"
 
 #: frontend/src/components/CourseCardOverlay.vue
 msgid "Unsubscribe"
@@ -11015,7 +11015,7 @@ msgstr "Не удалось отписаться"
 
 #: frontend/src/pages/Courses/Courses.vue
 msgid "Being prepared"
-msgstr "Готовятся"
+msgstr "В разработке"
 
 #: frontend/src/pages/Courses/CourseOverview.vue
 msgid "The course is not published yet: you test it before everyone else. What seems wrong or awkward, tell the tutor during the session: it reaches the author."
