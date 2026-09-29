@@ -87,7 +87,7 @@
 						class="flex items-start gap-2 rounded-md bg-surface-blue-1 px-3 py-2.5 text-p-sm text-ink-gray-8"
 					>
 						<span
-							class="lucide-flask-conical size-4 shrink-0 mt-0.5 text-ink-blue-3"
+							class="lucide-flask-conical size-4 shrink-0 mt-0.5 text-ink-blue-6"
 						/>
 						<span>
 							{{
