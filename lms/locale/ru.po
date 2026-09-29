@@ -11016,3 +11016,11 @@ msgstr "Не удалось отписаться"
 #: frontend/src/pages/Courses/Courses.vue
 msgid "Being prepared"
 msgstr "Готовятся"
+
+#: frontend/src/pages/Courses/CourseOverview.vue
+msgid "The course is not published yet: you test it before everyone else. What seems wrong or awkward, tell the tutor during the session: it reaches the author."
+msgstr "Курс ещё не опубликован: вы проверяете его первым. Что покажется неверным или неудобным, скажите наставнику на занятии: он передаст это автору."
+
+#: frontend/src/pages/Courses/CourseOverview.vue
+msgid "You test this course. What seems wrong or awkward, tell the tutor during the session: it reaches the author."
+msgstr "Вы тестируете этот курс. Что покажется неверным или неудобным, скажите наставнику на занятии: он передаст это автору."

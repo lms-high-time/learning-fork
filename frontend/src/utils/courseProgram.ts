@@ -61,6 +61,8 @@ export type ProgramData = {
 	objectives?: string[]
 	/** Absent for a guest. */
 	notify?: boolean
+	/** The viewer tests the course before publication (learning-services#393). */
+	tester?: boolean
 }
 
 export type LessonStatus =

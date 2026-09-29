@@ -79,6 +79,28 @@
 							{{ tag }}
 						</Badge>
 					</div>
+					<!-- A tester sees the course before anyone else: say so, and where
+					their remarks go (learning-services#393). -->
+					<div
+						v-if="isTester"
+						data-testid="course-tester-note"
+						class="flex items-start gap-2 rounded-md bg-surface-blue-1 px-3 py-2.5 text-p-sm text-ink-gray-8"
+					>
+						<span
+							class="lucide-flask-conical size-4 shrink-0 mt-0.5 text-ink-blue-3"
+						/>
+						<span>
+							{{
+								course.data.published
+									? __(
+											'You test this course. What seems wrong or awkward, tell the tutor during the session: it reaches the author.'
+									  )
+									: __(
+											'The course is not published yet: you test it before everyone else. What seems wrong or awkward, tell the tutor during the session: it reaches the author.'
+									  )
+							}}
+						</span>
+					</div>
 					<p
 						v-if="course.data.short_introduction"
 						class="text-ink-gray-7 leading-6"
@@ -325,6 +347,7 @@ const objectives = computed<string[]>(
 )
 const notify = computed<boolean>(() => Boolean(courseMap.data?.data?.notify))
 const mapLoaded = computed<boolean>(() => Boolean(courseMap.data))
+const isTester = computed<boolean>(() => Boolean(courseMap.data?.data?.tester))
 
 const plainText = (html: string): string =>
 	html

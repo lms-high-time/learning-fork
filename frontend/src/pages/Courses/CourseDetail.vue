@@ -461,7 +461,14 @@ watch(
 )
 
 watch(course, () => {
-	if (!isAdmin.value && !course.data?.published && !course.data?.upcoming) {
+	// An unpublished course stays open to whoever is enrolled in it: a tester
+	// the author let in before publication (learning-services#393).
+	if (
+		!isAdmin.value &&
+		!course.data?.published &&
+		!course.data?.upcoming &&
+		!course.data?.membership
+	) {
 		router.push({
 			name: 'Courses',
 		})
