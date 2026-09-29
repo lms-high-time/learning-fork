@@ -18,9 +18,11 @@
 			</div>
 			<div v-if="!readOnlyMode">
 				<!-- A program in set order keeps this course shut until the previous
-				one is passed; the server refuses it too (learning-services#405). -->
+				one is passed; the server refuses it too (learning-services#405).
+				Not on an announcement: nobody enrols in one anyway, and the lock
+				would hide asking to hear of its release. -->
 				<div
-					v-if="lock && !isAdmin"
+					v-if="lock && !isAdmin && !course.data?.upcoming"
 					data-testid="course-program-lock"
 					class="space-y-3"
 				>

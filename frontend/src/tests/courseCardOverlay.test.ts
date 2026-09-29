@@ -128,6 +128,33 @@ describe('CourseCardOverlay in a program (#405)', () => {
 		expect(wrapper.find('[data-testid="course-program-lock"]').exists()).toBe(false)
 	})
 
+	it('leaves an announcement to its release notice', async () => {
+		programsResource.data = program(true)
+		const wrapper = mount(CourseCardOverlay, {
+			props: {
+				course: {
+					data: { name: 'course-2', upcoming: true, instructors: [] },
+				} as never,
+			},
+			global: {
+				mocks: { __ },
+				provide: { $user: { data: { name: 'pupil@example.com' } } },
+				stubs: {
+					VideoPreview: true,
+					CertificationLinks: true,
+					RouterLink: { template: '<a><slot /></a>' },
+				},
+			},
+		})
+		await flushPromises()
+
+		expect(wrapper.find('[data-testid="course-program-lock"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="course-notify"]').exists()).toBe(true)
+		expect(wrapper.get('[data-testid="course-programs"]').text()).toContain(
+			'Course 2 of 3'
+		)
+	})
+
 	it('sends to the previous course instead of studying a shut one', async () => {
 		programsResource.data = program(true)
 		entryResource.data = {
