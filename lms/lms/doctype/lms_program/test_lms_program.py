@@ -71,3 +71,15 @@ class TestLMSProgram(BaseTestUtils):
 		program = frappe.get_doc("LMS Program", self.program.name)
 		self.assertEqual([row.member for row in program.program_members], [self.student])
 		self.assertEqual(program.member_count, 1)
+
+	def test_a_guest_reads_a_published_program_only(self):
+		frappe.set_user("Guest")
+		details = get_program_details(self.program.name)
+		self.assertFalse(details.is_member)
+		self.assertEqual(details.title, self.program.title)
+
+		frappe.set_user("Administrator")
+		frappe.db.set_value("LMS Program", self.program.name, "published", 0)
+		frappe.set_user("Guest")
+		with self.assertRaises(frappe.ValidationError):
+			get_program_details(self.program.name)
