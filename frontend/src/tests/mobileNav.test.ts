@@ -177,6 +177,11 @@ describe('sectionFor', () => {
 		expect(sectionFor('Programming Exercises')).toBe('LEARN')
 	})
 
+	it('files the learner\'s homework under LEARN', () => {
+		// learning-services#439: the phone reaches «Homework» from the You page.
+		expect(sectionFor('Homework')).toBe('LEARN')
+	})
+
 	it('files session actions under ACCOUNT', () => {
 		expect(sectionFor('Notifications')).toBe('ACCOUNT')
 		expect(sectionFor('Log out')).toBe('ACCOUNT')

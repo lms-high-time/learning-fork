@@ -11246,3 +11246,24 @@ msgstr "Ответ сохранён"
 #: frontend/src/composables/useHomework.ts
 msgid "Could not save the answer"
 msgstr "Не удалось сохранить ответ"
+
+#: frontend/src/pages/Homework/Homework.vue
+#: frontend/src/utils/index.js
+msgid "Homework"
+msgstr "Домашние задания"
+
+#: frontend/src/pages/Homework/Homework.vue
+msgid "Mine"
+msgstr "Мои"
+
+#: frontend/src/pages/Homework/Homework.vue
+msgid "No homework yet"
+msgstr "Домашних заданий пока нет"
+
+#: frontend/src/pages/Homework/Homework.vue
+msgid "A lesson with homework gives it to you when you finish the lesson."
+msgstr "Урок с домашним заданием выдаёт его, когда вы закрываете урок."
+
+#: frontend/src/pages/Homework/Homework.vue
+msgid "Homework from your lessons is gathered here."
+msgstr "Здесь собираются домашние задания ваших уроков."

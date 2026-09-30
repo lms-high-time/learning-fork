@@ -538,6 +538,16 @@ const getSidebarItems = (forMobile = false) => {
 						return checkIfCanAddProgram(forMobile)
 					},
 				},
+				// The learner's homework (learning-services#439).
+				{
+					label: 'Homework',
+					icon: 'NotebookPen',
+					to: 'Homework',
+					activeFor: ['Homework'],
+					condition: () => {
+						return userResource?.data
+					},
+				},
 				{
 					label: 'Batches',
 					icon: 'Users',

@@ -3,6 +3,7 @@
 // are tested without a server; the lesson block and the «Homework» page only
 // draw them.
 
+import { getLmsBasePath } from '@/utils/basePath'
 import { plural, type PluralForms } from '@/utils/plural'
 import { formatDay } from '@/utils/team'
 
@@ -183,4 +184,26 @@ export const formatSize = (bytes: number | null): string => {
 	if (!bytes) return ''
 	if (bytes < 1024 * 1024) return __('{0} KB').format(Math.max(1, Math.round(bytes / 1024)))
 	return __('{0} MB').format((bytes / 1024 / 1024).toFixed(1))
+}
+
+/**
+ * The SPA route of a lesson's homework block, from the lesson's address the
+ * server gives. The base is the site's (`/lms` by default, router.js), not
+ * written in here.
+ */
+export function lessonPath(
+	url: string | null | undefined,
+	base: string = getLmsBasePath()
+): string | null {
+	if (!url) return null
+	let path: string
+	try {
+		path = new URL(url, 'http://host').pathname
+	} catch {
+		return null
+	}
+	const prefix = `/${base}`
+	if (path === prefix || path.startsWith(`${prefix}/`))
+		path = path.slice(prefix.length) || '/'
+	return `${path}#homework`
 }

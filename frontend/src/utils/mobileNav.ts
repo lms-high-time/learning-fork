@@ -75,6 +75,7 @@ const MAX_PRIMARY_TABS = 5
 
 const SECTION_MAP: Record<string, readonly string[]> = {
 	LEARN: [
+		'Homework',
 		'Programs',
 		'Batches',
 		'Quizzes',
