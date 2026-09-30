@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
 	canEdit,
 	dueLabel,
+	eventLabel,
+	isCurator,
 	isFilesAllowed,
 	isTextAllowed,
 	lastComment,
@@ -105,6 +107,22 @@ describe('the journal', () => {
 		expect(lastComment([])).toBeNull()
 	})
 
+	it('takes the comment of a cancelled acceptance too', () => {
+		// Reopening an accepted homework sends it back with the tutor's word, the
+		// way a return does (learning-services#452).
+		expect(
+			lastComment([...history, row('reopened', '5', 'Нет подписи спонсора')])
+		).toBe('Нет подписи спонсора')
+		expect(lastComment([row('reopened', '5', 'x'), row('returned', '6', 'y')])).toBe(
+			'y'
+		)
+	})
+
+	it('names a cancelled acceptance', () => {
+		expect(eventLabel('reopened')).toBe('Reopened')
+		expect(eventLabel('returned')).toBe('Returned for revision')
+	})
+
 	it('finds the last row of an event', () => {
 		expect(lastEvent(history, 'returned')?.at).toBe('4')
 		expect(lastEvent(history, 'accepted')).toBeNull()
@@ -130,5 +148,29 @@ describe('lessonPath', () => {
 			'/courses/c-1/learn/1-2#homework'
 		)
 		expect(lessonPath(null)).toBeNull()
+	})
+})
+
+describe('isCurator', () => {
+	// Who gets the «Awaiting review» tab (learning-services#452). The server
+	// decides what each of them may review; the page only offers the tab.
+	it('is a manager, a course creator, a moderator or a system manager', () => {
+		expect(isCurator({ roles: ['Organization Manager'] })).toBe(true)
+		expect(isCurator({ roles: [], is_instructor: 1 })).toBe(true)
+		expect(isCurator({ roles: [], is_moderator: 1 })).toBe(true)
+		expect(isCurator({ roles: [], is_system_manager: true })).toBe(true)
+	})
+
+	it('is not a learner, nor a visitor', () => {
+		expect(
+			isCurator({
+				roles: ['LMS Student'],
+				is_instructor: 0,
+				is_moderator: 0,
+				is_system_manager: 0,
+			})
+		).toBe(false)
+		expect(isCurator(null)).toBe(false)
+		expect(isCurator(undefined)).toBe(false)
 	})
 })

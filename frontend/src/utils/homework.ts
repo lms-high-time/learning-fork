@@ -156,11 +156,18 @@ export const lastEvent = (
 ): HomeworkEvent | null =>
 	[...history].reverse().find((row) => row.event === event) ?? null
 
-/** The tutor's last word: the comment of the last return. */
+/**
+ * The tutor's last word: the comment of the last return or cancelled
+ * acceptance — both send the homework back (learning-services#452), and the
+ * server's `last_comment` reads them the same way.
+ */
 export const lastComment = (
 	history: readonly HomeworkEvent[]
 ): string | null =>
-	lastEvent(history, 'returned')?.comment ?? null
+	[...history]
+		.reverse()
+		.find((row) => row.event === 'returned' || row.event === 'reopened')
+		?.comment ?? null
 
 const EVENTS: Record<HomeworkEvent['event'], string> = {
 	assigned: 'Issued',
@@ -216,3 +223,25 @@ export function lessonPath(
 		path = path.slice(prefix.length) || '/'
 	return `${path}#homework`
 }
+
+/** `get_user_info`: the flags come as 1/0. */
+export type CuratorFlags = {
+	roles?: readonly string[]
+	is_instructor?: boolean | number
+	is_moderator?: boolean | number
+	is_system_manager?: boolean | number
+}
+
+/**
+ * Who gets the «Awaiting review» tab and the count by the menu item
+ * (learning-services#452): a manager, a course creator, a moderator. The
+ * server decides which submissions each of them may review.
+ */
+export const isCurator = (user: CuratorFlags | null | undefined): boolean =>
+	Boolean(
+		user &&
+			(user.roles?.includes('Organization Manager') ||
+				user.is_instructor ||
+				user.is_moderator ||
+				user.is_system_manager)
+	)
