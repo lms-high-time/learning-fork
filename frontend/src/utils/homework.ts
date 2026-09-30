@@ -89,8 +89,10 @@ export type HomeworkRow = {
 	last_comment: string | null
 }
 
+// `Issued`, not `Assigned`: the catalogue's «Назначено» is Learning's word for
+// other things; a homework is «Выдано».
 const STATUS: Record<HomeworkStatus, string> = {
-	Assigned: 'Assigned',
+	Assigned: 'Issued',
 	Submitted: 'Submitted',
 	Returned: 'Returned for revision',
 	Accepted: 'Accepted',
@@ -161,7 +163,7 @@ export const lastComment = (
 	lastEvent(history, 'returned')?.comment ?? null
 
 const EVENTS: Record<HomeworkEvent['event'], string> = {
-	assigned: 'Assigned',
+	assigned: 'Issued',
 	submitted: 'Submitted',
 	returned: 'Returned for revision',
 	accepted: 'Accepted',

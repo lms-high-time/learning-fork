@@ -18,7 +18,8 @@ import {
 
 describe('statusLabel', () => {
 	it('names every status, and the absence of a submission', () => {
-		expect(statusLabel('Assigned')).toBe('Assigned')
+		// «Выдано» (the design's word), not Learning's «Назначено».
+		expect(statusLabel('Assigned')).toBe('Issued')
 		expect(statusLabel('Submitted')).toBe('Submitted')
 		expect(statusLabel('Returned')).toBe('Returned for revision')
 		expect(statusLabel('Accepted')).toBe('Accepted')
