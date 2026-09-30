@@ -43,7 +43,12 @@ vi.mock('@/utils/dialogs', () => ({
 }))
 
 import TeamAssignments from '@/components/Team/TeamAssignments.vue'
-import { audienceText, type Allocation, type TeamData } from '@/utils/team'
+import {
+	audienceText,
+	type Allocation,
+	type AllocationHomework,
+	type TeamData,
+} from '@/utils/team'
 
 const team: TeamData = {
 	organization: 'org-1',
@@ -169,5 +174,150 @@ describe('the assignments tab', () => {
 			method: 'lms_frappe_app.api.team.remove_allocation',
 			params: { allocation: 'ca-1' },
 		})
+	})
+})
+
+describe('homework deadlines in an assignment', () => {
+	// The manager's rule for the group overrides the author's; «as the author»
+	// is no rule at all (learning-services#452).
+	const homework = (
+		overrides: Partial<AllocationHomework> = {}
+	): AllocationHomework => ({
+		homework: 'hw-1',
+		lesson: 'L1',
+		lesson_title: 'Спонсор',
+		title: 'Встреча со спонсором',
+		author_due: { mode: 'relative', days: 5, date: null },
+		due: null,
+		...overrides,
+	})
+
+	const serve = (items: AllocationHomework[]) => {
+		answers['lms_frappe_app.api.team.allocations'] = {
+			ok: true,
+			data: {
+				allocations: [allocation({ homework: items })],
+				courses: [{ id: 'c-1', title: 'P3' }],
+			},
+		}
+	}
+
+	const mountTab = async () => {
+		const wrapper = mount(TeamAssignments, {
+			props: { team },
+			global: { mocks },
+		})
+		await flushPromises()
+		return wrapper
+	}
+
+	const save = async (wrapper: Awaited<ReturnType<typeof mountTab>>) => {
+		await wrapper.find('[data-testid="save-due-ca-1"]').trigger('click')
+		await flushPromises()
+		return calls[calls.length - 1]
+	}
+
+	it('lists the homework of the course with the rule in force', async () => {
+		serve([
+			homework(),
+			homework({
+				homework: 'hw-2',
+				lesson_title: 'Устав',
+				title: 'Устав проекта',
+				author_due: { mode: 'none', days: null, date: null },
+				due: { mode: 'absolute', days: null, date: '2030-02-01' },
+			}),
+		])
+		const wrapper = await mountTab()
+		const block = wrapper.find('[data-testid="homework-due-ca-1"]')
+		expect(block.text()).toContain('Homework deadlines')
+		const rows = block.findAll('[data-testid="homework-due-row"]')
+		expect(rows).toHaveLength(2)
+		expect(rows[0].text()).toContain('Встреча со спонсором')
+		expect(rows[0].text()).toContain('Спонсор')
+		expect(
+			(block.find('[data-testid="due-mode-hw-1"]').element as HTMLInputElement)
+				.value
+		).toBe('author')
+		expect(
+			(block.find('[data-testid="due-mode-hw-2"]').element as HTMLInputElement)
+				.value
+		).toBe('absolute')
+		expect(
+			(block.find('[data-testid="due-date-hw-2"]').element as HTMLInputElement)
+				.value
+		).toBe('2030-02-01')
+	})
+
+	it("names the author's deadline in the choice that keeps it", async () => {
+		serve([homework()])
+		const wrapper = await mountTab()
+		const select = wrapper.findComponent('[data-testid="due-mode-hw-1"]')
+		expect(
+			(select.props('options') as { label: string }[]).map((o) => o.label)
+		).toEqual([
+			'As the author: 5 days after the lesson',
+			'Days after the lesson',
+			'By a date',
+		])
+	})
+
+	it('saves the rules of the whole assignment at once', async () => {
+		serve([
+			homework(),
+			homework({ homework: 'hw-2', title: 'Устав проекта' }),
+			homework({ homework: 'hw-3', title: 'Риски' }),
+		])
+		const wrapper = await mountTab()
+		await wrapper.find('[data-testid="due-mode-hw-1"]').setValue('relative')
+		await wrapper.find('[data-testid="due-days-hw-1"]').setValue('7')
+		await wrapper.find('[data-testid="due-mode-hw-3"]').setValue('absolute')
+		await wrapper.find('[data-testid="due-date-hw-3"]').setValue('2030-03-01')
+
+		expect(await save(wrapper)).toEqual({
+			method: 'lms_frappe_app.api.team.update_allocation',
+			params: {
+				allocation: 'ca-1',
+				homework_due: [
+					{ homework: 'hw-1', due_mode: 'relative', due_days: 7 },
+					{ homework: 'hw-3', due_mode: 'absolute', due_date: '2030-03-01' },
+				],
+			},
+		})
+	})
+
+	it("drops the rule when the author's deadline is chosen", async () => {
+		serve([homework({ due: { mode: 'relative', days: 3, date: null } })])
+		const wrapper = await mountTab()
+		expect(
+			(
+				wrapper.find('[data-testid="due-days-hw-1"]')
+					.element as HTMLInputElement
+			).value
+		).toBe('3')
+		await wrapper.find('[data-testid="due-mode-hw-1"]').setValue('author')
+		expect(await save(wrapper)).toEqual({
+			method: 'lms_frappe_app.api.team.update_allocation',
+			params: { allocation: 'ca-1', homework_due: [] },
+		})
+	})
+
+	it('does not save a rule without its days or date', async () => {
+		serve([homework()])
+		const wrapper = await mountTab()
+		await wrapper.find('[data-testid="due-mode-hw-1"]').setValue('absolute')
+		const button = wrapper.find('[data-testid="save-due-ca-1"]')
+		expect(button.attributes('disabled')).toBeDefined()
+		await button.trigger('click')
+		await flushPromises()
+		expect(calls).toEqual([])
+	})
+
+	it('has no block for a course without homework', async () => {
+		serve([])
+		const wrapper = await mountTab()
+		expect(wrapper.find('[data-testid="homework-due-ca-1"]').exists()).toBe(
+			false
+		)
 	})
 })

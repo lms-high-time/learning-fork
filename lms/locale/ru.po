@@ -11403,3 +11403,31 @@ msgstr "Напишите, что доделать. Ученик увидит к�
 #: frontend/src/components/Homework/HomeworkReview.vue
 msgid "The homework goes back to the learner for revision, with your comment."
 msgstr "Домашка вернётся ученику на доработку с вашим комментарием."
+
+#: frontend/src/components/Team/TeamHomeworkDue.vue
+msgid "Homework deadlines"
+msgstr "Сроки домашек"
+
+#: frontend/src/components/Team/TeamHomeworkDue.vue
+msgid "A deadline set here applies to everyone in this assignment instead of the author's. A deadline already given does not move."
+msgstr "Срок, заданный здесь, действует для всех в этом назначении вместо срока автора. Уже выставленный срок не сдвигается."
+
+#: frontend/src/components/Team/TeamHomeworkDue.vue
+msgid "As the author: {0}"
+msgstr "Как у автора: {0}"
+
+#: frontend/src/components/Team/TeamHomeworkDue.vue
+msgid "Days after the lesson"
+msgstr "Дней после закрытия урока"
+
+#: frontend/src/components/Team/TeamHomeworkDue.vue
+msgid "By a date"
+msgstr "До даты"
+
+#: frontend/src/components/Team/TeamHomeworkDue.vue
+msgid "Save deadlines"
+msgstr "Сохранить сроки"
+
+#: frontend/src/components/Team/TeamAssignments.vue
+msgid "Deadlines saved"
+msgstr "Сроки сохранены"
