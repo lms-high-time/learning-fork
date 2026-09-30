@@ -6,7 +6,8 @@
 		<h3 class="text-p-sm font-medium text-ink-gray-8">
 			{{ __('Changes since version {0}').format(version) }}
 		</h3>
-		<!-- Parts as text in <del>/<ins>: an answer is never drawn as HTML. -->
+		<!-- Parts as text in <del>/<ins>: an answer is never drawn as HTML.
+		     Screen readers do not announce the tags, so each says what it is. -->
 		<p
 			v-if="changed"
 			class="whitespace-pre-wrap break-words text-p-sm leading-relaxed text-ink-gray-8"
@@ -15,10 +16,12 @@
 				><del
 					v-if="part.type === 'del'"
 					class="rounded-sm bg-surface-red-2 text-ink-red-7"
+					><span class="sr-only">{{ __('Removed:') + ' ' }}</span
 					>{{ part.text }}</del
 				><ins
 					v-else-if="part.type === 'add'"
 					class="rounded-sm bg-surface-green-2 text-ink-green-8 no-underline"
+					><span class="sr-only">{{ __('Added:') + ' ' }}</span
 					>{{ part.text }}</ins
 				><span v-else>{{ part.text }}</span></template
 			>

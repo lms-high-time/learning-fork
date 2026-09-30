@@ -223,8 +223,11 @@ describe('HomeworkReview', () => {
 		const wrapper = await open()
 		const diff = wrapper.find('[data-testid="homework-diff"]')
 		expect(diff.text()).toContain('Changes since version 1')
-		expect(diff.find('del').text()).toBe('встречу')
-		expect(diff.find('ins').text()).toBe('две встречи')
+		expect(diff.find('del').text()).toBe('Removed: встречу')
+		expect(diff.find('ins').text()).toBe('Added: две встречи')
+		// The words are said to a screen reader only.
+		expect(diff.find('del .sr-only').text()).toBe('Removed:')
+		expect(diff.find('ins .sr-only').text()).toBe('Added:')
 		expect(diff.find('[data-testid="diff-added"]').text()).toContain(
 			'minutes.pdf'
 		)
@@ -471,6 +474,30 @@ describe('HomeworkReview', () => {
 		const wrapper = await open()
 		expect(wrapper.find('[data-testid="review-error"]').text()).toBe(
 			'Could not load the submission'
+		)
+	})
+
+	it('takes the focus to the title of a card that comes, and after an action', async () => {
+		serve(card())
+		const wrapper = mount(HomeworkReview, {
+			props: { submission: 'HS-1' },
+			attachTo: document.body,
+			global: {
+				mocks: { __: (globalThis as any).__ },
+				stubs: { 'router-link': { template: '<a><slot /></a>' } },
+			},
+		})
+		await flushPromises()
+		const title = wrapper.find('[data-testid="review-title"]')
+		expect(title.attributes('tabindex')).toBe('-1')
+		expect(document.activeElement).toBe(title.element)
+
+		const accept = button(wrapper, 'Accept')!
+		;(accept.element as HTMLElement).focus()
+		await accept.trigger('click')
+		await flushPromises()
+		expect(document.activeElement).toBe(
+			wrapper.find('[data-testid="review-title"]').element
 		)
 	})
 

@@ -11435,3 +11435,11 @@ msgstr "Сроки сохранены"
 #: frontend/src/utils/homework.ts
 msgid "Learner"
 msgstr "Ученик"
+
+#: frontend/src/components/Homework/HomeworkDiff.vue
+msgid "Removed:"
+msgstr "Удалено:"
+
+#: frontend/src/components/Homework/HomeworkDiff.vue
+msgid "Added:"
+msgstr "Добавлено:"
