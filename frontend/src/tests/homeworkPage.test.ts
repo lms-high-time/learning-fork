@@ -1,9 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils'
 import { reactive } from 'vue'
 
 // «Homework» (learning-services#439): the learner's homework of every course,
-// each a way back to its lesson.
+// each a way back to its lesson; for a tutor, also the queue to review
+// (learning-services#452).
 
 const answers: Record<string, unknown> = {}
 const reloads: { url: string; params: unknown }[] = []
@@ -40,7 +41,34 @@ const space = reactive({
 })
 vi.mock('@/stores/space', () => ({ useSpace: () => space }))
 vi.mock('@/stores/session', () => ({
-	sessionStore: () => ({ isLoggedIn: true }),
+	sessionStore: () => ({ isLoggedIn: true, user: 'a@x' }),
+}))
+
+const user = reactive({ data: { roles: ['LMS Student'] } as unknown })
+vi.mock('@/stores/user', () => ({
+	usersStore: () => ({ userResource: user }),
+}))
+
+// The tab and the card live in the address: `?tab=queue`, `?submission=`.
+const route = reactive({ query: {} as Record<string, string> })
+const router = vi.hoisted(() => ({
+	push: vi.fn(),
+	replace: vi.fn(),
+}))
+vi.mock('vue-router', () => ({
+	useRoute: () => route,
+	useRouter: () => router,
+}))
+
+// The queue and the card have their own tests; here they only have to appear.
+vi.mock('@/components/Homework/HomeworkQueue.vue', () => ({
+	default: { template: '<div data-testid="queue" />' },
+}))
+vi.mock('@/components/Homework/HomeworkReview.vue', () => ({
+	default: {
+		props: ['submission'],
+		template: '<div data-testid="card">{{ submission }}</div>',
+	},
 }))
 
 import Homework from '@/pages/Homework/Homework.vue'
@@ -80,7 +108,15 @@ const open = async () => {
 	return wrapper
 }
 
+// The route and the user are shared: a page left mounted would follow them.
+enableAutoUnmount(afterEach)
+
 beforeEach(() => {
+	route.query = {}
+	user.data = { roles: ['LMS Student'] }
+	router.push.mockReset()
+	router.replace.mockReset()
+	router.replace.mockImplementation(({ query }) => (route.query = query))
 	reloads.length = 0
 	for (const key of Object.keys(answers)) delete answers[key]
 	for (const key of Object.keys(failures)) delete failures[key]
@@ -173,5 +209,64 @@ describe('Homework page', () => {
 		expect(wrapper.find('[data-testid="homework-empty"]').text()).toContain(
 			'No homework yet'
 		)
+	})
+})
+
+describe('the tutor\'s tabs', () => {
+	beforeEach(() => {
+		answers[URL] = { ok: true, data: { space: 'org-1', items: [] } }
+	})
+
+	it('offers a learner no tabs', async () => {
+		const wrapper = await open()
+		expect(wrapper.find('[role="tablist"]').exists()).toBe(false)
+		expect(wrapper.find('h1').text()).toBe('Mine')
+	})
+
+	it('keeps a learner on their own list whatever the address says', async () => {
+		route.query = { tab: 'queue' }
+		const wrapper = await open()
+		expect(wrapper.find('[data-testid="queue"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="homework-empty"]').exists()).toBe(true)
+	})
+
+	it('gives a tutor both lists', async () => {
+		user.data = { roles: ['Organization Manager'] }
+		const wrapper = await open()
+		const tabs = wrapper.findAll('[role="tab"]')
+		expect(tabs.map((tab) => tab.text())).toEqual(['Mine', 'Awaiting review'])
+		expect(tabs[0].attributes('aria-selected')).toBe('true')
+
+		await tabs[1].trigger('click')
+		await flushPromises()
+		expect(router.replace).toHaveBeenCalledWith({
+			query: { tab: 'queue' },
+		})
+		expect(wrapper.find('[data-testid="queue"]').exists()).toBe(true)
+		expect(
+			wrapper.findAll('[role="tab"]')[1].attributes('aria-selected')
+		).toBe('true')
+	})
+
+	it('moves between the tabs with the arrows', async () => {
+		user.data = { roles: [], is_moderator: 1 }
+		const wrapper = await open()
+		await wrapper.find('[role="tablist"]').trigger('keydown', { key: 'End' })
+		await flushPromises()
+		expect(route.query).toEqual({ tab: 'queue' })
+	})
+
+	it('opens the queue and the card from the address', async () => {
+		user.data = { roles: [], is_instructor: 1 }
+		route.query = { tab: 'queue' }
+		let wrapper = await open()
+		expect(wrapper.find('[data-testid="queue"]').exists()).toBe(true)
+		// The queue does not ask for the tutor's own homework.
+		expect(reloads).toEqual([])
+
+		route.query = { tab: 'queue', submission: 'HS-9' }
+		wrapper = await open()
+		expect(wrapper.find('[data-testid="queue"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="card"]').text()).toBe('HS-9')
 	})
 })

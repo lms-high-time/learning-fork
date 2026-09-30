@@ -1,0 +1,202 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
+import { reactive } from 'vue'
+
+// «Awaiting review» (learning-services#452): the submissions a tutor may
+// review, oldest first, with the filters the server offers.
+
+const answers: Record<string, unknown> = {}
+const fetched: { url: string; params: unknown }[] = []
+const failures: Record<string, Error> = {}
+
+vi.mock('frappe-ui', () => ({
+	createResource: (config: { url: string; makeParams?: () => unknown }) => {
+		const resource = reactive({
+			data: null as unknown,
+			fetch: vi.fn(async () => {
+				fetched.push({ url: config.url, params: config.makeParams?.() })
+				if (failures[config.url]) throw failures[config.url]
+				resource.data = answers[config.url] ?? null
+			}),
+			reload: vi.fn(async () => {
+				resource.data = answers[config.url] ?? null
+			}),
+		})
+		return resource
+	},
+	toast: { error: vi.fn(), success: vi.fn() },
+	LoadingIndicator: { template: '<span />' },
+	FormControl: {
+		props: ['modelValue', 'options', 'type', 'label'],
+		emits: ['update:modelValue'],
+		template: `<select :data-label="label" :value="modelValue"
+			@change="$emit('update:modelValue', $event.target.value)">
+			<option v-for="o in options" :key="o.value" :value="o.value">{{ o.label }}</option>
+		</select>`,
+	},
+}))
+
+import HomeworkQueue from '@/components/Homework/HomeworkQueue.vue'
+import type { QueueData, QueueRow } from '@/utils/homework'
+
+const URL = 'lms_frappe_app.api.review.queue'
+
+const row = (overrides: Partial<QueueRow> = {}): QueueRow => ({
+	id: 'HS-1',
+	status: 'Submitted',
+	student: { name: 'Анна Ученица' },
+	course: 'c-1',
+	course_title: 'Проектный менеджмент',
+	lesson: 'L1',
+	lesson_title: 'Спонсор',
+	title: 'Встреча со спонсором',
+	organization: 'org-1',
+	organization_title: 'Кофейни',
+	submitted_at: '2030-01-12 12:00:00',
+	version: 2,
+	reviewed_version: 1,
+	due_at: '2030-01-15 23:59:59',
+	overdue: false,
+	...overrides,
+})
+
+const serve = (data: Partial<QueueData> = {}) => {
+	answers[URL] = {
+		ok: true,
+		data: {
+			items: [row()],
+			total: 1,
+			courses: [
+				{ id: 'c-1', title: 'Проектный менеджмент' },
+				{ id: 'c-2', title: 'Продажи' },
+			],
+			organizations: [
+				{ id: 'org-1', title: 'Кофейни' },
+				{ id: 'personal', title: 'Личное' },
+			],
+			...data,
+		},
+	}
+}
+
+const open = async () => {
+	const wrapper = mount(HomeworkQueue, {
+		global: {
+			mocks: { __: (globalThis as any).__ },
+			stubs: {
+				'router-link': {
+					props: ['to'],
+					template: '<a :data-to="JSON.stringify(to)"><slot /></a>',
+				},
+			},
+		},
+	})
+	await flushPromises()
+	return wrapper
+}
+
+const select = (wrapper: Awaited<ReturnType<typeof open>>, label: string) =>
+	wrapper.find(`select[data-label="${label}"]`)
+
+beforeEach(() => {
+	fetched.length = 0
+	for (const key of Object.keys(answers)) delete answers[key]
+	for (const key of Object.keys(failures)) delete failures[key]
+})
+
+describe('HomeworkQueue', () => {
+	it('asks for the submitted ones first', async () => {
+		serve()
+		await open()
+		expect(fetched).toEqual([{ url: URL, params: { status: 'Submitted' } }])
+	})
+
+	it('shows who, what and when, and leads to the card', async () => {
+		serve({
+			items: [
+				row(),
+				row({
+					id: 'HS-2',
+					student: { name: 'boris@x' },
+					organization: 'personal',
+					organization_title: 'Личное',
+					overdue: true,
+				}),
+			],
+			total: 2,
+		})
+		const wrapper = await open()
+		const rows = wrapper.findAll('[data-testid="queue-row"]')
+		expect(rows).toHaveLength(2)
+		const first = rows[0].text()
+		expect(first).toContain('Анна Ученица')
+		expect(first).toContain('Проектный менеджмент · Спонсор')
+		expect(first).toContain('Встреча со спонсором')
+		expect(first).toContain('Кофейни')
+		expect(first).toContain('Submitted 12 января 2030 г., 12:00')
+		expect(first).toContain('Version 2')
+		expect(first).not.toContain('Overdue')
+		expect(rows[1].text()).toContain('Личное')
+		expect(rows[1].text()).toContain('Overdue')
+		expect(JSON.parse(rows[0].find('a').attributes('data-to')!)).toEqual({
+			name: 'Homework',
+			query: { tab: 'queue', submission: 'HS-1' },
+		})
+	})
+
+	it('filters by course, organization and status', async () => {
+		serve()
+		const wrapper = await open()
+		expect(
+			select(wrapper, 'Organization')
+				.findAll('option')
+				.map((o) => o.text())
+		).toEqual(['All organizations', 'Кофейни', 'Личное'])
+
+		await select(wrapper, 'Course').setValue('c-2')
+		await flushPromises()
+		await select(wrapper, 'Organization').setValue('personal')
+		await flushPromises()
+		await select(wrapper, 'Status').setValue('Accepted')
+		await flushPromises()
+
+		expect(fetched[fetched.length - 1].params).toEqual({
+			status: 'Accepted',
+			course: 'c-2',
+			organization: 'personal',
+		})
+	})
+
+	it('says how many are shown when there are more', async () => {
+		serve({ items: [row()], total: 120 })
+		const wrapper = await open()
+		expect(wrapper.find('[data-testid="queue-total"]').text()).toBe(
+			'Showing 1 of 120'
+		)
+		serve({ items: [row()], total: 1 })
+		expect((await open()).find('[data-testid="queue-total"]').exists()).toBe(
+			false
+		)
+	})
+
+	it('says when nothing awaits review', async () => {
+		serve({ items: [], total: 0 })
+		const wrapper = await open()
+		expect(wrapper.find('[data-testid="queue-empty"]').text()).toContain(
+			'Nothing awaits review'
+		)
+	})
+
+	it('says what the server refused, and stops waiting on a failure', async () => {
+		answers[URL] = { ok: false, error: { code: 'x', message: 'Нельзя' } }
+		expect((await open()).find('[data-testid="queue-error"]').text()).toBe(
+			'Нельзя'
+		)
+		failures[URL] = new Error('502')
+		const wrapper = await open()
+		expect(wrapper.find('[data-testid="queue-loading"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="queue-error"]').text()).toBe(
+			'Could not load the queue'
+		)
+	})
+})

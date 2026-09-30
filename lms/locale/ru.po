@@ -11287,3 +11287,119 @@ msgstr "Не удалось загрузить домашние задания"
 #: frontend/src/utils/homework.ts
 msgid "Issued"
 msgstr "Выдано"
+
+#: frontend/src/pages/Homework/Homework.vue
+msgid "Awaiting review"
+msgstr "Ждут проверки"
+
+#: frontend/src/components/Homework/HomeworkQueue.vue
+msgid "Nothing awaits review"
+msgstr "Проверять нечего"
+
+#: frontend/src/components/Homework/HomeworkQueue.vue
+msgid "No homework with this status"
+msgstr "Нет домашек с таким статусом"
+
+#: frontend/src/components/Homework/HomeworkQueue.vue
+msgid "Submitted {0}"
+msgstr "Сдано {0}"
+
+#: frontend/src/components/Homework/HomeworkQueue.vue
+msgid "Showing {0} of {1}"
+msgstr "Показаны {0} из {1}"
+
+#: frontend/src/components/Homework/HomeworkQueue.vue
+msgid "All courses"
+msgstr "Все курсы"
+
+#: frontend/src/components/Homework/HomeworkQueue.vue
+msgid "All organizations"
+msgstr "Все организации"
+
+#: frontend/src/composables/useHomeworkReview.ts
+msgid "Could not load the queue"
+msgstr "Не удалось загрузить очередь"
+
+#: frontend/src/composables/useHomeworkReview.ts
+msgid "Could not load the submission"
+msgstr "Не удалось загрузить сдачу"
+
+#: frontend/src/composables/useHomeworkReview.ts
+msgid "Homework accepted"
+msgstr "Домашка принята"
+
+#: frontend/src/composables/useHomeworkReview.ts
+msgid "Sent back for revision"
+msgstr "Возвращено на доработку"
+
+#: frontend/src/composables/useHomeworkReview.ts
+msgid "Acceptance cancelled"
+msgstr "Приём отменён"
+
+#: frontend/src/composables/useHomeworkReview.ts
+msgid "The learner saved a new version. Look at it first."
+msgstr "Ученик сохранил новую версию — посмотрите её."
+
+#: frontend/src/components/Homework/HomeworkDiff.vue
+msgid "Changes since version {0}"
+msgstr "Изменения после версии {0}"
+
+#: frontend/src/components/Homework/HomeworkDiff.vue
+msgid "The text has not changed."
+msgstr "Текст не изменился."
+
+#: frontend/src/components/Homework/HomeworkDiff.vue
+msgid "Added: {0}"
+msgstr "Добавлен: {0}"
+
+#: frontend/src/components/Homework/HomeworkDiff.vue
+msgid "Removed: {0}"
+msgstr "Убран: {0}"
+
+#: frontend/src/components/Homework/HomeworkReturnDialog.vue
+msgid "Comment"
+msgstr "Комментарий"
+
+#: frontend/src/components/Homework/HomeworkReturnDialog.vue
+msgid "What to fix"
+msgstr "Что доделать"
+
+#: frontend/src/components/Homework/HomeworkReview.vue
+msgid "The assignment"
+msgstr "Задание"
+
+#: frontend/src/components/Homework/HomeworkReview.vue
+msgid "Answer, version {0}"
+msgstr "Ответ, версия {0}"
+
+#: frontend/src/components/Homework/HomeworkReview.vue
+msgid "The answer"
+msgstr "Ответ"
+
+#: frontend/src/components/Homework/HomeworkReview.vue
+msgid "No text in the answer"
+msgstr "В ответе нет текста"
+
+#: frontend/src/components/Homework/HomeworkReview.vue
+msgid "Accept"
+msgstr "Принять"
+
+#: frontend/src/components/Homework/HomeworkReview.vue
+msgid "Return for revision"
+msgstr "Вернуть на доработку"
+
+#: frontend/src/components/Homework/HomeworkReview.vue
+msgid "Cancel acceptance"
+msgstr "Отменить приём"
+
+#: frontend/src/components/Homework/HomeworkReview.vue
+msgid "Return"
+msgstr "Вернуть"
+
+#: frontend/src/components/Homework/HomeworkReview.vue
+msgid "Write what to fix. The learner sees your comment under the lesson and gets it by email."
+msgstr "Напишите, что доделать. Ученик увидит комментарий под уроком и получит его письмом."
+
+#: frontend/src/components/Homework/HomeworkReview.vue
+msgid "The homework goes back to the learner for revision, with your comment."
+msgstr "Домашка вернётся ученику на доработку с вашим комментарием."

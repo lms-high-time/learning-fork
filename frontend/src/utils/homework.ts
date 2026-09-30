@@ -89,6 +89,56 @@ export type HomeworkRow = {
 	last_comment: string | null
 }
 
+/** A name the tutor sees: the full name, or the email when there is none. */
+export type Student = { name: string }
+
+/** A row of `review.queue` (learning-services#452). */
+export type QueueRow = {
+	id: string
+	status: HomeworkStatus
+	student: Student
+	course: string
+	course_title: string | null
+	lesson: string
+	lesson_title: string | null
+	title: string
+	/** `personal` — the learner's own space. */
+	organization: string
+	organization_title: string | null
+	submitted_at: string | null
+	version: number | null
+	reviewed_version: number | null
+	due_at: string | null
+	overdue: boolean
+}
+
+export type QueueData = {
+	items: QueueRow[]
+	total: number
+	courses: { id: string; title: string | null }[]
+	organizations: { id: string; title: string | null }[]
+}
+
+export type ReviewAction = 'accept' | 'send_back' | 'reopen'
+
+/** `review.submission`, and the answer of every review action. */
+export type ReviewCard = {
+	submission: Submission & { versions: HomeworkVersion[] }
+	homework: Homework
+	student: Student
+	course: string
+	course_title: string | null
+	lesson: string
+	lesson_title: string | null
+	lesson_url: string | null
+	organization: string
+	organization_title: string | null
+	/** The version of the last return, acceptance or reopening; null — never. */
+	reviewed_version: number | null
+	/** What the reader may do now; empty — the card is read-only. */
+	actions: ReviewAction[]
+}
+
 // `Issued`, not `Assigned`: the catalogue's «Назначено» is Learning's word for
 // other things; a homework is «Выдано».
 const STATUS: Record<HomeworkStatus, string> = {
