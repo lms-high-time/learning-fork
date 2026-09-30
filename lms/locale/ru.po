@@ -11039,6 +11039,10 @@ msgstr "Перейти к курсу «{0}»"
 msgid "Course {0} of {1} in the program «{2}»"
 msgstr "Курс {0} из {1} в программе «{2}»"
 
+#: frontend/src/components/CourseCardOverlay.vue
+msgid "Next: «{0}»"
+msgstr "Дальше — курс «{0}»"
+
 #: frontend/src/pages/Programs/ProgramDetail.vue
 msgid "in order: each course opens after the previous one"
 msgstr "по порядку: каждый курс открывается после предыдущего"
