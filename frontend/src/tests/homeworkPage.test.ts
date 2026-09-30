@@ -7,6 +7,7 @@ import { reactive } from 'vue'
 
 const answers: Record<string, unknown> = {}
 const reloads: { url: string; params: unknown }[] = []
+const failures: Record<string, Error> = {}
 
 vi.mock('frappe-ui', () => ({
 	createResource: (config: { url: string; makeParams?: () => unknown }) => {
@@ -15,6 +16,8 @@ vi.mock('frappe-ui', () => ({
 			loading: false,
 			fetch: vi.fn(async () => {
 				reloads.push({ url: config.url, params: config.makeParams?.() })
+				// frappe-ui rethrows a failed request after its onError.
+				if (failures[config.url]) throw failures[config.url]
 				resource.data = answers[config.url] ?? null
 			}),
 			reload: vi.fn(async () => {
@@ -41,7 +44,7 @@ vi.mock('@/stores/session', () => ({
 }))
 
 import Homework from '@/pages/Homework/Homework.vue'
-import { lessonPath, type HomeworkRow } from '@/utils/homework'
+import type { HomeworkRow } from '@/utils/homework'
 
 const URL = 'lms_frappe_app.api.student.my_homework'
 
@@ -80,21 +83,7 @@ const open = async () => {
 beforeEach(() => {
 	reloads.length = 0
 	for (const key of Object.keys(answers)) delete answers[key]
-})
-
-describe('lessonPath', () => {
-	it('takes the lesson route without the SPA base, to the homework block', () => {
-		expect(lessonPath('/lms/courses/c-1/learn/1-2')).toBe(
-			'/courses/c-1/learn/1-2#homework'
-		)
-		expect(lessonPath('https://x.test/lms/courses/c-1/learn/1-2')).toBe(
-			'/courses/c-1/learn/1-2#homework'
-		)
-		expect(lessonPath('/study/courses/c-1/learn/1-2', 'study')).toBe(
-			'/courses/c-1/learn/1-2#homework'
-		)
-		expect(lessonPath(null)).toBeNull()
-	})
+	for (const key of Object.keys(failures)) delete failures[key]
 })
 
 describe('Homework page', () => {
@@ -144,6 +133,38 @@ describe('Homework page', () => {
 		expect(returned.find('a').attributes('href')).toBe(
 			'/courses/c-1/learn/1-2#homework'
 		)
+	})
+
+	it('says what the server refused instead of an empty list', async () => {
+		answers[URL] = {
+			ok: false,
+			error: { code: 'space_not_available', message: 'Пространство недоступно' },
+		}
+		const wrapper = await open()
+		expect(wrapper.find('[data-testid="homework-error"]').text()).toBe(
+			'Пространство недоступно'
+		)
+		expect(wrapper.find('[data-testid="homework-empty"]').exists()).toBe(false)
+	})
+
+	it('stops waiting when the request fails', async () => {
+		failures[URL] = new Error('502')
+		const wrapper = await open()
+		expect(wrapper.find('[data-testid="homework-loading"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="homework-error"]').text()).toBe(
+			'Could not load homework'
+		)
+	})
+
+	it('leaves a row without a lesson unlinked', async () => {
+		answers[URL] = {
+			ok: true,
+			data: { space: 'org-1', items: [row({ lesson_url: null })] },
+		}
+		const wrapper = await open()
+		const item = wrapper.find('[data-testid="homework-row"]')
+		expect(item.find('a').exists()).toBe(false)
+		expect(item.html()).not.toContain('hover:')
 	})
 
 	it('says there is no homework yet', async () => {

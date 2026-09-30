@@ -11,9 +11,22 @@
 			}}</a>
 		</div>
 
-		<div v-else-if="!answer" class="flex justify-center p-10">
+		<div
+			v-else-if="state === 'loading'"
+			class="flex justify-center p-10"
+			data-testid="homework-loading"
+		>
 			<LoadingIndicator class="size-5 text-ink-gray-5" />
 		</div>
+
+		<p
+			v-else-if="state === 'error'"
+			class="mx-auto max-w-3xl p-5 text-p-base text-ink-gray-6"
+			role="alert"
+			data-testid="homework-error"
+		>
+			{{ failure }}
+		</p>
 
 		<div v-else class="mx-auto max-w-3xl space-y-6 p-4 sm:p-5">
 			<!-- «Mine» is the only list on stage 1; the tutor's queue comes with
@@ -53,9 +66,10 @@
 						data-testid="homework-row"
 					>
 						<component
-							:is="lessonPath(row.lesson_url) ? 'router-link' : 'div'"
-							:to="lessonPath(row.lesson_url) ?? undefined"
-							class="flex flex-col gap-1 p-3 hover:bg-surface-gray-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3"
+							:is="row.path ? 'router-link' : 'div'"
+							:to="row.path ?? undefined"
+							class="flex flex-col gap-1 p-3 sm:flex-row sm:items-start sm:justify-between sm:gap-3"
+							:class="{ 'hover:bg-surface-gray-1': row.path }"
 						>
 							<div class="min-w-0 space-y-0.5">
 								<div class="text-p-base font-medium text-ink-gray-9">
@@ -95,7 +109,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { createResource, LoadingIndicator, usePageMeta } from 'frappe-ui'
 import PageHeader from '@/components/Layouts/PageHeader.vue'
 import { sessionStore } from '@/stores/session'
@@ -105,9 +119,9 @@ import {
 	lessonPath,
 	statusLabel,
 	STATUS_CLASSES,
-	type ContractAnswer,
 	type HomeworkRow,
 } from '@/utils/homework'
+import type { ContractAnswer } from '@/utils/postForm'
 
 // «Homework» (learning-services#439): the learner's homework of the chosen
 // space, by course; each row leads to the block under its lesson.
@@ -119,16 +133,45 @@ const homework = createResource({
 	url: 'lms_frappe_app.api.student.my_homework',
 	makeParams: () => ({ space: space.current }),
 	auto: false,
+	// Said on the page itself, not in the app's error toast.
+	onError: () => {},
 })
 
-// The space first: the list is the chosen space's.
-if (session.isLoggedIn) space.load().then(() => homework.fetch())
+// The space first: the list is the chosen space's. A dropped connection or a
+// server error ends the wait too, with the page saying so.
+const settled = ref(false)
+const failed = ref(false)
+if (session.isLoggedIn)
+	space
+		.load()
+		.then(() => homework.fetch())
+		.catch(() => (failed.value = true))
+		.finally(() => (settled.value = true))
 
 const answer = computed(
 	() => homework.data as ContractAnswer<{ items: HomeworkRow[] }> | null
 )
-const rows = computed<HomeworkRow[]>(() =>
-	answer.value?.ok ? answer.value.data?.items ?? [] : []
+
+const state = computed<'loading' | 'error' | 'ready'>(() => {
+	if (!settled.value) return 'loading'
+	if (failed.value || !answer.value?.ok) return 'error'
+	return 'ready'
+})
+
+// A refusal says why; a failure without words gets ours.
+const failure = computed(
+	() =>
+		(answer.value && !answer.value.ok && answer.value.error?.message) ||
+		__('Could not load homework')
+)
+
+type ShownRow = HomeworkRow & { path: string | null }
+
+const rows = computed<ShownRow[]>(() =>
+	(answer.value?.ok ? answer.value.data?.items ?? [] : []).map((row) => ({
+		...row,
+		path: lessonPath(row.lesson_url),
+	}))
 )
 
 // Courses in the order their latest homework comes: the server sorts rows by
@@ -136,7 +179,7 @@ const rows = computed<HomeworkRow[]>(() =>
 const groups = computed(() => {
 	const byCourse = new Map<
 		string,
-		{ course: string; title: string; rows: HomeworkRow[] }
+		{ course: string; title: string; rows: ShownRow[] }
 	>()
 	for (const row of rows.value) {
 		if (!byCourse.has(row.course))

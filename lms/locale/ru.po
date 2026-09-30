@@ -11275,3 +11275,7 @@ msgstr "Файлы слишком большие, чтобы отправить 
 #: frontend/src/components/Homework/LessonHomework.vue
 msgid "Detach {0}"
 msgstr "Убрать {0}"
+
+#: frontend/src/pages/Homework/Homework.vue
+msgid "Could not load homework"
+msgstr "Не удалось загрузить домашние задания"
