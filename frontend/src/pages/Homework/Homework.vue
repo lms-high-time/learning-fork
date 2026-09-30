@@ -52,7 +52,11 @@
 				:aria-labelledby="curator ? `homework-tab-${tab}` : undefined"
 			>
 				<HomeworkMine v-if="tab === 'mine'" />
-				<HomeworkReview v-else-if="submission" :submission="submission" />
+				<HomeworkReview
+					v-else-if="submission"
+					:key="submission"
+					:submission="submission"
+				/>
 				<HomeworkQueue v-else />
 			</div>
 		</div>

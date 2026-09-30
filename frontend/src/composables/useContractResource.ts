@@ -38,9 +38,9 @@ export function useContractResource<T>(options: {
 	 * `quiet` keeps what is shown on screen until the answer comes.
 	 */
 	async function load(
-		options: { before?: () => Promise<unknown>; quiet?: boolean } = {}
+		how: { before?: () => Promise<unknown>; quiet?: boolean } = {}
 	): Promise<void> {
-		const { before, quiet } = options
+		const { before, quiet } = how
 		const mine = ++generation
 		resource.abort()
 		if (!quiet) settled.value = false
