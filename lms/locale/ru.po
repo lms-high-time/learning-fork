@@ -11134,3 +11134,55 @@ msgstr "{0} курсов"
 #: frontend/src/utils/plural.ts
 msgid "{0} courses"
 msgstr "{0} курса"
+
+#: frontend/src/utils/homework.ts
+msgid "Submitted"
+msgstr "Сдано"
+
+#: frontend/src/utils/homework.ts
+msgid "Returned for revision"
+msgstr "На доработке"
+
+#: frontend/src/utils/homework.ts
+msgid "Accepted"
+msgstr "Принято"
+
+#: frontend/src/utils/homework.ts
+msgid "Not submitted"
+msgstr "Не сдано"
+
+#: frontend/src/utils/homework.ts
+msgid "Reopened"
+msgstr "Приём отменён"
+
+#: frontend/src/utils/homework.ts
+msgid "{0} day after the lesson"
+msgstr "{0} день после закрытия урока"
+
+#: frontend/src/utils/homework.ts
+msgid "{0} days after the lesson [few]"
+msgstr "{0} дня после закрытия урока"
+
+#: frontend/src/utils/homework.ts
+msgid "{0} days after the lesson [many]"
+msgstr "{0} дней после закрытия урока"
+
+#: frontend/src/utils/homework.ts
+msgid "{0} days after the lesson"
+msgstr "{0} дня после закрытия урока"
+
+#: frontend/src/utils/homework.ts
+msgid "Due {0}"
+msgstr "До {0}"
+
+#: frontend/src/utils/homework.ts
+msgid "No deadline"
+msgstr "Без срока"
+
+#: frontend/src/utils/homework.ts
+msgid "{0} KB"
+msgstr "{0} КБ"
+
+#: frontend/src/utils/homework.ts
+msgid "{0} MB"
+msgstr "{0} МБ"
