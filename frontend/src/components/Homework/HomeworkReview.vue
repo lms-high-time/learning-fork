@@ -32,8 +32,13 @@
 		<article v-else class="space-y-5" data-testid="review-card">
 			<header class="space-y-1">
 				<div class="flex items-start justify-between gap-3">
-					<h2 class="text-xl-semibold text-ink-gray-9">
-						{{ card.homework.title }}
+					<h2
+						ref="heading"
+						tabindex="-1"
+						class="text-xl-semibold text-ink-gray-9 focus:outline-none"
+						data-testid="review-title"
+					>
+						{{ title }}
 					</h2>
 					<span
 						class="inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-p-xs font-medium"
@@ -42,7 +47,7 @@
 					>
 				</div>
 				<div class="text-p-base font-medium text-ink-gray-8">
-					{{ card.student.name }}
+					{{ studentName(card.student) }}
 				</div>
 				<div class="text-p-sm text-ink-gray-6">
 					<router-link
@@ -63,7 +68,7 @@
 							formatMoment(card.submission.submitted_at)
 						)
 					}}</span>
-					· {{ dueLabel(card.homework.due, card.submission.due_at) }}
+					<span v-if="due"> · {{ due }}</span>
 					<span
 						v-if="card.submission.overdue"
 						class="font-medium text-ink-red-7"
@@ -72,12 +77,11 @@
 				</div>
 			</header>
 
-			<details class="text-p-sm">
+			<details v-if="card.homework?.description" class="text-p-sm">
 				<summary class="cursor-pointer text-ink-gray-6">
 					{{ __('The assignment') }}
 				</summary>
 				<div
-					v-if="card.homework.description"
 					v-safe-html:rich="render(card.homework.description)"
 					class="prose prose-sm mt-2 max-w-none text-ink-gray-8"
 				/>
@@ -143,11 +147,12 @@
 		</article>
 
 		<HomeworkReturnDialog
+			v-model:comment="comments.send_back"
 			:open="dialog === 'send_back'"
 			:title="__('Return for revision')"
 			:message="
 				__(
-					'Write what to fix. The learner sees your comment under the lesson and gets it by email.'
+					'Write what to fix. The learner will see the comment under the lesson.'
 				)
 			"
 			:label="__('Return')"
@@ -155,6 +160,7 @@
 			@update:open="(value: boolean) => !value && (dialog = null)"
 		/>
 		<HomeworkReturnDialog
+			v-model:comment="comments.reopen"
 			:open="dialog === 'reopen'"
 			:title="__('Cancel acceptance')"
 			:message="
@@ -170,7 +176,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, toRef } from 'vue'
+import { computed, nextTick, reactive, ref, toRef, watch } from 'vue'
 import MarkdownIt from 'markdown-it'
 import { Button, LoadingIndicator } from 'frappe-ui'
 import { sessionStore } from '@/stores/session'
@@ -179,12 +185,16 @@ import HomeworkFiles from '@/components/Homework/HomeworkFiles.vue'
 import HomeworkHistory from '@/components/Homework/HomeworkHistory.vue'
 import HomeworkReturnDialog from '@/components/Homework/HomeworkReturnDialog.vue'
 import HomeworkVersions from '@/components/Homework/HomeworkVersions.vue'
-import { useReviewCard } from '@/composables/useHomeworkReview'
+import {
+	useReviewCard,
+	type ReviewOutcome,
+} from '@/composables/useHomeworkReview'
 import {
 	dueLabel,
 	formatMoment,
 	lessonPath,
 	statusLabel,
+	studentName,
 	STATUS_CLASSES,
 	type ReviewAction,
 } from '@/utils/homework'
@@ -210,6 +220,24 @@ const me = computed(() => session.user as string | null)
 const markdown = new MarkdownIt({ html: false, linkify: true })
 const render = (text: string) => markdown.render(text)
 
+// The assignment may be gone; the answer to it is still the learner's.
+const title = computed(
+	() =>
+		card.value?.homework?.title || card.value?.lesson_title || __('Homework')
+)
+const due = computed(() => {
+	const value = card.value
+	if (!value) return null
+	if (value.homework)
+		return dueLabel(value.homework.due, value.submission.due_at)
+	return value.submission.due_at
+		? dueLabel(
+				{ mode: 'none', days: null, date: null },
+				value.submission.due_at
+		  )
+		: null
+})
+
 const place = computed(() =>
 	[card.value?.course_title || card.value?.course, card.value?.lesson_title]
 		.filter(Boolean)
@@ -232,13 +260,38 @@ const reviewed = computed(() => {
 	)
 })
 
+// A screen reader lands on the card's title when a card comes, and when an
+// action changed it.
+const heading = ref<HTMLElement | null>(null)
+const focusHeading = () => nextTick(() => heading.value?.focus())
+watch(
+	() => (state.value === 'ready' ? card.value?.submission.id : null),
+	(id) => id && focusHeading()
+)
+
 const dialog = ref<'send_back' | 'reopen' | null>(null)
+// The comments being written: kept until the action is done.
+const comments = reactive({ send_back: '', reopen: '' })
 const pendingAction = ref<ReviewAction | null>(null)
 
-async function act(action: ReviewAction, comment?: string) {
+// A dialog whose action the card no longer offers has nothing to do.
+watch(
+	() => card.value?.actions,
+	(actions) => {
+		if (dialog.value && !actions?.includes(dialog.value)) dialog.value = null
+	}
+)
+
+async function act(
+	action: ReviewAction,
+	comment?: string
+): Promise<ReviewOutcome> {
 	pendingAction.value = action
 	try {
-		return await send(action, comment)
+		const outcome = await send(action, comment)
+		if (outcome === 'done' && action !== 'accept') comments[action] = ''
+		if (outcome !== 'refused') focusHeading()
+		return outcome
 	} finally {
 		pendingAction.value = null
 	}

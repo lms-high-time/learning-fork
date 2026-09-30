@@ -96,8 +96,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { createResource, LoadingIndicator } from 'frappe-ui'
+import { computed } from 'vue'
+import { LoadingIndicator } from 'frappe-ui'
+import { useContractResource } from '@/composables/useContractResource'
 import { useSpace } from '@/stores/space'
 import { formatDay } from '@/utils/team'
 import {
@@ -106,52 +107,28 @@ import {
 	STATUS_CLASSES,
 	type HomeworkRow,
 } from '@/utils/homework'
-import type { ContractAnswer } from '@/utils/postForm'
 
 // «Mine» (learning-services#439): the learner's homework of the chosen space,
 // by course; each row leads to the block under its lesson.
 
 const space = useSpace()
 
-const homework = createResource({
+const { data, state, failure, load } = useContractResource<{
+	items: HomeworkRow[]
+}>({
 	url: 'lms_frappe_app.api.student.my_homework',
 	makeParams: () => ({ space: space.current }),
-	auto: false,
-	// Said on the page itself, not in the app's error toast.
-	onError: () => {},
+	fallback: () => __('Could not load homework'),
 })
 
 // The space first: the list is the chosen space's. A dropped connection or a
 // server error ends the wait too, with the page saying so.
-const settled = ref(false)
-const failed = ref(false)
-space
-	.load()
-	.then(() => homework.fetch())
-	.catch(() => (failed.value = true))
-	.finally(() => (settled.value = true))
-
-const answer = computed(
-	() => homework.data as ContractAnswer<{ items: HomeworkRow[] }> | null
-)
-
-const state = computed<'loading' | 'error' | 'ready'>(() => {
-	if (!settled.value) return 'loading'
-	if (failed.value || !answer.value?.ok) return 'error'
-	return 'ready'
-})
-
-// A refusal says why; a failure without words gets ours.
-const failure = computed(
-	() =>
-		(answer.value && !answer.value.ok && answer.value.error?.message) ||
-		__('Could not load homework')
-)
+load({ before: () => space.load() })
 
 type ShownRow = HomeworkRow & { path: string | null }
 
 const rows = computed<ShownRow[]>(() =>
-	(answer.value?.ok ? answer.value.data?.items ?? [] : []).map((row) => ({
+	(data.value?.items ?? []).map((row) => ({
 		...row,
 		path: lessonPath(row.lesson_url),
 	}))

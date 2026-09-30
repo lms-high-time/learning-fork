@@ -75,7 +75,7 @@
 					>
 						<div class="min-w-0 space-y-0.5">
 							<div class="text-p-base font-medium text-ink-gray-9">
-								{{ row.student.name }}
+								{{ studentName(row.student) }}
 							</div>
 							<div class="text-p-sm text-ink-gray-8">{{ row.title }}</div>
 							<div class="text-p-sm text-ink-gray-6">
@@ -122,14 +122,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, reactive } from 'vue'
 import { FormControl, LoadingIndicator } from 'frappe-ui'
 import { useReviewQueue } from '@/composables/useHomeworkReview'
 import {
 	formatMoment,
+	QUEUE_STATUSES,
 	statusLabel,
+	studentName,
 	STATUS_CLASSES,
-	type HomeworkStatus,
+	type QueueFilters,
 	type QueueRow,
 } from '@/utils/homework'
 
@@ -138,14 +140,18 @@ import {
 // organizations of what the tutor can see, «Personal» among them when the
 // tutor sees learners' own spaces.
 
-const { filters, data, state, failure, load } = useReviewQueue()
-onMounted(load)
+const filters = reactive<QueueFilters>({
+	status: 'Submitted',
+	course: '',
+	organization: '',
+})
+const { data, state, failure, load } = useReviewQueue(() => ({ ...filters }))
+onMounted(() => load())
 
 const rows = computed(() => data.value?.items ?? [])
 
-const STATUSES: HomeworkStatus[] = ['Submitted', 'Returned', 'Accepted']
 const statusOptions = computed(() =>
-	STATUSES.map((value) => ({ value, label: statusLabel(value) }))
+	QUEUE_STATUSES.map((value) => ({ value, label: statusLabel(value) }))
 )
 const courseOptions = computed(() => [
 	{ value: '', label: __('All courses') },

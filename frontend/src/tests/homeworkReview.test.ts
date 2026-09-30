@@ -6,40 +6,26 @@ import { reactive } from 'vue'
 // the answer, what changed since the last review, and the actions the server
 // offers.
 
-const answers: Record<string, unknown> = {}
-const fetched: { url: string; params: unknown }[] = []
-const reloaded: string[] = []
 const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }))
 const pending = vi.hoisted(() => ({ load: vi.fn() }))
 
-vi.mock('frappe-ui', () => ({
-	createResource: (config: { url: string; makeParams?: () => unknown }) => {
-		const resource = reactive({
-			data: null as unknown,
-			fetch: vi.fn(async () => {
-				fetched.push({ url: config.url, params: config.makeParams?.() })
-				resource.data = answers[config.url] ?? null
-			}),
-			reload: vi.fn(async () => {
-				reloaded.push(config.url)
-				resource.data = answers[config.url] ?? null
-			}),
-		})
-		return resource
-	},
-	toast,
-	LoadingIndicator: { template: '<span />' },
-	Button: {
-		props: ['label', 'loading', 'variant', 'disabled', 'type', 'theme'],
-		template:
-			'<button :type="type || \'button\'" :disabled="disabled">{{ label }}<slot /></button>',
-	},
-	// The real Dialog's contract: open by v-model:open, the body in the default
-	// slot, each action a button whose onClick gets `close`.
-	Dialog: {
-		props: ['open', 'title', 'message', 'actions'],
-		emits: ['update:open'],
-		template: `<div v-if="open" data-testid="dialog">
+vi.mock('frappe-ui', async () => {
+	const { fakeResource } = await import('./helpers/fakeResource')
+	return {
+		createResource: fakeResource,
+		toast,
+		LoadingIndicator: { template: '<span />' },
+		Button: {
+			props: ['label', 'loading', 'variant', 'disabled', 'type', 'theme'],
+			template:
+				'<button :type="type || \'button\'" :disabled="disabled">{{ label }}<slot /></button>',
+		},
+		// The real Dialog's contract: open by v-model:open, the body in the default
+		// slot, each action a button whose onClick gets `close`.
+		Dialog: {
+			props: ['open', 'title', 'message', 'actions'],
+			emits: ['update:open'],
+			template: `<div v-if="open" data-testid="dialog">
 			<h3>{{ title }}</h3><p>{{ message }}</p><slot />
 			<button
 				v-for="a in actions"
@@ -49,8 +35,9 @@ vi.mock('frappe-ui', () => ({
 				@click="a.onClick({ close: () => $emit('update:open', false) })"
 			>{{ a.label }}</button>
 		</div>`,
-	},
-}))
+		},
+	}
+})
 
 // The count by the menu item follows every action (learning-services#452).
 vi.mock('@/stores/homeworkQueue', () => ({
@@ -61,6 +48,7 @@ vi.mock('@/stores/session', () => ({
 	sessionStore: () => ({ user: 'tutor@x' }),
 }))
 
+import { hold, server } from './helpers/fakeResource'
 import HomeworkReview from '@/components/Homework/HomeworkReview.vue'
 import type { ReviewCard } from '@/utils/homework'
 
@@ -151,7 +139,7 @@ const card = (overrides: Partial<ReviewCard> = {}): ReviewCard => ({
 })
 
 const serve = (value: ReviewCard) => {
-	answers[READ] = { ok: true, data: value }
+	server.answers[READ] = { ok: true, data: value }
 }
 
 const serverAnswers = (message: unknown) =>
@@ -180,9 +168,7 @@ const button = (wrapper: Awaited<ReturnType<typeof open>>, label: string) =>
 	wrapper.findAll('button').find((b) => b.text() === label)
 
 beforeEach(() => {
-	for (const key of Object.keys(answers)) delete answers[key]
-	fetched.length = 0
-	reloaded.length = 0
+	server.clear()
 	toast.error.mockReset()
 	toast.success.mockReset()
 	pending.load.mockReset()
@@ -199,7 +185,9 @@ describe('HomeworkReview', () => {
 	it('asks for the submission it shows', async () => {
 		serve(card())
 		await open('HS-7')
-		expect(fetched).toEqual([{ url: READ, params: { submission: 'HS-7' } }])
+		expect(server.fetched).toEqual([
+			{ url: READ, params: { submission: 'HS-7' } },
+		])
 	})
 
 	it('shows the assignment, the learner and the answer', async () => {
@@ -277,8 +265,17 @@ describe('HomeworkReview', () => {
 		expect(wrapper.find('[data-testid="review-actions"]').exists()).toBe(false)
 	})
 
-	it('accepts the version on screen', async () => {
+	const reads = () => server.fetched.filter((call) => call.url === READ).length
+	const refuse = (code: string | null, message = 'x') =>
+		fetchMock.mockResolvedValue(
+			serverAnswers({ ok: false, error: { code, message } })
+		)
+
+	it('accepts the version on screen and shows the card it gets back', async () => {
 		serve(card())
+		const accepted = card({ actions: ['reopen'] })
+		accepted.submission.status = 'Accepted'
+		fetchMock.mockResolvedValue(serverAnswers({ ok: true, data: accepted }))
 		const wrapper = await open()
 		await button(wrapper, 'Accept')!.trigger('click')
 		await flushPromises()
@@ -290,8 +287,24 @@ describe('HomeworkReview', () => {
 		expect(form.get('version')).toBe('2')
 		expect(form.has('comment')).toBe(false)
 		expect(toast.success).toHaveBeenCalledWith('Homework accepted')
-		expect(reloaded).toContain(READ)
+		// The action's answer is the card: on screen at once, no second read.
+		expect(wrapper.find('[data-testid="review-card"]').text()).toContain(
+			'Accepted'
+		)
+		expect(button(wrapper, 'Cancel acceptance')).toBeTruthy()
+		expect(button(wrapper, 'Accept')).toBeFalsy()
+		expect(reads()).toBe(1)
 		expect(pending.load).toHaveBeenCalled()
+	})
+
+	it('sends one action for a double click', async () => {
+		serve(card())
+		const wrapper = await open()
+		const accept = button(wrapper, 'Accept')!
+		await accept.trigger('click')
+		await accept.trigger('click')
+		await flushPromises()
+		expect(fetchMock).toHaveBeenCalledTimes(1)
 	})
 
 	it('returns with a comment, and not without one', async () => {
@@ -313,6 +326,12 @@ describe('HomeworkReview', () => {
 		expect(url).toBe('/api/method/lms_frappe_app.api.review.send_back')
 		expect((init.body as FormData).get('comment')).toBe('Добавьте решения')
 		expect(wrapper.find('[data-testid="dialog"]').exists()).toBe(false)
+
+		// Done: the next return starts from a blank comment.
+		await button(wrapper, 'Return for revision')!.trigger('click')
+		expect(
+			(wrapper.find('textarea').element as HTMLTextAreaElement).value
+		).toBe('')
 	})
 
 	it('cancels an acceptance with a comment', async () => {
@@ -330,50 +349,126 @@ describe('HomeworkReview', () => {
 
 	it('reads the card again when the learner saved a new version', async () => {
 		serve(card())
-		fetchMock.mockResolvedValue(
-			serverAnswers({
-				ok: false,
-				error: { code: 'stale_version', message: 'x', version: 3 },
-			})
-		)
+		refuse('stale_version')
 		const wrapper = await open()
-		await button(wrapper, 'Accept')!.trigger('click')
+		await button(wrapper, 'Return for revision')!.trigger('click')
+		await wrapper.find('textarea').setValue('Добавьте решения')
+		await wrapper.find('[data-testid="dialog-action"]').trigger('click')
 		await flushPromises()
+
 		expect(toast.error).toHaveBeenCalledWith(
 			'The learner saved a new version. Look at it first.'
 		)
-		expect(reloaded).toContain(READ)
+		expect(reads()).toBe(2)
+		expect(pending.load).toHaveBeenCalled()
+		// The dialog closes on the new version; the comment waits for it.
+		expect(wrapper.find('[data-testid="dialog"]').exists()).toBe(false)
+		await button(wrapper, 'Return for revision')!.trigger('click')
+		expect(
+			(wrapper.find('textarea').element as HTMLTextAreaElement).value
+		).toBe('Добавьте решения')
 	})
 
-	it('says why the server refused, and reads again when it changed', async () => {
+	it('reads again when someone reviewed it first, and closes the dialog', async () => {
 		serve(card())
-		fetchMock.mockResolvedValue(
-			serverAnswers({
-				ok: false,
-				error: { code: 'wrong_status', message: 'Сдачу уже проверили' },
-			})
-		)
+		refuse('wrong_status', 'Сдачу уже проверили')
+		const wrapper = await open()
+		await button(wrapper, 'Return for revision')!.trigger('click')
+		await wrapper.find('textarea').setValue('Ещё раз')
+		// The other tutor accepted it: the card now offers only reopening.
+		const accepted = card({ actions: ['reopen'] })
+		accepted.submission.status = 'Accepted'
+		serve(accepted)
+		await wrapper.find('[data-testid="dialog-action"]').trigger('click')
+		await flushPromises()
+
+		expect(toast.error).toHaveBeenCalledWith('Сдачу уже проверили')
+		expect(reads()).toBe(2)
+		expect(pending.load).toHaveBeenCalled()
+		expect(wrapper.find('[data-testid="dialog"]').exists()).toBe(false)
+		expect(button(wrapper, 'Return for revision')).toBeFalsy()
+	})
+
+	it('keeps the dialog on a race, to try again', async () => {
+		serve(card())
+		refuse('busy', 'Попробуйте ещё раз')
+		const wrapper = await open()
+		await button(wrapper, 'Return for revision')!.trigger('click')
+		await wrapper.find('textarea').setValue('Добавьте решения')
+		await wrapper.find('[data-testid="dialog-action"]').trigger('click')
+		await flushPromises()
+
+		expect(toast.error).toHaveBeenCalledWith('Попробуйте ещё раз')
+		expect(reads()).toBe(2)
+		expect(wrapper.find('[data-testid="dialog"]').exists()).toBe(true)
+		expect(
+			(wrapper.find('textarea').element as HTMLTextAreaElement).value
+		).toBe('Добавьте решения')
+	})
+
+	it('says a plain refusal and reads nothing', async () => {
+		serve(card())
+		refuse('not_allowed', 'Нет права')
 		const wrapper = await open()
 		await button(wrapper, 'Accept')!.trigger('click')
 		await flushPromises()
-		expect(toast.error).toHaveBeenCalledWith('Сдачу уже проверили')
-		expect(reloaded).toContain(READ)
+		expect(toast.error).toHaveBeenLastCalledWith('Нет права')
+		expect(reads()).toBe(1)
+	})
 
-		reloaded.length = 0
-		fetchMock.mockResolvedValue(
-			serverAnswers({
-				ok: false,
-				error: { code: 'not_allowed', message: 'Нет права' },
-			})
-		)
+	it('reads again after a lost connection: the action may have gone', async () => {
+		serve(card())
+		fetchMock.mockRejectedValue(new TypeError('Failed to fetch'))
+		const wrapper = await open()
 		await button(wrapper, 'Accept')!.trigger('click')
 		await flushPromises()
-		expect(toast.error).toHaveBeenLastCalledWith('Нет права')
-		expect(reloaded).toEqual([])
+		expect(toast.error).toHaveBeenCalledWith('Could not save')
+		expect(reads()).toBe(2)
+		expect(wrapper.find('[data-testid="review-card"]').exists()).toBe(true)
+	})
+
+	it('shows another submission without the previous one in between', async () => {
+		serve(card())
+		const wrapper = await open()
+		const other = card()
+		other.submission.id = 'HS-2'
+		other.submission.answer = 'Другой ответ'
+		serve(other)
+		const gate = hold(READ)
+		await wrapper.setProps({ submission: 'HS-2' })
+		await flushPromises()
+		expect(wrapper.find('[data-testid="review-card"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="review-loading"]').exists()).toBe(true)
+
+		gate.release()
+		await flushPromises()
+		expect(server.fetched[server.fetched.length - 1].params).toEqual({
+			submission: 'HS-2',
+		})
+		expect(wrapper.find('[data-testid="review-answer"]').text()).toBe(
+			'Другой ответ'
+		)
+	})
+
+	it('draws a submission whose assignment and learner have no name', async () => {
+		serve(card({ homework: null, student: { name: null } }))
+		const wrapper = await open()
+		expect(wrapper.find('[data-testid="review-title"]').text()).toBe('Спонсор')
+		expect(wrapper.text()).toContain('Learner')
+		expect(wrapper.text()).toContain('Due 15 января 2030 г.')
+		expect(wrapper.find('[data-testid="review-answer"]').exists()).toBe(true)
+	})
+
+	it('says when the connection fails', async () => {
+		server.failures[READ] = { error: new Error('502') }
+		const wrapper = await open()
+		expect(wrapper.find('[data-testid="review-error"]').text()).toBe(
+			'Could not load the submission'
+		)
 	})
 
 	it('says when the submission cannot be read', async () => {
-		answers[READ] = {
+		server.answers[READ] = {
 			ok: false,
 			error: { code: 'not_allowed', message: 'Нет доступа к сдаче' },
 		}

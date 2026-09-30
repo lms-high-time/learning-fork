@@ -5,37 +5,24 @@ import { reactive } from 'vue'
 // «Awaiting review» (learning-services#452): the submissions a tutor may
 // review, oldest first, with the filters the server offers.
 
-const answers: Record<string, unknown> = {}
-const fetched: { url: string; params: unknown }[] = []
-const failures: Record<string, Error> = {}
-
-vi.mock('frappe-ui', () => ({
-	createResource: (config: { url: string; makeParams?: () => unknown }) => {
-		const resource = reactive({
-			data: null as unknown,
-			fetch: vi.fn(async () => {
-				fetched.push({ url: config.url, params: config.makeParams?.() })
-				if (failures[config.url]) throw failures[config.url]
-				resource.data = answers[config.url] ?? null
-			}),
-			reload: vi.fn(async () => {
-				resource.data = answers[config.url] ?? null
-			}),
-		})
-		return resource
-	},
-	toast: { error: vi.fn(), success: vi.fn() },
-	LoadingIndicator: { template: '<span />' },
-	FormControl: {
-		props: ['modelValue', 'options', 'type', 'label'],
-		emits: ['update:modelValue'],
-		template: `<select :data-label="label" :value="modelValue"
+vi.mock('frappe-ui', async () => {
+	const { fakeResource } = await import('./helpers/fakeResource')
+	return {
+		createResource: fakeResource,
+		toast: { error: vi.fn(), success: vi.fn() },
+		LoadingIndicator: { template: '<span />' },
+		FormControl: {
+			props: ['modelValue', 'options', 'type', 'label'],
+			emits: ['update:modelValue'],
+			template: `<select :data-label="label" :value="modelValue"
 			@change="$emit('update:modelValue', $event.target.value)">
 			<option v-for="o in options" :key="o.value" :value="o.value">{{ o.label }}</option>
 		</select>`,
-	},
-}))
+		},
+	}
+})
 
+import { hold, server } from './helpers/fakeResource'
 import HomeworkQueue from '@/components/Homework/HomeworkQueue.vue'
 import type { QueueData, QueueRow } from '@/utils/homework'
 
@@ -61,7 +48,7 @@ const row = (overrides: Partial<QueueRow> = {}): QueueRow => ({
 })
 
 const serve = (data: Partial<QueueData> = {}) => {
-	answers[URL] = {
+	server.answers[URL] = {
 		ok: true,
 		data: {
 			items: [row()],
@@ -99,16 +86,16 @@ const select = (wrapper: Awaited<ReturnType<typeof open>>, label: string) =>
 	wrapper.find(`select[data-label="${label}"]`)
 
 beforeEach(() => {
-	fetched.length = 0
-	for (const key of Object.keys(answers)) delete answers[key]
-	for (const key of Object.keys(failures)) delete failures[key]
+	server.clear()
 })
 
 describe('HomeworkQueue', () => {
 	it('asks for the submitted ones first', async () => {
 		serve()
 		await open()
-		expect(fetched).toEqual([{ url: URL, params: { status: 'Submitted' } }])
+		expect(server.fetched).toEqual([
+			{ url: URL, params: { status: 'Submitted' } },
+		])
 	})
 
 	it('shows who, what and when, and leads to the card', async () => {
@@ -160,7 +147,7 @@ describe('HomeworkQueue', () => {
 		await select(wrapper, 'Status').setValue('Accepted')
 		await flushPromises()
 
-		expect(fetched[fetched.length - 1].params).toEqual({
+		expect(server.fetched[server.fetched.length - 1].params).toEqual({
 			status: 'Accepted',
 			course: 'c-2',
 			organization: 'personal',
@@ -188,15 +175,40 @@ describe('HomeworkQueue', () => {
 	})
 
 	it('says what the server refused, and stops waiting on a failure', async () => {
-		answers[URL] = { ok: false, error: { code: 'x', message: 'Нельзя' } }
+		server.answers[URL] = {
+			ok: false,
+			error: { code: 'x', message: 'Нельзя' },
+		}
 		expect((await open()).find('[data-testid="queue-error"]').text()).toBe(
 			'Нельзя'
 		)
-		failures[URL] = new Error('502')
+		server.failures[URL] = { error: new Error('502') }
 		const wrapper = await open()
 		expect(wrapper.find('[data-testid="queue-loading"]').exists()).toBe(false)
 		expect(wrapper.find('[data-testid="queue-error"]').text()).toBe(
 			'Could not load the queue'
 		)
+	})
+
+	it('shows the answer to the last filters, not to a slower earlier read', async () => {
+		serve()
+		const wrapper = await open()
+		const slow = hold(URL)
+		await select(wrapper, 'Course').setValue('c-2')
+		await flushPromises()
+
+		serve({ items: [row({ id: 'HS-9', title: 'Отчёт' })], total: 1 })
+		const fast = hold(URL)
+		await select(wrapper, 'Status').setValue('Accepted')
+		await flushPromises()
+		fast.release()
+		await flushPromises()
+		slow.release()
+		await flushPromises()
+
+		const rows = wrapper.findAll('[data-testid="queue-row"]')
+		expect(rows).toHaveLength(1)
+		expect(rows[0].text()).toContain('Отчёт')
+		expect(wrapper.find('[data-testid="queue-loading"]').exists()).toBe(false)
 	})
 })

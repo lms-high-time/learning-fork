@@ -26,33 +26,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { Dialog } from 'frappe-ui'
+import type { ReviewOutcome } from '@/composables/useHomeworkReview'
 
 // Sending a homework back, or cancelling an acceptance, takes a comment
 // (learning-services#452): it is what the learner acts on. The button stays
-// off until there is one; the dialog closes only when the server agreed.
+// off until there is one. The dialog closes when the server did it, or when
+// the submission changed under the tutor and the card was read again; on a
+// refusal it stays, with the comment, to try again. The comment is the
+// parent's: it outlives the dialog until the action is done.
 const open = defineModel<boolean>('open', { default: false })
+const comment = defineModel<string>('comment', { default: '' })
 const props = defineProps<{
 	title: string
 	message: string
 	label: string
-	send: (comment: string) => Promise<boolean>
+	send: (comment: string) => Promise<ReviewOutcome>
 }>()
 
-const comment = ref('')
 const sending = ref(false)
-
-watch(open, (value) => {
-	if (value) comment.value = ''
-})
 
 async function submit(close: () => void) {
 	const text = comment.value.trim()
 	if (!text || sending.value) return
 	sending.value = true
 	try {
-		if (await props.send(text)) close()
+		const outcome = await props.send(text)
+		if (outcome !== 'refused') close()
 	} finally {
 		sending.value = false
 	}

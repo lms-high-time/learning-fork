@@ -11397,8 +11397,8 @@ msgid "Return"
 msgstr "Вернуть"
 
 #: frontend/src/components/Homework/HomeworkReview.vue
-msgid "Write what to fix. The learner sees your comment under the lesson and gets it by email."
-msgstr "Напишите, что доделать. Ученик увидит комментарий под уроком и получит его письмом."
+msgid "Write what to fix. The learner will see the comment under the lesson."
+msgstr "Напишите, что доделать. Комментарий появится у ученика под уроком."
 
 #: frontend/src/components/Homework/HomeworkReview.vue
 msgid "The homework goes back to the learner for revision, with your comment."
@@ -11431,3 +11431,7 @@ msgstr "Сохранить сроки"
 #: frontend/src/components/Team/TeamAssignments.vue
 msgid "Deadlines saved"
 msgstr "Сроки сохранены"
+
+#: frontend/src/utils/homework.ts
+msgid "Learner"
+msgstr "Ученик"

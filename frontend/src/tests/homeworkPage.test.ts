@@ -6,30 +6,14 @@ import { reactive } from 'vue'
 // each a way back to its lesson; for a tutor, also the queue to review
 // (learning-services#452).
 
-const answers: Record<string, unknown> = {}
-const reloads: { url: string; params: unknown }[] = []
-const failures: Record<string, Error> = {}
-
-vi.mock('frappe-ui', () => ({
-	createResource: (config: { url: string; makeParams?: () => unknown }) => {
-		const resource = reactive({
-			data: null as unknown,
-			loading: false,
-			fetch: vi.fn(async () => {
-				reloads.push({ url: config.url, params: config.makeParams?.() })
-				// frappe-ui rethrows a failed request after its onError.
-				if (failures[config.url]) throw failures[config.url]
-				resource.data = answers[config.url] ?? null
-			}),
-			reload: vi.fn(async () => {
-				resource.data = answers[config.url] ?? null
-			}),
-		})
-		return resource
-	},
+vi.mock('frappe-ui', async () => {
+	const { fakeResource } = await import('./helpers/fakeResource')
+	return {
+		createResource: fakeResource,
 	LoadingIndicator: { template: '<span />' },
-	usePageMeta: vi.fn(),
-}))
+		usePageMeta: vi.fn(),
+	}
+})
 
 vi.mock('@/components/Layouts/PageHeader.vue', () => ({
 	default: { template: '<header />' },
@@ -71,6 +55,7 @@ vi.mock('@/components/Homework/HomeworkReview.vue', () => ({
 	},
 }))
 
+import { server } from './helpers/fakeResource'
 import Homework from '@/pages/Homework/Homework.vue'
 import type { HomeworkRow } from '@/utils/homework'
 
@@ -117,20 +102,18 @@ beforeEach(() => {
 	router.push.mockReset()
 	router.replace.mockReset()
 	router.replace.mockImplementation(({ query }) => (route.query = query))
-	reloads.length = 0
-	for (const key of Object.keys(answers)) delete answers[key]
-	for (const key of Object.keys(failures)) delete failures[key]
+	server.clear()
 })
 
 describe('Homework page', () => {
 	it('asks for the homework of the current space', async () => {
-		answers[URL] = { ok: true, data: { space: 'org-1', items: [] } }
+		server.answers[URL] = { ok: true, data: { space: 'org-1', items: [] } }
 		await open()
-		expect(reloads).toEqual([{ url: URL, params: { space: 'org-1' } }])
+		expect(server.fetched).toEqual([{ url: URL, params: { space: 'org-1' } }])
 	})
 
 	it('groups the homework by course and leads to the lesson', async () => {
-		answers[URL] = {
+		server.answers[URL] = {
 			ok: true,
 			data: {
 				space: 'org-1',
@@ -172,7 +155,7 @@ describe('Homework page', () => {
 	})
 
 	it('says what the server refused instead of an empty list', async () => {
-		answers[URL] = {
+		server.answers[URL] = {
 			ok: false,
 			error: { code: 'space_not_available', message: 'Пространство недоступно' },
 		}
@@ -184,7 +167,7 @@ describe('Homework page', () => {
 	})
 
 	it('stops waiting when the request fails', async () => {
-		failures[URL] = new Error('502')
+		server.failures[URL] = { error: new Error('502') }
 		const wrapper = await open()
 		expect(wrapper.find('[data-testid="homework-loading"]').exists()).toBe(false)
 		expect(wrapper.find('[data-testid="homework-error"]').text()).toBe(
@@ -193,7 +176,7 @@ describe('Homework page', () => {
 	})
 
 	it('leaves a row without a lesson unlinked', async () => {
-		answers[URL] = {
+		server.answers[URL] = {
 			ok: true,
 			data: { space: 'org-1', items: [row({ lesson_url: null })] },
 		}
@@ -204,7 +187,7 @@ describe('Homework page', () => {
 	})
 
 	it('says there is no homework yet', async () => {
-		answers[URL] = { ok: true, data: { space: 'org-1', items: [] } }
+		server.answers[URL] = { ok: true, data: { space: 'org-1', items: [] } }
 		const wrapper = await open()
 		expect(wrapper.find('[data-testid="homework-empty"]').text()).toContain(
 			'No homework yet'
@@ -214,7 +197,7 @@ describe('Homework page', () => {
 
 describe('the tutor\'s tabs', () => {
 	beforeEach(() => {
-		answers[URL] = { ok: true, data: { space: 'org-1', items: [] } }
+		server.answers[URL] = { ok: true, data: { space: 'org-1', items: [] } }
 	})
 
 	it('offers a learner no tabs', async () => {
@@ -262,7 +245,7 @@ describe('the tutor\'s tabs', () => {
 		let wrapper = await open()
 		expect(wrapper.find('[data-testid="queue"]').exists()).toBe(true)
 		// The queue does not ask for the tutor's own homework.
-		expect(reloads).toEqual([])
+		expect(server.fetched).toEqual([])
 
 		route.query = { tab: 'queue', submission: 'HS-9' }
 		wrapper = await open()

@@ -89,8 +89,11 @@ export type HomeworkRow = {
 	last_comment: string | null
 }
 
-/** A name the tutor sees: the full name, or the email when there is none. */
-export type Student = { name: string }
+/**
+ * A name the tutor sees: the full name, or the email when there is none;
+ * `null` when the server has neither.
+ */
+export type Student = { name: string | null }
 
 /** A row of `review.queue` (learning-services#452). */
 export type QueueRow = {
@@ -124,7 +127,8 @@ export type ReviewAction = 'accept' | 'send_back' | 'reopen'
 /** `review.submission`, and the answer of every review action. */
 export type ReviewCard = {
 	submission: Submission & { versions: HomeworkVersion[] }
-	homework: Homework
+	/** `null` — the assignment is gone; the answer is still shown. */
+	homework: Homework | null
 	student: Student
 	course: string
 	course_title: string | null
@@ -138,6 +142,46 @@ export type ReviewCard = {
 	/** What the reader may do now; empty — the card is read-only. */
 	actions: ReviewAction[]
 }
+
+export const studentName = (student: Student | null | undefined): string =>
+	student?.name || __('Learner')
+
+/** The queue's filters; an empty one is no filter. */
+export type QueueFilters = {
+	status: HomeworkStatus
+	course: string
+	organization: string
+}
+
+export const QUEUE_STATUSES: HomeworkStatus[] = [
+	'Submitted',
+	'Returned',
+	'Accepted',
+]
+
+type Query = Record<string, unknown>
+const text = (value: unknown): string => (typeof value === 'string' ? value : '')
+
+/** The filters the address holds; the queue opens on what awaits review. */
+export const queueFilters = (query: Query): QueueFilters => {
+	const status = text(query.status) as HomeworkStatus
+	return {
+		status: QUEUE_STATUSES.includes(status) ? status : 'Submitted',
+		course: text(query.course),
+		organization: text(query.organization),
+	}
+}
+
+/**
+ * The address of the queue with these filters: a card's link and its way back
+ * keep them (learning-services#452). The defaults are left out.
+ */
+export const queueQuery = (filters: QueueFilters): Record<string, string> => ({
+	tab: 'queue',
+	...(filters.status !== 'Submitted' ? { status: filters.status } : {}),
+	...(filters.course ? { course: filters.course } : {}),
+	...(filters.organization ? { organization: filters.organization } : {}),
+})
 
 // `Issued`, not `Assigned`: the catalogue's «Назначено» is Learning's word for
 // other things; a homework is «Выдано».
