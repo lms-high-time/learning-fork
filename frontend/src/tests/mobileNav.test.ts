@@ -23,7 +23,6 @@ const sidebarLinks = [
 ]
 const otherLinks = [
 	link('Quizzes'),
-	link('Assignments'),
 	link('Programming Exercises'),
 	link('Notifications'),
 	link('Profile'),
@@ -173,8 +172,12 @@ describe('pickPrimaryTabs for a signed-out visitor', () => {
 describe('sectionFor', () => {
 	it('files course content under LEARN wherever it came from', () => {
 		expect(sectionFor('Quizzes')).toBe('LEARN')
-		expect(sectionFor('Assignments')).toBe('LEARN')
 		expect(sectionFor('Programming Exercises')).toBe('LEARN')
+	})
+
+	it('files the learner\'s homework under LEARN', () => {
+		// learning-services#439: the phone reaches «Homework» from the You page.
+		expect(sectionFor('Homework')).toBe('LEARN')
 	})
 
 	it('files session actions under ACCOUNT', () => {
@@ -202,7 +205,6 @@ describe('overflowLinks', () => {
 			'Jobs',
 			'Statistics',
 			'Quizzes',
-			'Assignments',
 			'Programming Exercises',
 			'Notifications',
 			'Profile',

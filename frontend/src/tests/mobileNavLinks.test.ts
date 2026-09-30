@@ -135,7 +135,6 @@ describe('loadMobileNavLinks', () => {
 		await loadMobileNavLinks(MODERATOR)
 		expect(labels(otherLinks)).toEqual([
 			'Quizzes',
-			'Assignments',
 			'Programming Exercises',
 			'Notifications',
 			'Profile',
@@ -192,9 +191,8 @@ describe('loadMobileNavLinks', () => {
 	it('puts the sidebar pages after the moderator extras', async () => {
 		settings.data = { web_pages: structuredClone(WEB_PAGES) }
 		await loadMobileNavLinks(MODERATOR)
-		expect(labels(otherLinks).slice(0, 5)).toEqual([
+		expect(labels(otherLinks).slice(0, 4)).toEqual([
 			'Quizzes',
-			'Assignments',
 			'Programming Exercises',
 			'Connect agent',
 			'Study in browser',

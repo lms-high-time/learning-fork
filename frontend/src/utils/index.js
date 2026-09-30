@@ -167,9 +167,12 @@ export function getEditorTools(
 		// The submission renders in an iframe (a separate app instance), so
 		// provide/inject can't reach it. Pass Student View through the tool
 		// config and on into the iframe URL.
+		// Out of the toolbox (learning-services#439); kept as a tool so a lesson
+		// that holds the block still renders it.
 		assignment: {
 			class: Assignment,
 			config: { studentView },
+			toolbox: false,
 		},
 		// Renders its submission in an iframe too, so Student View travels the
 		// same way it does for assignments.
@@ -538,6 +541,16 @@ const getSidebarItems = (forMobile = false) => {
 						return checkIfCanAddProgram(forMobile)
 					},
 				},
+				// The learner's homework (learning-services#439).
+				{
+					label: 'Homework',
+					icon: 'NotebookPen',
+					to: 'Homework',
+					activeFor: ['Homework'],
+					condition: () => {
+						return userResource?.data
+					},
+				},
 				{
 					label: 'Batches',
 					icon: 'Users',
@@ -607,19 +620,6 @@ const getSidebarItems = (forMobile = false) => {
 						'QuizSubmissions',
 						'QuizSubmission',
 						'Questions',
-					],
-				},
-				{
-					label: 'Assignments',
-					icon: 'Pencil',
-					to: 'Assignments',
-					condition: () => {
-						return !forMobile && isAdmin()
-					},
-					activeFor: [
-						'Assignments',
-						'AssignmentSubmissionList',
-						'AssignmentSubmission',
 					],
 				},
 				{

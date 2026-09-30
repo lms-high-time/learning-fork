@@ -172,6 +172,12 @@ export const routes = [
 		name: 'Team',
 		component: () => import('@/pages/Team/Team.vue'),
 	},
+	// «Homework» (learning-services#439): the learner's homework by course.
+	{
+		path: '/homework',
+		name: 'Homework',
+		component: () => import('@/pages/Homework/Homework.vue'),
+	},
 	// Joining an organization by its link (learning-services#363).
 	{
 		path: '/join/:token',

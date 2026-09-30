@@ -97,6 +97,15 @@ describe('getEditorTools wiring', () => {
 		expect(tools.assignment.config.studentView).toBe(true)
 	})
 
+	// Out of the toolbox (learning-services#439); a lesson that holds the block
+	// still renders it.
+	it('keeps the assignment block out of the toolbox', () => {
+		const tools = getEditorTools() as Record<string, any>
+
+		expect(tools.assignment.toolbox).toBe(false)
+		expect(tools.assignment.class).toBeDefined()
+	})
+
 	it('defaults the flag off', () => {
 		const tools = getEditorTools() as Record<string, any>
 

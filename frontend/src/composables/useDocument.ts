@@ -10,6 +10,7 @@ import {
 import { call, createResource, toast } from 'frappe-ui'
 import type { CellValue, DocumentData, DocRow } from '@/utils/documentTable'
 import { useSpace } from '@/stores/space'
+import { postForm, type ContractAnswer } from '@/utils/postForm'
 
 /**
  * A course document: read with `artifact`, written with `update_artifact` —
@@ -21,12 +22,6 @@ import { useSpace } from '@/stores/space'
  * still lacks are the server's to compute. A cell changes on screen at once
  * and goes back if the server refuses.
  */
-
-interface ContractAnswer<T> {
-	ok: boolean
-	data?: T
-	error?: { code: string; message: string }
-}
 
 interface WriteAnswer {
 	blocks_total: number
@@ -164,22 +159,12 @@ export function useDocument(course: Ref<string>, artifact: Ref<string>) {
 		form.append('file', file)
 		saving.value++
 		try {
-			const response = await fetch(
-				'/api/method/lms_frappe_app.api.student.upload_artifact_file',
-				{
-					method: 'POST',
-					body: form,
-					headers: {
-						Accept: 'application/json',
-						'X-Frappe-CSRF-Token':
-							(window as Window & { csrf_token?: string }).csrf_token ?? '',
-					},
-				}
+			const result = await postForm(
+				'lms_frappe_app.api.student.upload_artifact_file',
+				form
 			)
-			const body = response.ok ? await response.json() : null
-			const result = body?.message as ContractAnswer<unknown> | undefined
-			if (!result?.ok) {
-				toast.error(result?.error?.message || __('Could not upload the file'))
+			if (!result.ok) {
+				toast.error(result.message || __('Could not upload the file'))
 				return false
 			}
 			await resource.reload()

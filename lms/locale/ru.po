@@ -11138,3 +11138,152 @@ msgstr "{0} курсов"
 #: frontend/src/utils/plural.ts
 msgid "{0} courses"
 msgstr "{0} курса"
+
+#: frontend/src/utils/homework.ts
+msgid "Submitted"
+msgstr "Сдано"
+
+#: frontend/src/utils/homework.ts
+msgid "Returned for revision"
+msgstr "На доработке"
+
+#: frontend/src/utils/homework.ts
+msgid "Accepted"
+msgstr "Принято"
+
+#: frontend/src/utils/homework.ts
+msgid "Not submitted"
+msgstr "Не сдано"
+
+#: frontend/src/utils/homework.ts
+msgid "Reopened"
+msgstr "Приём отменён"
+
+#: frontend/src/utils/homework.ts
+msgid "{0} day after the lesson"
+msgstr "{0} день после закрытия урока"
+
+#: frontend/src/utils/homework.ts
+msgid "{0} days after the lesson [few]"
+msgstr "{0} дня после закрытия урока"
+
+#: frontend/src/utils/homework.ts
+msgid "{0} days after the lesson [many]"
+msgstr "{0} дней после закрытия урока"
+
+#: frontend/src/utils/homework.ts
+msgid "{0} days after the lesson"
+msgstr "{0} дня после закрытия урока"
+
+#: frontend/src/utils/homework.ts
+msgid "Due {0}"
+msgstr "До {0}"
+
+#: frontend/src/utils/homework.ts
+msgid "No deadline"
+msgstr "Без срока"
+
+#: frontend/src/utils/homework.ts
+msgid "{0} KB"
+msgstr "{0} КБ"
+
+#: frontend/src/utils/homework.ts
+msgid "{0} MB"
+msgstr "{0} МБ"
+
+#: frontend/src/components/Homework/LessonHomework.vue
+msgid "Lesson homework"
+msgstr "Домашнее задание"
+
+#: frontend/src/components/Homework/LessonHomework.vue
+msgid "Overdue"
+msgstr "Просрочено"
+
+#: frontend/src/components/Homework/LessonHomework.vue
+msgid "Tutor's comment"
+msgstr "Комментарий наставника"
+
+#: frontend/src/components/Homework/LessonHomework.vue
+msgid "Your answer"
+msgstr "Ваш ответ"
+
+#: frontend/src/components/Homework/LessonHomework.vue
+msgid "Detach"
+msgstr "Убрать"
+
+#: frontend/src/components/Homework/LessonHomework.vue
+msgid "Attach files"
+msgstr "Прикрепить файлы"
+
+#: frontend/src/components/Homework/LessonHomework.vue
+msgid "New files add up to more than {0} MB. Attach fewer at a time."
+msgstr "Новые файлы вместе больше {0} МБ. Прикрепите часть, остальные — следующим сохранением."
+
+#: frontend/src/components/Homework/LessonHomework.vue
+msgid "Hand in"
+msgstr "Сдать"
+
+#: frontend/src/components/Homework/LessonHomework.vue
+msgid "History"
+msgstr "История"
+
+#: frontend/src/components/Homework/LessonHomework.vue
+msgid "version {0}"
+msgstr "версия {0}"
+
+#: frontend/src/components/Homework/LessonHomework.vue
+msgid "Versions"
+msgstr "Версии"
+
+#: frontend/src/components/Homework/LessonHomework.vue
+msgid "Version {0}"
+msgstr "Версия {0}"
+
+#: frontend/src/composables/useHomework.ts
+msgid "Homework submitted"
+msgstr "Домашнее задание сдано"
+
+#: frontend/src/composables/useHomework.ts
+msgid "Answer saved"
+msgstr "Ответ сохранён"
+
+#: frontend/src/composables/useHomework.ts
+msgid "Could not save the answer"
+msgstr "Не удалось сохранить ответ"
+
+#: frontend/src/pages/Homework/Homework.vue
+#: frontend/src/utils/index.js
+msgid "Homework"
+msgstr "Домашние задания"
+
+#: frontend/src/pages/Homework/Homework.vue
+msgid "Mine"
+msgstr "Мои"
+
+#: frontend/src/pages/Homework/Homework.vue
+msgid "No homework yet"
+msgstr "Домашних заданий пока нет"
+
+#: frontend/src/pages/Homework/Homework.vue
+msgid "A lesson with homework gives it to you when you finish the lesson."
+msgstr "Урок с домашним заданием выдаёт его, когда вы закрываете урок."
+
+#: frontend/src/pages/Homework/Homework.vue
+msgid "Homework from your lessons is gathered here."
+msgstr "Здесь собираются домашние задания ваших уроков."
+
+#: frontend/src/utils/postForm.ts
+msgid "The files are too large to send at once"
+msgstr "Файлы слишком большие, чтобы отправить их разом"
+
+#: frontend/src/components/Homework/LessonHomework.vue
+msgid "Detach {0}"
+msgstr "Убрать {0}"
+
+#: frontend/src/pages/Homework/Homework.vue
+msgid "Could not load homework"
+msgstr "Не удалось загрузить домашние задания"
+
+#: frontend/src/utils/homework.ts
+msgid "Issued"
+msgstr "Выдано"

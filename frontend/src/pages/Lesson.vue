@@ -109,6 +109,13 @@
 						:entry="lessonEntry.data.data"
 						:title="lesson.data.title"
 					/>
+					<!-- The homework the session leads to (learning-services#439). -->
+					<!-- Student View reaches here without an enrolment: no homework then. -->
+					<LessonHomework
+						v-if="lesson.data.membership"
+						:lesson="lesson.data.name"
+						:course="courseName"
+					/>
 				</div>
 				<!-- v-show, not v-if: EditorJS renders into #editor by id, and the
 				holder has to exist whichever way the entry resolves. -->
@@ -317,6 +324,14 @@
 							/>
 						</div>
 					</div>
+					<!-- After the material, for the enrolled only; the entry branch
+					has its own, and this one is kept out while it shows. -->
+					<LessonHomework
+						v-if="lesson.data.membership && entryState === 'content'"
+						class="mt-10"
+						:lesson="lesson.data.name"
+						:course="courseName"
+					/>
 					<div
 						v-if="lesson.data && (allowDiscussions || tabs.length > 1)"
 						class="mt-10 pb-20 pt-5 border-t px-5"
@@ -445,6 +460,7 @@ import CertificationLinks from '@/components/CertificationLinks.vue'
 import CourseOutline from '@/components/CourseOutline.vue'
 import LockedLessonNotice from '@/components/LockedLessonNotice.vue'
 import LessonEntry from '@/components/LessonEntry.vue'
+import LessonHomework from '@/components/Homework/LessonHomework.vue'
 import StudentLessonSidebar from '@/components/StudentLessonSidebar.vue'
 import BottomSheet from '@/components/BottomSheet.vue'
 import PageHeader from '@/components/Layouts/PageHeader.vue'
