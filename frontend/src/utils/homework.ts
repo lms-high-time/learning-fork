@@ -36,6 +36,8 @@ export type HomeworkFile = {
 export type HomeworkEvent = {
 	event: 'assigned' | 'submitted' | 'returned' | 'accepted' | 'reopened'
 	by: string | null
+	/** The person's full name; the server falls back to `by`. */
+	by_name: string | null
 	at: string | null
 	version: number | null
 	comment: string | null
@@ -85,12 +87,6 @@ export type HomeworkRow = {
 	overdue: boolean
 	version: number | null
 	last_comment: string | null
-}
-
-export type ContractAnswer<T> = {
-	ok: boolean
-	data?: T
-	error?: { code: string; message: string }
 }
 
 const STATUS: Record<HomeworkStatus, string> = {
@@ -153,13 +149,15 @@ export const newFilesTooLarge = (files: { size: number }[]): boolean =>
 	files.reduce((sum, file) => sum + file.size, 0) > SAVE_LIMIT_MB * 1024 * 1024
 
 export const lastEvent = (
-	history: HomeworkEvent[],
+	history: readonly HomeworkEvent[],
 	event: HomeworkEvent['event']
 ): HomeworkEvent | null =>
 	[...history].reverse().find((row) => row.event === event) ?? null
 
 /** The tutor's last word: the comment of the last return. */
-export const lastComment = (history: HomeworkEvent[]): string | null =>
+export const lastComment = (
+	history: readonly HomeworkEvent[]
+): string | null =>
 	lastEvent(history, 'returned')?.comment ?? null
 
 const EVENTS: Record<HomeworkEvent['event'], string> = {
@@ -172,6 +170,15 @@ const EVENTS: Record<HomeworkEvent['event'], string> = {
 
 export const eventLabel = (event: HomeworkEvent['event']): string =>
 	__(EVENTS[event] ?? event)
+
+/** Who did it: «You» for the reader, otherwise the name. */
+export const whoLabel = (
+	row: Pick<HomeworkEvent, 'by' | 'by_name'>,
+	me?: string | null
+): string => {
+	if (row.by && me && row.by === me) return __('You')
+	return row.by_name || row.by || '—'
+}
 
 /** A moment of the journal, in the reader's words. */
 export const formatMoment = (iso: string | null): string => {

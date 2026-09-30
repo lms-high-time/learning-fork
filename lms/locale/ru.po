@@ -11271,3 +11271,7 @@ msgstr "Здесь собираются домашние задания ваши
 #: frontend/src/utils/postForm.ts
 msgid "The files are too large to send at once"
 msgstr "Файлы слишком большие, чтобы отправить их разом"
+
+#: frontend/src/components/Homework/LessonHomework.vue
+msgid "Detach {0}"
+msgstr "Убрать {0}"

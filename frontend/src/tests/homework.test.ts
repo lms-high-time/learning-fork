@@ -6,8 +6,11 @@ import {
 	isTextAllowed,
 	lastComment,
 	lastEvent,
+	lessonPath,
 	newFilesTooLarge,
 	statusLabel,
+	whoLabel,
+	type HomeworkEvent,
 } from '@/utils/homework'
 
 // A lesson's homework (learning-services#439): the wording and the rules the
@@ -36,7 +39,7 @@ describe('dueLabel', () => {
 	it('names the day of an absolute deadline', () => {
 		expect(
 			dueLabel({ mode: 'absolute', days: null, date: '2030-01-15' })
-		).toContain('15')
+		).toBe('Due 15 января 2030 г.')
 	})
 
 	it('prefers the deadline the submission was given', () => {
@@ -44,8 +47,7 @@ describe('dueLabel', () => {
 			{ mode: 'relative', days: 5, date: null },
 			'2030-02-20 23:59:59'
 		)
-		expect(label).toContain('20')
-		expect(label).not.toContain('after the lesson')
+		expect(label).toBe('Due 20 февраля 2030 г.')
 	})
 
 	it('says there is no deadline', () => {
@@ -77,12 +79,25 @@ describe('what the learner may do', () => {
 })
 
 describe('the journal', () => {
+	const row = (
+		event: HomeworkEvent['event'],
+		at: string,
+		comment: string | null = null
+	): HomeworkEvent => ({
+		event,
+		by: 't@x',
+		by_name: 'Тьютор',
+		at,
+		version: 1,
+		comment,
+		due_at: null,
+	})
 	const history = [
-		{ event: 'assigned', by: 'a', at: '1', version: null, comment: null, due_at: null },
-		{ event: 'returned', by: 't', at: '2', version: 1, comment: 'old', due_at: null },
-		{ event: 'submitted', by: 'a', at: '3', version: 2, comment: null, due_at: null },
-		{ event: 'returned', by: 't', at: '4', version: 2, comment: 'new', due_at: null },
-	]
+		row('assigned', '1'),
+		row('returned', '2', 'old'),
+		row('submitted', '3'),
+		row('returned', '4', 'new'),
+	] satisfies readonly HomeworkEvent[]
 
 	it('finds the last comment of the tutor', () => {
 		expect(lastComment(history)).toBe('new')
@@ -92,5 +107,27 @@ describe('the journal', () => {
 	it('finds the last row of an event', () => {
 		expect(lastEvent(history, 'returned')?.at).toBe('4')
 		expect(lastEvent(history, 'accepted')).toBeNull()
+	})
+
+	it('names the person, and the reader as «You»', () => {
+		expect(whoLabel({ by: 't@x', by_name: 'Тьютор' }, 'a@x')).toBe('Тьютор')
+		expect(whoLabel({ by: 'a@x', by_name: 'Анна' }, 'a@x')).toBe('You')
+		expect(whoLabel({ by: 't@x', by_name: null }, 'a@x')).toBe('t@x')
+		expect(whoLabel({ by: null, by_name: null })).toBe('—')
+	})
+})
+
+describe('lessonPath', () => {
+	it('takes the lesson route without the SPA base, to the homework block', () => {
+		expect(lessonPath('/lms/courses/c-1/learn/1-2')).toBe(
+			'/courses/c-1/learn/1-2#homework'
+		)
+		expect(lessonPath('https://x.test/lms/courses/c-1/learn/1-2')).toBe(
+			'/courses/c-1/learn/1-2#homework'
+		)
+		expect(lessonPath('/study/courses/c-1/learn/1-2', 'study')).toBe(
+			'/courses/c-1/learn/1-2#homework'
+		)
+		expect(lessonPath(null)).toBeNull()
 	})
 })

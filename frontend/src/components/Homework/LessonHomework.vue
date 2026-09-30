@@ -90,6 +90,7 @@
 								type="button"
 								class="shrink-0 text-ink-gray-5 hover:text-ink-gray-8"
 								:data-testid="`homework-remove-${file.id}`"
+								:aria-label="__('Detach {0}').format(file.name)"
 								@click="removed.push(file.id)"
 							>
 								{{ __('Detach') }}
@@ -107,13 +108,17 @@
 							<button
 								type="button"
 								class="shrink-0 text-ink-gray-5 hover:text-ink-gray-8"
+								:aria-label="__('Detach {0}').format(file.name)"
 								@click="added.splice(index, 1)"
 							>
 								{{ __('Detach') }}
 							</button>
 						</li>
 					</ul>
-					<label class="inline-flex cursor-pointer">
+					<!-- The input is hidden; the ring shows where keyboard focus is. -->
+					<label
+						class="inline-flex cursor-pointer rounded focus-within:ring-2 focus-within:ring-outline-gray-3"
+					>
 						<input type="file" multiple class="sr-only" @change="onFiles" />
 						<span
 							class="rounded bg-surface-gray-2 px-3 py-1.5 text-p-sm font-medium text-ink-gray-8"
@@ -123,6 +128,8 @@
 					</label>
 					<p
 						v-if="tooLarge"
+						id="homework-too-large"
+						role="alert"
 						class="text-p-sm text-ink-red-7"
 						data-testid="homework-too-large"
 					>
@@ -139,7 +146,8 @@
 					variant="solid"
 					:label="submitted ? __('Save') : __('Hand in')"
 					:loading="saving"
-					:disabled="tooLarge || saving"
+					:disabled="tooLarge || empty || saving"
+					:aria-describedby="tooLarge ? 'homework-too-large' : undefined"
 				/>
 			</form>
 
@@ -156,7 +164,7 @@
 						<span class="font-medium text-ink-gray-8">{{
 							eventLabel(row.event)
 						}}</span>
-						· {{ row.by || '—' }} · {{ formatMoment(row.at) }}
+						· {{ whoLabel(row, me) }} · {{ formatMoment(row.at) }}
 						<span v-if="row.version">
 							· {{ __('version {0}').format(row.version) }}</span
 						>
@@ -173,7 +181,7 @@
 				</summary>
 				<div class="mt-2 space-y-2">
 					<details
-						v-for="version in [...submission.versions].reverse()"
+						v-for="version in versionsNewestFirst"
 						:key="version.version"
 					>
 						<summary class="cursor-pointer text-ink-gray-7">
@@ -200,6 +208,7 @@
 import { computed, nextTick, ref, toRef, watch } from 'vue'
 import MarkdownIt from 'markdown-it'
 import { Button } from 'frappe-ui'
+import { sessionStore } from '@/stores/session'
 import HomeworkFiles from '@/components/Homework/HomeworkFiles.vue'
 import { useHomework } from '@/composables/useHomework'
 import { safeUrl } from '@/utils/safeUrl'
@@ -217,6 +226,7 @@ import {
 	SAVE_LIMIT_MB,
 	statusLabel,
 	STATUS_CLASSES,
+	whoLabel,
 } from '@/utils/homework'
 
 // The homework under a lesson (learning-services#439): the author's
@@ -229,6 +239,10 @@ const { homework, submission, saving, save } = useHomework(
 	toRef(props, 'lesson'),
 	toRef(props, 'course')
 )
+
+// The reader, named «You» in the journal.
+const session = sessionStore()
+const me = computed(() => session.user as string | null)
 
 const markdown = new MarkdownIt({ html: false, linkify: true })
 const render = (text: string) => markdown.render(text)
@@ -245,7 +259,11 @@ const comment = computed(() => lastComment(submission.value?.history ?? []))
 
 const acceptedLine = computed(() => {
 	const row = lastEvent(submission.value?.history ?? [], 'accepted')
-	return [__('Accepted'), row?.by, row?.at ? formatMoment(row.at) : null]
+	return [
+		__('Accepted'),
+		row ? whoLabel(row, me.value) : null,
+		row?.at ? formatMoment(row.at) : null,
+	]
 		.filter(Boolean)
 		.join(' · ')
 })
@@ -261,10 +279,25 @@ const keptFiles = computed(() =>
 	)
 )
 const tooLarge = computed(() => newFilesTooLarge(added.value))
+// Nothing to hand in: no text, no file kept, none added.
+const empty = computed(
+	() =>
+		!(textAllowed.value && draft.value.trim()) &&
+		!keptFiles.value.length &&
+		!added.value.length
+)
+
+const versionsNewestFirst = computed(() =>
+	[...(submission.value?.versions ?? [])].reverse()
+)
 
 // A fresh read — another lesson, or the answer just saved — resets the form.
 watch(
-	() => [props.lesson, submission.value?.id, submission.value?.version],
+	[
+		() => props.lesson,
+		() => submission.value?.id,
+		() => submission.value?.version,
+	],
 	() => {
 		draft.value = submission.value?.answer ?? ''
 		removed.value = []
@@ -291,7 +324,7 @@ function onFiles(event: Event) {
 }
 
 async function send() {
-	if (tooLarge.value || saving.value) return
+	if (tooLarge.value || empty.value || saving.value) return
 	await save({
 		answer: textAllowed.value ? draft.value : undefined,
 		removeFiles: filesAllowed.value ? [...removed.value] : [],

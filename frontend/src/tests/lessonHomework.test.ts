@@ -7,6 +7,7 @@ import { reactive } from 'vue'
 
 const answers: Record<string, unknown> = {}
 const fetched: { url: string; params: unknown }[] = []
+const resources: { reload: ReturnType<typeof vi.fn> }[] = []
 const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }))
 
 vi.mock('frappe-ui', () => ({
@@ -24,6 +25,7 @@ vi.mock('frappe-ui', () => ({
 				resource.data = answers[config.url] ?? null
 			}),
 		})
+		resources.push(resource)
 		return resource
 	},
 	toast,
@@ -42,8 +44,16 @@ vi.mock('@/stores/space', () => ({
 	}),
 }))
 
+vi.mock('@/stores/session', () => ({
+	sessionStore: () => ({ user: 'student@x' }),
+}))
+
 import LessonHomework from '@/components/Homework/LessonHomework.vue'
-import type { LessonHomeworkData, Submission } from '@/utils/homework'
+import type {
+	HomeworkEvent,
+	LessonHomeworkData,
+	Submission,
+} from '@/utils/homework'
 
 const URL = 'lms_frappe_app.api.student.homework'
 
@@ -57,6 +67,19 @@ const homework = (
 	due: { mode: 'relative' as const, days: 5, date: null },
 	...overrides,
 })
+
+const event = (overrides: Partial<HomeworkEvent> = {}): HomeworkEvent => ({
+	event: 'submitted',
+	by: 'student@x',
+	by_name: 'Анна Ученица',
+	at: '2030-01-11 12:00:00',
+	version: 1,
+	comment: null,
+	due_at: null,
+	...overrides,
+})
+
+const tutor = { by: 'tutor@x', by_name: 'Тьютор Иванов' }
 
 const submission = (overrides: Partial<Submission> = {}): Submission => ({
 	id: 'HS-1',
@@ -77,16 +100,7 @@ const submission = (overrides: Partial<Submission> = {}): Submission => ({
 			url: '/private/files/protocol.pdf',
 		},
 	],
-	history: [
-		{
-			event: 'submitted',
-			by: 'student@x',
-			at: '2030-01-11 12:00:00',
-			version: 1,
-			comment: null,
-			due_at: null,
-		},
-	],
+	history: [event()],
 	versions: [
 		{
 			version: 1,
@@ -120,33 +134,40 @@ const mountBlock = async () => {
 	return wrapper
 }
 
-const fetchMock = vi.fn()
+const serverAnswers = (message: unknown, status = 200) =>
+	({
+		ok: status >= 200 && status < 300,
+		status,
+		json: async () => ({ message }),
+	}) as Response
+
+let fetchMock: ReturnType<typeof vi.spyOn>
+
+const attach = async (
+	wrapper: Awaited<ReturnType<typeof mountBlock>>,
+	file: File
+) => {
+	const input = wrapper.find('input[type="file"]')
+	Object.defineProperty(input.element, 'files', {
+		value: [file],
+		configurable: true,
+	})
+	await input.trigger('change')
+}
 
 beforeEach(() => {
 	for (const key of Object.keys(answers)) delete answers[key]
 	fetched.length = 0
+	resources.length = 0
 	toast.error.mockReset()
 	toast.success.mockReset()
-	fetchMock.mockReset()
-	fetchMock.mockResolvedValue({
-		ok: true,
-		json: async () => ({ message: { ok: true, data: {} } }),
-	})
-	vi.stubGlobal('fetch', fetchMock)
+	fetchMock = vi
+		.spyOn(globalThis, 'fetch')
+		.mockResolvedValue(serverAnswers({ ok: true, data: {} }))
 })
 
 afterEach(() => {
-	vi.unstubAllGlobals()
-	// setup.ts stubs `__` globally; unstubbing all takes it too.
-	vi.stubGlobal('__', (message: string) => {
-		if (!/{\d+}/.test(message)) return message
-		return {
-			format: (...args: unknown[]) =>
-				message.replace(/{(\d+)}/g, (m, i) =>
-					args[Number(i)] === undefined ? m : String(args[Number(i)])
-				),
-		}
-	})
+	vi.restoreAllMocks()
 })
 
 describe('LessonHomework', () => {
@@ -206,14 +227,11 @@ describe('LessonHomework', () => {
 				status: 'Returned',
 				overdue: true,
 				history: [
-					{
+					event({
+						...tutor,
 						event: 'returned',
-						by: 'tutor@x',
-						at: '2030-01-12 09:00:00',
-						version: 1,
 						comment: 'Добавьте решения встречи',
-						due_at: null,
-					},
+					}),
 				],
 			}),
 		})
@@ -231,22 +249,15 @@ describe('LessonHomework', () => {
 			submission: submission({
 				status: 'Accepted',
 				history: [
-					{
-						event: 'accepted',
-						by: 'tutor@x',
-						at: '2030-01-12 09:00:00',
-						version: 1,
-						comment: null,
-						due_at: null,
-					},
+					event({ ...tutor, event: 'accepted', at: '2030-01-12 09:00:00' }),
 				],
 			}),
 		})
 		const wrapper = await mountBlock()
 		expect(wrapper.find('form').exists()).toBe(false)
 		expect(wrapper.find('textarea').exists()).toBe(false)
-		expect(wrapper.find('[data-testid="homework-accepted"]').text()).toContain(
-			'tutor@x'
+		expect(wrapper.find('[data-testid="homework-accepted"]').text()).toBe(
+			'Accepted · Тьютор Иванов · 12 января 2030 г., 09:00'
 		)
 		expect(wrapper.text()).toContain('Провёл')
 	})
@@ -256,15 +267,15 @@ describe('LessonHomework', () => {
 		const wrapper = await mountBlock()
 		await wrapper.find('textarea').setValue('Провёл, протокол ниже')
 		await wrapper.find('[data-testid="homework-remove-F-1"]').trigger('click')
-		const input = wrapper.find('input[type="file"]')
-		const file = new File(['hi'], 'minutes.txt', { type: 'text/plain' })
-		Object.defineProperty(input.element, 'files', { value: [file] })
-		await input.trigger('change')
+		await attach(
+			wrapper,
+			new File(['hi'], 'minutes.txt', { type: 'text/plain' })
+		)
 		await wrapper.find('form').trigger('submit')
 		await flushPromises()
 
 		expect(fetchMock).toHaveBeenCalledTimes(1)
-		const [url, init] = fetchMock.mock.calls[0]
+		const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
 		expect(url).toBe('/api/method/lms_frappe_app.api.student.submit_homework')
 		expect(init.method).toBe('POST')
 		const form = init.body as FormData
@@ -279,13 +290,10 @@ describe('LessonHomework', () => {
 	it('sends no text for a files-only homework', async () => {
 		answer({ homework: homework({ answer_mode: 'files' }) })
 		const wrapper = await mountBlock()
-		const input = wrapper.find('input[type="file"]')
-		const file = new File(['hi'], 'a.txt', { type: 'text/plain' })
-		Object.defineProperty(input.element, 'files', { value: [file] })
-		await input.trigger('change')
+		await attach(wrapper, new File(['hi'], 'a.txt', { type: 'text/plain' }))
 		await wrapper.find('form').trigger('submit')
 		await flushPromises()
-		const form = fetchMock.mock.calls[0][1].body as FormData
+		const form = (fetchMock.mock.calls[0][1] as RequestInit).body as FormData
 		expect(form.has('answer')).toBe(false)
 		expect(form.getAll('file')).toHaveLength(1)
 	})
@@ -293,14 +301,14 @@ describe('LessonHomework', () => {
 	it('stops new files over the limit before sending', async () => {
 		answer({ homework: homework() })
 		const wrapper = await mountBlock()
-		const input = wrapper.find('input[type="file"]')
 		const big = new File(['x'], 'big.mov')
 		Object.defineProperty(big, 'size', { value: 31 * 1024 * 1024 })
-		Object.defineProperty(input.element, 'files', { value: [big] })
-		await input.trigger('change')
-		expect(wrapper.find('[data-testid="homework-too-large"]').exists()).toBe(
-			true
-		)
+		await attach(wrapper, big)
+		const warning = wrapper.find('[data-testid="homework-too-large"]')
+		expect(warning.attributes('role')).toBe('alert')
+		expect(
+			wrapper.find('button[type="submit"]').attributes('aria-describedby')
+		).toBe(warning.attributes('id'))
 		await wrapper.find('form').trigger('submit')
 		await flushPromises()
 		expect(fetchMock).not.toHaveBeenCalled()
@@ -308,15 +316,12 @@ describe('LessonHomework', () => {
 
 	it('says what the server refused', async () => {
 		answer({ homework: homework() })
-		fetchMock.mockResolvedValue({
-			ok: true,
-			json: async () => ({
-				message: {
-					ok: false,
-					error: { code: 'empty_answer', message: 'Ответ пуст' },
-				},
-			}),
-		})
+		fetchMock.mockResolvedValue(
+			serverAnswers({
+				ok: false,
+				error: { code: 'empty_answer', message: 'Ответ пуст' },
+			})
+		)
 		const wrapper = await mountBlock()
 		await wrapper.find('textarea').setValue('x')
 		await wrapper.find('form').trigger('submit')
@@ -327,6 +332,7 @@ describe('LessonHomework', () => {
 	it('scrolls itself into view when the link names it', async () => {
 		answer({ homework: homework() })
 		const scrolled = vi.fn()
+		const original = Element.prototype.scrollIntoView
 		Element.prototype.scrollIntoView = scrolled
 		window.location.hash = '#homework'
 		try {
@@ -340,6 +346,7 @@ describe('LessonHomework', () => {
 			wrapper.unmount()
 		} finally {
 			window.location.hash = ''
+			Element.prototype.scrollIntoView = original
 		}
 	})
 
@@ -349,5 +356,115 @@ describe('LessonHomework', () => {
 		const summaries = wrapper.findAll('details > summary').map((s) => s.text())
 		expect(summaries).toContain('History')
 		expect(summaries).toContain('Versions')
+	})
+
+	it('names people in the journal, and the reader as «You»', async () => {
+		answer({
+			homework: homework(),
+			submission: submission({
+				status: 'Returned',
+				history: [
+					event(),
+					event({ ...tutor, event: 'returned', comment: 'Ещё раз' }),
+				],
+			}),
+		})
+		const wrapper = await mountBlock()
+		const rows = wrapper.findAll('details li').map((row) => row.text())
+		expect(rows[0]).toContain('Submitted · You ·')
+		expect(rows[1]).toContain('Returned for revision · Тьютор Иванов ·')
+		expect(wrapper.text()).not.toContain('tutor@x')
+	})
+
+	it('names the file a Detach button takes out', async () => {
+		answer({ homework: homework(), submission: submission() })
+		const wrapper = await mountBlock()
+		expect(
+			wrapper.find('[data-testid="homework-remove-F-1"]').attributes('aria-label')
+		).toBe('Detach protocol.pdf')
+	})
+
+	it('keeps Hand in off while the answer is empty', async () => {
+		answer({ homework: homework() })
+		const wrapper = await mountBlock()
+		const button = wrapper.find('button[type="submit"]')
+		expect(button.attributes('disabled')).toBeDefined()
+		await wrapper.find('textarea').setValue('   ')
+		expect(button.attributes('disabled')).toBeDefined()
+		await wrapper.find('form').trigger('submit')
+		await flushPromises()
+		expect(fetchMock).not.toHaveBeenCalled()
+		await wrapper.find('textarea').setValue('Сделал')
+		expect(button.attributes('disabled')).toBeUndefined()
+	})
+
+	it('sends once when the form is submitted twice', async () => {
+		answer({ homework: homework() })
+		let finish: (value: Response) => void = () => {}
+		fetchMock.mockReturnValue(new Promise<Response>((r) => (finish = r)))
+		const wrapper = await mountBlock()
+		await wrapper.find('textarea').setValue('Сделал')
+		await wrapper.find('form').trigger('submit')
+		await wrapper.find('form').trigger('submit')
+		finish(serverAnswers({ ok: true, data: {} }))
+		await flushPromises()
+		expect(fetchMock).toHaveBeenCalledTimes(1)
+	})
+
+	it('says it could not save when the connection drops', async () => {
+		answer({ homework: homework() })
+		fetchMock.mockRejectedValue(new TypeError('Failed to fetch'))
+		const wrapper = await mountBlock()
+		await wrapper.find('textarea').setValue('Сделал')
+		await wrapper.find('form').trigger('submit')
+		await flushPromises()
+		expect(toast.error).toHaveBeenCalledWith('Could not save the answer')
+		expect(toast.success).not.toHaveBeenCalled()
+	})
+
+	it('says the files are too large when nginx turns them away', async () => {
+		answer({ homework: homework() })
+		fetchMock.mockResolvedValue(serverAnswers(null, 413))
+		const wrapper = await mountBlock()
+		await wrapper.find('textarea').setValue('Сделал')
+		await wrapper.find('form').trigger('submit')
+		await flushPromises()
+		expect(toast.error).toHaveBeenCalledWith(
+			'The files are too large to send at once'
+		)
+	})
+
+	it('does not report a saved answer as failed when the read-back fails', async () => {
+		answer({ homework: homework() })
+		const wrapper = await mountBlock()
+		resources[0].reload.mockRejectedValue(new Error('502'))
+		await wrapper.find('textarea').setValue('Сделал')
+		await wrapper.find('form').trigger('submit')
+		await flushPromises()
+		expect(toast.success).toHaveBeenCalledWith('Homework submitted')
+		expect(toast.error).not.toHaveBeenCalled()
+	})
+
+	it('starts the form over from the saved version', async () => {
+		answer({ homework: homework(), submission: submission() })
+		const wrapper = await mountBlock()
+		await wrapper.find('textarea').setValue('Черновик')
+		await attach(wrapper, new File(['hi'], 'minutes.txt'))
+		answer({
+			homework: homework(),
+			submission: submission({ version: 2, answer: 'Сохранённый ответ' }),
+		})
+		await wrapper.find('form').trigger('submit')
+		await flushPromises()
+		expect(
+			(wrapper.find('textarea').element as HTMLTextAreaElement).value
+		).toBe('Сохранённый ответ')
+		expect(wrapper.text()).not.toContain('minutes.txt')
+	})
+
+	it('ignores an answer for another lesson', async () => {
+		answer({ homework: homework({ lesson: 'L2' }) })
+		const wrapper = await mountBlock()
+		expect(wrapper.find('[data-testid="lesson-homework"]').exists()).toBe(false)
 	})
 })
