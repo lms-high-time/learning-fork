@@ -154,6 +154,16 @@ vi.mock('@/components/Notes/Notes.vue', () => ({ default: stub('Notes') }))
 vi.mock('@/components/Notes/InlineLessonMenu.vue', () => ({
 	default: stub('InlineLessonMenu'),
 }))
+vi.mock('@/components/LessonEntry.vue', () => ({
+	default: { name: 'LessonEntry', props: ['entry', 'title'], template: '<div />' },
+}))
+vi.mock('@/components/Homework/LessonHomework.vue', () => ({
+	default: {
+		name: 'LessonHomework',
+		props: ['lesson', 'course'],
+		template: '<div />',
+	},
+}))
 
 // Mirrors src/translation.js: a message with {0}-style placeholders returns a
 // formatter object, not a string. A stub that always returns the string hides a
@@ -583,5 +593,45 @@ describe('Lesson.vue Next survives an outline that never resolves', () => {
 		;(wrapper.vm as any).goNext()
 
 		expect(pushMock).not.toHaveBeenCalled()
+	})
+})
+
+// The homework of the lesson (learning-services#439) sits with what the
+// enrolled learner sees: under the way into the session, or under the material.
+describe('Lesson.vue homework block', () => {
+	const ENTRY = 'lms_frappe_app.api.public.lesson_entry'
+
+	async function openLesson(lessonData: Record<string, unknown>, entry: unknown) {
+		wrapper = await mountLesson()
+		const entryResource = findResource(ENTRY)
+		entryResource.data = entry
+		entryResource.fetch.mockResolvedValue(entry)
+		findResource('lms.lms.utils.get_lesson').data = { ...baseLesson, ...lessonData }
+		await flushPromises()
+	}
+
+	it('puts it under the entry for an enrolled learner', async () => {
+		await openLesson(
+			{ membership: { progress: 0 } },
+			{ data: { title: 'Lesson 1' } }
+		)
+
+		const blocks = wrapper.findAllComponents({ name: 'LessonHomework' })
+		expect(wrapper.findComponent({ name: 'LessonEntry' }).exists()).toBe(true)
+		expect(blocks).toHaveLength(1)
+		expect(blocks[0].props()).toEqual({ lesson: 'L1', course: 'COURSE-1' })
+	})
+
+	it('puts it under the material when there is no entry', async () => {
+		await openLesson({ membership: { progress: 0 } }, { data: null })
+
+		expect(wrapper.findComponent({ name: 'LessonEntry' }).exists()).toBe(false)
+		expect(wrapper.findAllComponents({ name: 'LessonHomework' })).toHaveLength(1)
+	})
+
+	it('leaves it out for a visitor who is not enrolled', async () => {
+		await openLesson({}, null)
+
+		expect(wrapper.findComponent({ name: 'LessonHomework' }).exists()).toBe(false)
 	})
 })

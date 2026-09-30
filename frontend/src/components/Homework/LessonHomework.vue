@@ -197,7 +197,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, toRef, watch } from 'vue'
+import { computed, nextTick, ref, toRef, watch } from 'vue'
 import MarkdownIt from 'markdown-it'
 import { Button } from 'frappe-ui'
 import HomeworkFiles from '@/components/Homework/HomeworkFiles.vue'
@@ -272,6 +272,17 @@ watch(
 	},
 	{ immediate: true }
 )
+
+// «Homework» links here with `#homework`. The router does not scroll to a hash,
+// and the block appears only once its read answers, so it scrolls itself.
+watch(homework, (value, before) => {
+	if (!value || before || window.location.hash !== '#homework') return
+	nextTick(() =>
+		document
+			.getElementById('homework')
+			?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+	)
+})
 
 function onFiles(event: Event) {
 	const input = event.target as HTMLInputElement

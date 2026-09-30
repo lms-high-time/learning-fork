@@ -324,6 +324,25 @@ describe('LessonHomework', () => {
 		expect(toast.error).toHaveBeenCalledWith('Ответ пуст')
 	})
 
+	it('scrolls itself into view when the link names it', async () => {
+		answer({ homework: homework() })
+		const scrolled = vi.fn()
+		Element.prototype.scrollIntoView = scrolled
+		window.location.hash = '#homework'
+		try {
+			const wrapper = mount(LessonHomework, {
+				props: { lesson: 'L1', course: 'C1' },
+				global: { mocks: { __: (globalThis as any).__ } },
+				attachTo: document.body,
+			})
+			await flushPromises()
+			expect(scrolled).toHaveBeenCalled()
+			wrapper.unmount()
+		} finally {
+			window.location.hash = ''
+		}
+	})
+
 	it('folds the history and the versions away', async () => {
 		answer({ homework: homework(), submission: submission() })
 		const wrapper = await mountBlock()
