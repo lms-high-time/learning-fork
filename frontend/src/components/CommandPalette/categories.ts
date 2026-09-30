@@ -45,12 +45,6 @@ export const CATEGORIES: Category[] = [
 		icon: 'lucide-circle-help',
 		listRoute: 'Quizzes',
 	},
-	{
-		id: 'assignments',
-		label: 'Assignments',
-		icon: 'lucide-pencil',
-		listRoute: 'Assignments',
-	},
 ]
 
 interface SidebarItem {

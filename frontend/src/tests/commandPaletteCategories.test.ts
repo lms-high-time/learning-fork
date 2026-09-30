@@ -71,7 +71,7 @@ const links = (...routes: string[]) => [{ items: routes.map((to) => ({ to })) }]
 
 // What getSidebarLinks() actually returns for each kind of visitor. Programs is
 // absent for a guest (`if (!userResource.data) return false`) and for a student
-// with no programs; Quizzes and Assignments are instructor/moderator/evaluator only.
+// with no programs; Quizzes are instructor/moderator/evaluator only.
 const GUEST = links('Courses', 'Batches', 'Jobs', 'Statistics')
 // Certifications' `to` is the route name, not the label.
 const STUDENT = links(
@@ -94,7 +94,6 @@ const ADMIN = links(
 	'Programs',
 	'Jobs',
 	'Quizzes',
-	'Assignments',
 	'CertifiedParticipants',
 	'Statistics',
 	'ProgrammingExercises'
@@ -189,6 +188,16 @@ describe('command palette categories', () => {
 			expect(offered).not.toContain(hidden)
 		}
 		expect(offered).toContain('Courses')
+	})
+
+	// Learning's assignments are not this platform's homework
+	// (learning-services#439): the palette no longer leads to them, even when a
+	// stale sidebar still names the route.
+	it('offers no Assignments category, even to an admin', () => {
+		sidebarLinks.value = [
+			{ items: [...ADMIN[0].items, { to: 'Assignments' }] },
+		]
+		expect(titles(build())).not.toContain('Assignments')
 	})
 
 	it('scopes the search to the category that was opened', async () => {

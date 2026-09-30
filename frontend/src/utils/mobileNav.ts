@@ -79,7 +79,6 @@ const SECTION_MAP: Record<string, readonly string[]> = {
 		'Programs',
 		'Batches',
 		'Quizzes',
-		'Assignments',
 		'Programming Exercises',
 	],
 	DISCOVER: ['Jobs', 'Statistics'],

@@ -38,7 +38,6 @@ vi.mock('@/utils', () => ({
 				{ to: 'Programs' },
 				{ to: 'Jobs' },
 				{ to: 'Quizzes' },
-				{ to: 'Assignments' },
 			],
 		},
 	],
