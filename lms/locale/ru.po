@@ -11040,7 +11040,7 @@ msgid "Course {0} of {1} in the program «{2}»"
 msgstr "Курс {0} из {1} в программе «{2}»"
 
 #: frontend/src/components/CourseCardOverlay.vue
-msgid "Next: «{0}»"
+msgid "Next course: «{0}»"
 msgstr "Дальше — курс «{0}»"
 
 #: frontend/src/pages/Programs/ProgramDetail.vue

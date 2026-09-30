@@ -88,7 +88,11 @@ const mountOverlay = () =>
 			stubs: {
 				VideoPreview: true,
 				CertificationLinks: true,
-				RouterLink: { template: '<a data-testid="reader"><slot /></a>' },
+				// `to` comes out as an attribute: a test can check where a link goes.
+				RouterLink: {
+					props: ['to'],
+					template: '<a data-testid="reader" :data-to="JSON.stringify(to)"><slot /></a>',
+				},
 			},
 		},
 	})
@@ -101,7 +105,7 @@ beforeEach(() => {
 })
 
 describe('CourseCardOverlay in a program (#405)', () => {
-	const program = (locked: boolean, last = false) => ({
+	const program = (locked: boolean, { last = false } = {}) => ({
 		ok: true,
 		data: {
 			programs: [
@@ -123,13 +127,16 @@ describe('CourseCardOverlay in a program (#405)', () => {
 		const wrapper = mountOverlay()
 		await flushPromises()
 
-		expect(wrapper.get('[data-testid="course-program-next"]').text()).toBe(
-			'Next: «Недельный ритм»'
-		)
+		const link = wrapper.get('[data-testid="course-program-next"]')
+		expect(link.text()).toBe('Next course: «Недельный ритм»')
+		expect(JSON.parse(link.attributes('data-to') ?? '{}')).toEqual({
+			name: 'CourseDetail',
+			params: { courseName: 'c-3' },
+		})
 	})
 
 	it('has no next course at the end of the program (#443)', async () => {
-		programsResource.data = program(false, true)
+		programsResource.data = program(false, { last: true })
 		const wrapper = mountOverlay()
 		await flushPromises()
 
