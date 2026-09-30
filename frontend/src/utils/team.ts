@@ -3,6 +3,7 @@
 // tested without a server; the page only draws them.
 
 import { plural, type PluralForms } from '@/utils/plural'
+import type { HomeworkDue } from '@/utils/homework'
 
 export type TeamMember = {
 	user: string
@@ -125,6 +126,20 @@ export const readersBeforeJoining = (
 				'Your documents for the courses of {0} will be visible to its managers.'
 		  ).format(title)
 
+/**
+ * A homework of the assigned course, with its deadline rule
+ * (learning-services#452): the author's, and the assignment's own — `null`,
+ * the author's applies.
+ */
+export type AllocationHomework = {
+	homework: string
+	lesson: string
+	lesson_title: string | null
+	title: string
+	author_due: HomeworkDue
+	due: HomeworkDue | null
+}
+
 export type Allocation = {
 	id: string
 	course: string
@@ -134,7 +149,56 @@ export type Allocation = {
 	deadline: string | null
 	mandatory: boolean
 	chosen_by_member: boolean
+	/** The course's homework, in lesson order. */
+	homework?: AllocationHomework[]
 }
+
+/** A deadline rule being edited: `author` — no rule of the assignment. */
+export type DueDraft = {
+	mode: 'author' | 'relative' | 'absolute'
+	days: string
+	date: string
+}
+
+export const dueDraft = (row: AllocationHomework): DueDraft => {
+	const due = row.due
+	if (due?.mode === 'relative')
+		return { mode: 'relative', days: String(due.days ?? ''), date: '' }
+	if (due?.mode === 'absolute')
+		return { mode: 'absolute', days: '', date: due.date ?? '' }
+	return { mode: 'author', days: '', date: '' }
+}
+
+export const isDueDraftValid = (draft: DueDraft): boolean => {
+	if (draft.mode === 'relative') {
+		const days = Number(draft.days)
+		return Number.isInteger(days) && days > 0
+	}
+	if (draft.mode === 'absolute') return Boolean(draft.date)
+	return true
+}
+
+export type HomeworkDueRow = {
+	homework: string
+	due_mode: 'relative' | 'absolute'
+	due_days?: number
+	due_date?: string
+}
+
+/**
+ * `update_allocation`'s `homework_due`: the whole table, which replaces the
+ * saved one. «As the author» is no row.
+ */
+export const homeworkDuePayload = (
+	drafts: { homework: string; draft: DueDraft }[]
+): HomeworkDueRow[] =>
+	drafts.flatMap(({ homework, draft }): HomeworkDueRow[] => {
+		if (draft.mode === 'relative')
+			return [{ homework, due_mode: 'relative', due_days: Number(draft.days) }]
+		if (draft.mode === 'absolute')
+			return [{ homework, due_mode: 'absolute', due_date: draft.date }]
+		return []
+	})
 
 // Who an assignment is for, in a line (learning-services#365).
 export const audienceText = (

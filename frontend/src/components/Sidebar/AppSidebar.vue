@@ -314,6 +314,7 @@ import {
 	unreadCount,
 	unreadNotifications,
 } from '@/stores/notifications'
+import { loadPendingCount, pendingCount } from '@/stores/homeworkQueue'
 
 const { userResource } = usersStore()
 let sidebarStore = useSidebar()
@@ -358,6 +359,7 @@ onMounted(() => {
 	addKeyboardShortcut()
 	updateSidebarLinks()
 	loadUnreadCount()
+	loadPendingCount()
 	socket.on('publish_lms_notifications', () => {
 		unreadNotifications.reload()
 	})
@@ -366,6 +368,8 @@ onMounted(() => {
 // The count lives in stores/notifications now, so the badge follows it rather
 // than being written from the resource's onSuccess.
 watch(unreadCount, () => updateUnreadCount())
+// Submissions awaiting review, by «Homework» (learning-services#452).
+watch(pendingCount, () => updateUnreadCount())
 
 const updateSidebarLinksVisibility = () => {
 	loadSidebarSettings().then(() => {
@@ -405,6 +409,9 @@ const updateUnreadCount = () => {
 		link.items.forEach((item) => {
 			if (item.label === 'Notifications') {
 				item.count = unreadCount.value || 0
+			}
+			if (item.label === 'Homework') {
+				item.count = pendingCount.value || 0
 			}
 		})
 	})
@@ -666,6 +673,8 @@ watch(userResource, async () => {
 		isInstructor.value = userResource.data.is_instructor
 		await programs.reload()
 		setUpOnboarding()
+		// The roles decide whether there is a queue to count.
+		loadPendingCount()
 	}
 	updateSidebarLinks()
 })

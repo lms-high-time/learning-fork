@@ -63,44 +63,49 @@
 				{{ __('Assigned') }}
 			</h2>
 			<ul class="divide-y" data-testid="allocations">
-				<li
-					v-for="item in items"
-					:key="item.id"
-					class="flex flex-wrap items-center justify-between gap-3 py-3"
-				>
-					<div class="min-w-0">
-						<div class="text-p-base text-ink-gray-9">{{ item.title }}</div>
-						<div class="text-p-sm text-ink-gray-5">
-							{{ audienceLabel(item) }}
+				<li v-for="item in items" :key="item.id" class="space-y-2 py-3">
+					<div class="flex flex-wrap items-center justify-between gap-3">
+						<div class="min-w-0">
+							<div class="text-p-base text-ink-gray-9">{{ item.title }}</div>
+							<div class="text-p-sm text-ink-gray-5">
+								{{ audienceLabel(item) }}
+							</div>
+						</div>
+						<div class="flex flex-wrap items-center gap-3">
+							<FormControl
+								type="date"
+								class="w-44"
+								:modelValue="item.deadline || ''"
+								:aria-label="
+									__('Deadline for {0}').format(item.title || item.course)
+								"
+								@update:modelValue="(value: string) => update(item.id, { deadline: value })"
+							/>
+							<label class="flex items-center gap-2 text-p-sm">
+								<input
+									type="checkbox"
+									:checked="item.mandatory"
+									@change="(e: Event) => update(item.id, { mandatory: (e.target as HTMLInputElement).checked ? '1' : '0' })"
+								/>
+								{{ __('Mandatory') }}
+							</label>
+							<Button
+								variant="ghost"
+								:aria-label="
+									__('Unassign {0}').format(item.title || item.course)
+								"
+								:data-testid="`unassign-${item.id}`"
+								@click="unassign(item)"
+							>
+								{{ __('Unassign') }}
+							</Button>
 						</div>
 					</div>
-					<div class="flex flex-wrap items-center gap-3">
-						<FormControl
-							type="date"
-							class="w-44"
-							:modelValue="item.deadline || ''"
-							:aria-label="
-								__('Deadline for {0}').format(item.title || item.course)
-							"
-							@update:modelValue="(value: string) => update(item.id, { deadline: value })"
-						/>
-						<label class="flex items-center gap-2 text-p-sm">
-							<input
-								type="checkbox"
-								:checked="item.mandatory"
-								@change="(e: Event) => update(item.id, { mandatory: (e.target as HTMLInputElement).checked ? '1' : '0' })"
-							/>
-							{{ __('Mandatory') }}
-						</label>
-						<Button
-							variant="ghost"
-							:aria-label="__('Unassign {0}').format(item.title || item.course)"
-							:data-testid="`unassign-${item.id}`"
-							@click="unassign(item)"
-						>
-							{{ __('Unassign') }}
-						</Button>
-					</div>
+					<TeamHomeworkDue
+						v-if="item.homework?.length"
+						:item="item"
+						:save="(rows: HomeworkDueRow[]) => saveHomeworkDue(item.id, rows)"
+					/>
 				</li>
 			</ul>
 		</section>
@@ -113,8 +118,14 @@
 // reminder are the server's; the page says they will come.
 import { computed, onMounted, ref } from 'vue'
 import { Button, call, createResource, FormControl, toast } from 'frappe-ui'
+import TeamHomeworkDue from '@/components/Team/TeamHomeworkDue.vue'
 import { confirmAction } from '@/utils/confirm'
-import { audienceText, type Allocation, type TeamData } from '@/utils/team'
+import {
+	audienceText,
+	type Allocation,
+	type HomeworkDueRow,
+	type TeamData,
+} from '@/utils/team'
 
 type Answer<T> = {
 	ok: boolean
@@ -204,6 +215,20 @@ async function assign() {
 async function update(id: string, change: Record<string, string>) {
 	if (await act('update_allocation', { allocation: id, ...change }))
 		await load()
+}
+
+// Homework deadlines replace the assignment's rules as a whole
+// (learning-services#452).
+async function saveHomeworkDue(id: string, rows: HomeworkDueRow[]) {
+	const done = await act('update_allocation', {
+		allocation: id,
+		homework_due: rows,
+	})
+	if (done) {
+		toast.success(__('Deadlines saved'))
+		await load()
+	}
+	return done
 }
 
 // Unassigning drops the course from the report and its reminders; the

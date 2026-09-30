@@ -89,6 +89,100 @@ export type HomeworkRow = {
 	last_comment: string | null
 }
 
+/**
+ * A name the tutor sees: the full name, or the email when there is none;
+ * `null` when the server has neither.
+ */
+export type Student = { name: string | null }
+
+/** A row of `review.queue` (learning-services#452). */
+export type QueueRow = {
+	id: string
+	status: HomeworkStatus
+	student: Student
+	course: string
+	course_title: string | null
+	lesson: string
+	lesson_title: string | null
+	title: string
+	/** `personal` — the learner's own space. */
+	organization: string
+	organization_title: string | null
+	submitted_at: string | null
+	version: number | null
+	reviewed_version: number | null
+	due_at: string | null
+	overdue: boolean
+}
+
+export type QueueData = {
+	items: QueueRow[]
+	total: number
+	courses: { id: string; title: string | null }[]
+	organizations: { id: string; title: string | null }[]
+}
+
+export type ReviewAction = 'accept' | 'send_back' | 'reopen'
+
+/** `review.submission`, and the answer of every review action. */
+export type ReviewCard = {
+	submission: Submission & { versions: HomeworkVersion[] }
+	/** `null` — the assignment is gone; the answer is still shown. */
+	homework: Homework | null
+	student: Student
+	course: string
+	course_title: string | null
+	lesson: string
+	lesson_title: string | null
+	lesson_url: string | null
+	organization: string
+	organization_title: string | null
+	/** The version of the last return, acceptance or reopening; null — never. */
+	reviewed_version: number | null
+	/** What the reader may do now; empty — the card is read-only. */
+	actions: ReviewAction[]
+}
+
+export const studentName = (student: Student | null | undefined): string =>
+	student?.name || __('Learner')
+
+/** The queue's filters; an empty one is no filter. */
+export type QueueFilters = {
+	status: HomeworkStatus
+	course: string
+	organization: string
+}
+
+export const QUEUE_STATUSES: HomeworkStatus[] = [
+	'Submitted',
+	'Returned',
+	'Accepted',
+]
+
+type Query = Record<string, unknown>
+const text = (value: unknown): string => (typeof value === 'string' ? value : '')
+
+/** The filters the address holds; the queue opens on what awaits review. */
+export const queueFilters = (query: Query): QueueFilters => {
+	const status = text(query.status) as HomeworkStatus
+	return {
+		status: QUEUE_STATUSES.includes(status) ? status : 'Submitted',
+		course: text(query.course),
+		organization: text(query.organization),
+	}
+}
+
+/**
+ * The address of the queue with these filters: a card's link and its way back
+ * keep them (learning-services#452). The defaults are left out.
+ */
+export const queueQuery = (filters: QueueFilters): Record<string, string> => ({
+	tab: 'queue',
+	...(filters.status !== 'Submitted' ? { status: filters.status } : {}),
+	...(filters.course ? { course: filters.course } : {}),
+	...(filters.organization ? { organization: filters.organization } : {}),
+})
+
 // `Issued`, not `Assigned`: the catalogue's «Назначено» is Learning's word for
 // other things; a homework is «Выдано».
 const STATUS: Record<HomeworkStatus, string> = {
@@ -156,11 +250,18 @@ export const lastEvent = (
 ): HomeworkEvent | null =>
 	[...history].reverse().find((row) => row.event === event) ?? null
 
-/** The tutor's last word: the comment of the last return. */
+/**
+ * The tutor's last word: the comment of the last return or cancelled
+ * acceptance — both send the homework back (learning-services#452), and the
+ * server's `last_comment` reads them the same way.
+ */
 export const lastComment = (
 	history: readonly HomeworkEvent[]
 ): string | null =>
-	lastEvent(history, 'returned')?.comment ?? null
+	[...history]
+		.reverse()
+		.find((row) => row.event === 'returned' || row.event === 'reopened')
+		?.comment ?? null
 
 const EVENTS: Record<HomeworkEvent['event'], string> = {
 	assigned: 'Issued',
@@ -216,3 +317,25 @@ export function lessonPath(
 		path = path.slice(prefix.length) || '/'
 	return `${path}#homework`
 }
+
+/** `get_user_info`: the flags come as 1/0. */
+export type CuratorFlags = {
+	roles?: readonly string[]
+	is_instructor?: boolean | number
+	is_moderator?: boolean | number
+	is_system_manager?: boolean | number
+}
+
+/**
+ * Who gets the «Awaiting review» tab and the count by the menu item
+ * (learning-services#452): a manager, a course creator, a moderator. The
+ * server decides which submissions each of them may review.
+ */
+export const isCurator = (user: CuratorFlags | null | undefined): boolean =>
+	Boolean(
+		user &&
+			(user.roles?.includes('Organization Manager') ||
+				user.is_instructor ||
+				user.is_moderator ||
+				user.is_system_manager)
+	)

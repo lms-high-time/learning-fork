@@ -88,6 +88,8 @@ export const buildYouRows = (options: {
 	primaryLabels: readonly string[]
 	themePreference: ThemePreference
 	unreadCount?: number
+	/** Submissions awaiting the tutor's review (learning-services#452). */
+	pendingHomework?: number
 	/**
 	 * `router.hasRoute`. Required rather than defaulted: a default of "yes,
 	 * everything is a route" is exactly the assumption that made Contact Us
@@ -101,6 +103,7 @@ export const buildYouRows = (options: {
 		primaryLabels,
 		themePreference,
 		unreadCount,
+		pendingHomework,
 		hasRoute,
 	} = options
 
@@ -113,6 +116,11 @@ export const buildYouRows = (options: {
 		.filter((link) => sectionRank(link) >= 0)
 		.sort((a, b) => sectionRank(a) - sectionRank(b))
 		.map((link) => destinationRow(link, hasRoute))
+		.map((row) =>
+			row.key === 'Homework' && pendingHomework
+				? { ...row, value: String(pendingHomework) }
+				: row
+		)
 
 	// No rows, no heading: a bar that already holds every destination should not
 	// leave an empty "Pages" behind.
