@@ -59,7 +59,9 @@
 				data-testid="homework-course"
 			>
 				<h2 class="text-lg-semibold text-ink-gray-9">{{ group.title }}</h2>
-				<ul class="divide-y divide-outline-gray-1 rounded-md border border-outline-gray-1">
+				<ul
+					class="divide-y divide-outline-gray-1 rounded-md border border-outline-gray-1"
+				>
 					<li
 						v-for="row in group.rows"
 						:key="row.id"

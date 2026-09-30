@@ -134,9 +134,9 @@
 						data-testid="homework-too-large"
 					>
 						{{
-							__('New files add up to more than {0} MB. Attach fewer at a time.').format(
-								SAVE_LIMIT_MB
-							)
+							__(
+								'New files add up to more than {0} MB. Attach fewer at a time.'
+							).format(SAVE_LIMIT_MB)
 						}}
 					</p>
 				</div>
