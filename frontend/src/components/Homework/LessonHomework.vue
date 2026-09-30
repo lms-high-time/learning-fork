@@ -151,55 +151,8 @@
 				/>
 			</form>
 
-			<details v-if="submission?.history?.length" class="text-p-sm">
-				<summary class="cursor-pointer text-ink-gray-6">
-					{{ __('History') }}
-				</summary>
-				<ul class="mt-2 space-y-2">
-					<li
-						v-for="(row, index) in submission.history"
-						:key="index"
-						class="text-ink-gray-7"
-					>
-						<span class="font-medium text-ink-gray-8">{{
-							eventLabel(row.event)
-						}}</span>
-						· {{ whoLabel(row, me) }} · {{ formatMoment(row.at) }}
-						<span v-if="row.version">
-							· {{ __('version {0}').format(row.version) }}</span
-						>
-						<p v-if="row.comment" class="mt-0.5 whitespace-pre-line">
-							{{ row.comment }}
-						</p>
-					</li>
-				</ul>
-			</details>
-
-			<details v-if="submission?.versions?.length" class="text-p-sm">
-				<summary class="cursor-pointer text-ink-gray-6">
-					{{ __('Versions') }}
-				</summary>
-				<div class="mt-2 space-y-2">
-					<details
-						v-for="version in versionsNewestFirst"
-						:key="version.version"
-					>
-						<summary class="cursor-pointer text-ink-gray-7">
-							{{ __('Version {0}').format(version.version) }} ·
-							{{ formatMoment(version.saved_at) }}
-						</summary>
-						<div class="mt-1 space-y-1 ps-4">
-							<p
-								v-if="version.answer"
-								class="whitespace-pre-line text-ink-gray-8"
-							>
-								{{ version.answer }}
-							</p>
-							<HomeworkFiles :files="version.files" />
-						</div>
-					</details>
-				</div>
-			</details>
+			<HomeworkHistory :history="submission?.history ?? []" :me="me" />
+			<HomeworkVersions :versions="submission?.versions ?? []" />
 		</div>
 	</section>
 </template>
@@ -210,12 +163,13 @@ import MarkdownIt from 'markdown-it'
 import { Button } from 'frappe-ui'
 import { sessionStore } from '@/stores/session'
 import HomeworkFiles from '@/components/Homework/HomeworkFiles.vue'
+import HomeworkHistory from '@/components/Homework/HomeworkHistory.vue'
+import HomeworkVersions from '@/components/Homework/HomeworkVersions.vue'
 import { useHomework } from '@/composables/useHomework'
 import { safeUrl } from '@/utils/safeUrl'
 import {
 	canEdit,
 	dueLabel,
-	eventLabel,
 	formatMoment,
 	formatSize,
 	isFilesAllowed,
@@ -285,10 +239,6 @@ const empty = computed(
 		!(textAllowed.value && draft.value.trim()) &&
 		!keptFiles.value.length &&
 		!added.value.length
-)
-
-const versionsNewestFirst = computed(() =>
-	[...(submission.value?.versions ?? [])].reverse()
 )
 
 // A fresh read — another lesson, or the answer just saved — resets the form.
