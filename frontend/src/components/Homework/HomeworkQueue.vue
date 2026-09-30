@@ -2,7 +2,8 @@
 	<div class="space-y-4">
 		<div class="flex flex-wrap items-end gap-3" data-testid="queue-filters">
 			<FormControl
-				v-model="filters.status"
+				:modelValue="filters.status"
+				@update:modelValue="(value: string) => setFilter('status', value)"
 				type="select"
 				class="w-full sm:w-48"
 				:options="statusOptions"
@@ -10,7 +11,8 @@
 			/>
 			<FormControl
 				v-if="courseOptions.length > 2 || filters.course"
-				v-model="filters.course"
+				:modelValue="filters.course"
+				@update:modelValue="(value: string) => setFilter('course', value)"
 				type="select"
 				class="w-full sm:w-56"
 				:options="courseOptions"
@@ -18,7 +20,8 @@
 			/>
 			<FormControl
 				v-if="organizationOptions.length > 2 || filters.organization"
-				v-model="filters.organization"
+				:modelValue="filters.organization"
+				@update:modelValue="(value: string) => setFilter('organization', value)"
 				type="select"
 				class="w-full sm:w-56"
 				:options="organizationOptions"
@@ -69,7 +72,7 @@
 					<router-link
 						:to="{
 							name: 'Homework',
-							query: { tab: 'queue', submission: row.id },
+							query: { ...queueQuery(filters), submission: row.id },
 						}"
 						class="flex flex-col gap-1 p-3 hover:bg-surface-gray-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3"
 					>
@@ -122,12 +125,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive } from 'vue'
+import { computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { FormControl, LoadingIndicator } from 'frappe-ui'
 import { useReviewQueue } from '@/composables/useHomeworkReview'
 import {
 	formatMoment,
 	QUEUE_STATUSES,
+	queueFilters,
+	queueQuery,
 	statusLabel,
 	studentName,
 	STATUS_CLASSES,
@@ -140,12 +146,17 @@ import {
 // organizations of what the tutor can see, «Personal» among them when the
 // tutor sees learners' own spaces.
 
-const filters = reactive<QueueFilters>({
-	status: 'Submitted',
-	course: '',
-	organization: '',
-})
-const { data, state, failure, load } = useReviewQueue(() => ({ ...filters }))
+// The filters live in the address: a card opened from the queue leads back
+// to the same list, and a link can be shared.
+const route = useRoute()
+const router = useRouter()
+const filters = computed(() => queueFilters(route.query))
+const setFilter = (key: keyof QueueFilters, value: string) =>
+	router.replace({
+		query: queueQuery({ ...filters.value, [key]: value } as QueueFilters),
+	})
+
+const { data, state, failure, load } = useReviewQueue(() => filters.value)
 onMounted(() => load())
 
 const rows = computed(() => data.value?.items ?? [])

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
+import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils'
 import { reactive } from 'vue'
 
 // The tutor's card of one submission (learning-services#452): the assignment,
@@ -47,6 +47,9 @@ vi.mock('@/stores/homeworkQueue', () => ({
 vi.mock('@/stores/session', () => ({
 	sessionStore: () => ({ user: 'tutor@x' }),
 }))
+
+const route = reactive({ query: {} as Record<string, string> })
+vi.mock('vue-router', () => ({ useRoute: () => route }))
 
 import { hold, server } from './helpers/fakeResource'
 import HomeworkReview from '@/components/Homework/HomeworkReview.vue'
@@ -167,8 +170,12 @@ const open = async (id = 'HS-1') => {
 const button = (wrapper: Awaited<ReturnType<typeof open>>, label: string) =>
 	wrapper.findAll('button').find((b) => b.text() === label)
 
+// The route is shared: a component left mounted would follow it.
+enableAutoUnmount(afterEach)
+
 beforeEach(() => {
 	server.clear()
+	route.query = {}
 	toast.error.mockReset()
 	toast.success.mockReset()
 	pending.load.mockReset()
@@ -478,13 +485,14 @@ describe('HomeworkReview', () => {
 		)
 	})
 
-	it('leads back to the queue', async () => {
+	it('leads back to the queue under its filters', async () => {
 		serve(card())
+		route.query = { tab: 'queue', course: 'c-1', submission: 'HS-1' }
 		const wrapper = await open()
 		const back = wrapper.find('[data-testid="review-back"]')
 		expect(JSON.parse(back.attributes('data-to')!)).toEqual({
 			name: 'Homework',
-			query: { tab: 'queue' },
+			query: { tab: 'queue', course: 'c-1' },
 		})
 	})
 })

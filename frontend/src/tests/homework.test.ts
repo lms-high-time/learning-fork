@@ -10,6 +10,8 @@ import {
 	lastEvent,
 	lessonPath,
 	newFilesTooLarge,
+	queueFilters,
+	queueQuery,
 	statusLabel,
 	whoLabel,
 	type HomeworkEvent,
@@ -172,5 +174,36 @@ describe('isCurator', () => {
 		).toBe(false)
 		expect(isCurator(null)).toBe(false)
 		expect(isCurator(undefined)).toBe(false)
+	})
+})
+
+describe('the queue in the address', () => {
+	// Filters survive a card and its way back (learning-services#452).
+	it('reads the filters, and opens on what awaits review', () => {
+		expect(queueFilters({ tab: 'queue' })).toEqual({
+			status: 'Submitted',
+			course: '',
+			organization: '',
+		})
+		expect(
+			queueFilters({ status: 'Returned', course: 'c-1', organization: 'personal' })
+		).toEqual({ status: 'Returned', course: 'c-1', organization: 'personal' })
+		expect(queueFilters({ status: 'Nonsense', course: ['x'] }).status).toBe(
+			'Submitted'
+		)
+	})
+
+	it('writes only what differs from the defaults', () => {
+		expect(
+			queueQuery({ status: 'Submitted', course: '', organization: '' })
+		).toEqual({ tab: 'queue' })
+		expect(
+			queueQuery({ status: 'Accepted', course: 'c-1', organization: 'org-1' })
+		).toEqual({
+			tab: 'queue',
+			status: 'Accepted',
+			course: 'c-1',
+			organization: 'org-1',
+		})
 	})
 })

@@ -85,11 +85,14 @@ const router = useRouter()
 const curator = computed(() => isCurator(userResource.data))
 
 type Tab = 'mine' | 'queue'
-const tab = computed<Tab>(() =>
-	curator.value && route.query.tab === 'queue' ? 'queue' : 'mine'
-)
 const submission = computed(() =>
 	typeof route.query.submission === 'string' ? route.query.submission : null
+)
+// A card is the queue's, even when a link names only the submission.
+const tab = computed<Tab>(() =>
+	curator.value && (route.query.tab === 'queue' || submission.value)
+		? 'queue'
+		: 'mine'
 )
 
 const tabs = computed(() => [

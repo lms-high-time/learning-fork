@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils'
 import { reactive } from 'vue'
 
 // «Awaiting review» (learning-services#452): the submissions a tutor may
@@ -21,6 +21,14 @@ vi.mock('frappe-ui', async () => {
 		},
 	}
 })
+
+// The filters are the address's (learning-services#452).
+const route = reactive({ query: {} as Record<string, string> })
+const router = vi.hoisted(() => ({ replace: vi.fn() }))
+vi.mock('vue-router', () => ({
+	useRoute: () => route,
+	useRouter: () => router,
+}))
 
 import { hold, server } from './helpers/fakeResource'
 import HomeworkQueue from '@/components/Homework/HomeworkQueue.vue'
@@ -85,8 +93,14 @@ const open = async () => {
 const select = (wrapper: Awaited<ReturnType<typeof open>>, label: string) =>
 	wrapper.find(`select[data-label="${label}"]`)
 
+// The route is shared: a component left mounted would follow it.
+enableAutoUnmount(afterEach)
+
 beforeEach(() => {
 	server.clear()
+	route.query = {}
+	router.replace.mockReset()
+	router.replace.mockImplementation(({ query }) => (route.query = query))
 })
 
 describe('HomeworkQueue', () => {
@@ -152,6 +166,39 @@ describe('HomeworkQueue', () => {
 			course: 'c-2',
 			organization: 'personal',
 		})
+		expect(route.query).toEqual({
+			tab: 'queue',
+			status: 'Accepted',
+			course: 'c-2',
+			organization: 'personal',
+		})
+		// A card opened now leads back to this list.
+		expect(
+			JSON.parse(
+				wrapper.find('[data-testid="queue-row"] a').attributes('data-to')!
+			)
+		).toEqual({
+			name: 'Homework',
+			query: {
+				tab: 'queue',
+				status: 'Accepted',
+				course: 'c-2',
+				organization: 'personal',
+				submission: 'HS-1',
+			},
+		})
+	})
+
+	it('opens with the filters of the address', async () => {
+		serve()
+		route.query = { tab: 'queue', status: 'Returned', course: 'c-1' }
+		const wrapper = await open()
+		expect(server.fetched).toEqual([
+			{ url: URL, params: { status: 'Returned', course: 'c-1' } },
+		])
+		expect((select(wrapper, 'Status').element as HTMLSelectElement).value).toBe(
+			'Returned'
+		)
 	})
 
 	it('says how many are shown when there are more', async () => {

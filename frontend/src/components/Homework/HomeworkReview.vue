@@ -1,7 +1,7 @@
 <template>
 	<div class="space-y-5">
 		<router-link
-			:to="{ name: 'Homework', query: { tab: 'queue' } }"
+			:to="{ name: 'Homework', query: queueQuery(queueFilters(route.query)) }"
 			class="inline-flex items-center gap-1 text-p-sm text-ink-gray-6 hover:text-ink-gray-9"
 			data-testid="review-back"
 		>
@@ -177,6 +177,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, reactive, ref, toRef, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import MarkdownIt from 'markdown-it'
 import { Button, LoadingIndicator } from 'frappe-ui'
 import { sessionStore } from '@/stores/session'
@@ -193,6 +194,8 @@ import {
 	dueLabel,
 	formatMoment,
 	lessonPath,
+	queueFilters,
+	queueQuery,
 	statusLabel,
 	studentName,
 	STATUS_CLASSES,
@@ -213,6 +216,9 @@ const {
 	acting,
 	act: send,
 } = useReviewCard(toRef(props, 'submission'))
+
+// Back to the queue under the filters it was opened from.
+const route = useRoute()
 
 const session = sessionStore()
 const me = computed(() => session.user as string | null)

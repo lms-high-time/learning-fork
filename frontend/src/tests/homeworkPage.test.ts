@@ -239,6 +239,23 @@ describe('the tutor\'s tabs', () => {
 		expect(route.query).toEqual({ tab: 'queue' })
 	})
 
+	it('opens a card from a link that names only the submission', async () => {
+		user.data = { roles: ['Organization Manager'] }
+		route.query = { submission: 'HS-4' }
+		const wrapper = await open()
+		expect(wrapper.find('[data-testid="card"]').text()).toBe('HS-4')
+		expect(
+			wrapper.findAll('[role="tab"]')[1].attributes('aria-selected')
+		).toBe('true')
+	})
+
+	it('keeps a learner on their own list with a card link', async () => {
+		route.query = { submission: 'HS-4' }
+		const wrapper = await open()
+		expect(wrapper.find('[data-testid="card"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="homework-empty"]').exists()).toBe(true)
+	})
+
 	it('opens the queue and the card from the address', async () => {
 		user.data = { roles: [], is_instructor: 1 }
 		route.query = { tab: 'queue' }
