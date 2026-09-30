@@ -13,8 +13,8 @@ export interface Category {
 /**
  * Visibility is taken from the sidebar rather than restated here: a category is
  * offered when the sidebar is offering its page to this user. That covers the
- * authoring surfaces (Quizzes and Assignments are instructor/moderator/evaluator
- * only) and Programs, which is hidden from guests and from students with no
+ * authoring surfaces (Quizzes are instructor/moderator/evaluator only) and
+ * Programs, which is hidden from guests and from students with no
  * programs, and it cannot drift from the sidebar the way a second copy of the
  * rules would. Hiding a row is a convenience either way — `get_grouped_results`
  * is what actually withholds records.

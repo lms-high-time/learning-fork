@@ -167,9 +167,8 @@ export function getEditorTools(
 		// The submission renders in an iframe (a separate app instance), so
 		// provide/inject can't reach it. Pass Student View through the tool
 		// config and on into the iframe URL.
-		// Out of the toolbox: homework replaced Learning's assignments
-		// (learning-services#439). Kept as a tool so a lesson that already holds
-		// the block still renders it rather than an «unsupported block» stub.
+		// Out of the toolbox (learning-services#439); kept as a tool so a lesson
+		// that holds the block still renders it.
 		assignment: {
 			class: Assignment,
 			config: { studentView },

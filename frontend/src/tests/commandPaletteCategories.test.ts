@@ -190,9 +190,8 @@ describe('command palette categories', () => {
 		expect(offered).toContain('Courses')
 	})
 
-	// Learning's assignments are not this platform's homework
-	// (learning-services#439): the palette no longer leads to them, even when a
-	// stale sidebar still names the route.
+	// No Assignments category (learning-services#439), even when a sidebar
+	// names the route.
 	it('offers no Assignments category, even to an admin', () => {
 		sidebarLinks.value = [
 			{ items: [...ADMIN[0].items, { to: 'Assignments' }] },

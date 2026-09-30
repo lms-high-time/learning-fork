@@ -97,8 +97,8 @@ describe('getEditorTools wiring', () => {
 		expect(tools.assignment.config.studentView).toBe(true)
 	})
 
-	// A lesson that already holds the block still renders it; a new one cannot
-	// be added — homework replaced it (learning-services#439).
+	// Out of the toolbox (learning-services#439); a lesson that holds the block
+	// still renders it.
 	it('keeps the assignment block out of the toolbox', () => {
 		const tools = getEditorTools() as Record<string, any>
 
