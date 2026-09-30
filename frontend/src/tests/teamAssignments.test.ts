@@ -256,7 +256,7 @@ describe('homework deadlines in an assignment', () => {
 		expect(
 			(select.props('options') as { label: string }[]).map((o) => o.label)
 		).toEqual([
-			'As the author: 5 days after the lesson',
+			'5 days after the lesson (as the author)',
 			'Days after the lesson',
 			'By a date',
 		])
@@ -311,6 +311,52 @@ describe('homework deadlines in an assignment', () => {
 		await button.trigger('click')
 		await flushPromises()
 		expect(calls).toEqual([])
+	})
+
+	it('names the homework in the fields of its deadline', async () => {
+		serve([homework()])
+		const wrapper = await mountTab()
+		await wrapper.find('[data-testid="due-mode-hw-1"]').setValue('relative')
+		expect(
+			wrapper.find('[data-testid="due-days-hw-1"]').attributes('aria-label')
+		).toBe('Days after the lesson for Встреча со спонсором')
+		await wrapper.find('[data-testid="due-mode-hw-1"]').setValue('absolute')
+		expect(
+			wrapper.find('[data-testid="due-date-hw-1"]').attributes('aria-label')
+		).toBe('Date for Встреча со спонсором')
+	})
+
+	it('keeps a draft when another change reads the assignments again', async () => {
+		serve([homework()])
+		const wrapper = await mountTab()
+		await wrapper.find('[data-testid="due-mode-hw-1"]').setValue('relative')
+		await wrapper.find('[data-testid="due-days-hw-1"]').setValue('9')
+
+		// «Mandatory» saves and reads the list again: same rules, new objects.
+		serve([homework()])
+		await wrapper
+			.find('[data-testid="allocations"] input[type="checkbox"]')
+			.trigger('change')
+		await flushPromises()
+		expect(calls[calls.length - 1]).toEqual({
+			method: 'lms_frappe_app.api.team.update_allocation',
+			params: { allocation: 'ca-1', mandatory: '1' },
+		})
+		expect(
+			(wrapper.find('[data-testid="due-days-hw-1"]').element as HTMLInputElement)
+				.value
+		).toBe('9')
+
+		// New rules from the server replace the draft.
+		serve([homework({ due: { mode: 'absolute', days: null, date: '2030-05-01' } })])
+		await wrapper
+			.find('[data-testid="allocations"] input[type="checkbox"]')
+			.trigger('change')
+		await flushPromises()
+		expect(
+			(wrapper.find('[data-testid="due-date-hw-1"]').element as HTMLInputElement)
+				.value
+		).toBe('2030-05-01')
 	})
 
 	it('has no block for a course without homework', async () => {

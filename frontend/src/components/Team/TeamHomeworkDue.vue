@@ -43,7 +43,9 @@
 							v-model="drafts[row.homework].days"
 							type="number"
 							class="w-24"
-							:aria-label="__('Days after the lesson')"
+							:aria-label="
+								__('Days after the lesson for {0}').format(row.title)
+							"
 							:data-testid="`due-days-${row.homework}`"
 						/>
 						<FormControl
@@ -51,7 +53,7 @@
 							v-model="drafts[row.homework].date"
 							type="date"
 							class="w-44"
-							:aria-label="__('By a date')"
+							:aria-label="__('Date for {0}').format(row.title)"
 							:data-testid="`due-date-${row.homework}`"
 						/>
 					</div>
@@ -95,12 +97,17 @@ const props = defineProps<{
 const rows = computed(() => props.item.homework ?? [])
 const drafts = reactive<Record<string, DueDraft>>({})
 
-// A fresh read — after a save, say — starts the form again from the server.
+// New rules from the server — after a save, say — start the form again. By
+// what the rules are, not by the array: the tab reads all assignments again
+// after any change, and a draft of this one must survive a change of another.
+const signature = computed(() =>
+	JSON.stringify(rows.value.map((row) => [row.homework, row.due]))
+)
 watch(
-	rows,
-	(value) => {
+	signature,
+	() => {
 		for (const key of Object.keys(drafts)) delete drafts[key]
-		for (const row of value) drafts[row.homework] = dueDraft(row)
+		for (const row of rows.value) drafts[row.homework] = dueDraft(row)
 	},
 	{ immediate: true }
 )
@@ -108,7 +115,7 @@ watch(
 const modeOptions = (row: AllocationHomework) => [
 	{
 		value: 'author',
-		label: __('As the author: {0}').format(dueLabel(row.author_due)),
+		label: __('{0} (as the author)').format(dueLabel(row.author_due)),
 	},
 	{ value: 'relative', label: __('Days after the lesson') },
 	{ value: 'absolute', label: __('By a date') },

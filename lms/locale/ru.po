@@ -11413,8 +11413,8 @@ msgid "A deadline set here applies to everyone in this assignment instead of the
 msgstr "Срок, заданный здесь, действует для всех в этом назначении вместо срока автора. Уже выставленный срок не сдвигается."
 
 #: frontend/src/components/Team/TeamHomeworkDue.vue
-msgid "As the author: {0}"
-msgstr "Как у автора: {0}"
+msgid "{0} (as the author)"
+msgstr "{0} (как у автора)"
 
 #: frontend/src/components/Team/TeamHomeworkDue.vue
 msgid "Days after the lesson"
@@ -11443,3 +11443,11 @@ msgstr "Удалено:"
 #: frontend/src/components/Homework/HomeworkDiff.vue
 msgid "Added:"
 msgstr "Добавлено:"
+
+#: frontend/src/components/Team/TeamHomeworkDue.vue
+msgid "Days after the lesson for {0}"
+msgstr "Дней после закрытия урока — {0}"
+
+#: frontend/src/components/Team/TeamHomeworkDue.vue
+msgid "Date for {0}"
+msgstr "Дата срока — {0}"
