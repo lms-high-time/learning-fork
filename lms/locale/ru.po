@@ -11267,3 +11267,7 @@ msgstr "Урок с домашним заданием выдаёт его, ко�
 #: frontend/src/pages/Homework/Homework.vue
 msgid "Homework from your lessons is gathered here."
 msgstr "Здесь собираются домашние задания ваших уроков."
+
+#: frontend/src/utils/postForm.ts
+msgid "The files are too large to send at once"
+msgstr "Файлы слишком большие, чтобы отправить их разом"
