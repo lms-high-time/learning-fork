@@ -112,6 +112,7 @@ import {
 	toggleNotifications,
 	unreadCount,
 } from '@/stores/notifications'
+import { loadPendingCount, pendingCount } from '@/stores/homeworkQueue'
 import { pickPrimaryTabs } from '@/utils/mobileNav'
 import MobilePageLayout from '@/components/Layouts/MobilePageLayout.vue'
 import BottomSheet from '@/components/BottomSheet.vue'
@@ -195,6 +196,7 @@ const groups = computed(() =>
 		primaryLabels: primaryLabels.value,
 		themePreference: themePreference.value,
 		unreadCount: unreadCount.value,
+		pendingHomework: pendingCount.value,
 		hasRoute: (name: string) => router.hasRoute(name),
 	})
 )
@@ -227,6 +229,8 @@ watch(
 // The count is stale the moment the panel is used from anywhere else, and this
 // page is where it is read; nothing else on a phone asks for it.
 onMounted(() => loadUnreadCount())
+// Likewise the submissions awaiting a tutor's review (learning-services#452).
+onMounted(() => loadPendingCount())
 
 // Personal or an organization (learning-services#347). The phone has no sidebar,
 // so the choice sits here, first, as a list with a check — the same shape as the

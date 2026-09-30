@@ -1,5 +1,6 @@
 import { computed, reactive, ref, watch, type Ref } from 'vue'
 import { createResource, toast } from 'frappe-ui'
+import { loadPendingCount } from '@/stores/homeworkQueue'
 import { postForm, type ContractAnswer } from '@/utils/postForm'
 import type {
 	HomeworkStatus,
@@ -147,6 +148,7 @@ export function useReviewCard(id: Ref<string>) {
 			if (result.ok) {
 				toast.success(__(DONE[action]))
 				await resource.reload().catch(() => {})
+				loadPendingCount()
 				return true
 			}
 			if (result.code === 'stale_version') {

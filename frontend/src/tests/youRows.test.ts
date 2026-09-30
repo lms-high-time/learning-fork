@@ -190,6 +190,27 @@ describe('notifications', () => {
 	})
 })
 
+describe('homework', () => {
+	// A tutor sees how many submissions wait, as on the desk menu
+	// (learning-services#452).
+	const withHomework = (pendingHomework?: number) =>
+		allRows(
+			build({
+				sidebarLinks: [...SIDEBAR, link('Homework', 'NotebookPen', 'Homework')],
+				pendingHomework,
+			})
+		).find((row) => row.label === 'Homework')
+
+	it('shows the count of submissions awaiting review', () => {
+		expect(withHomework(4)?.value).toBe('4')
+	})
+
+	it('shows nothing rather than a zero', () => {
+		expect(withHomework(0)?.value).toBeUndefined()
+		expect(withHomework()?.value).toBeUndefined()
+	})
+})
+
 describe('the last group', () => {
 	it('is the session, with no way into settings', () => {
 		// An LMS is not configured with a thumb: there is no phone settings

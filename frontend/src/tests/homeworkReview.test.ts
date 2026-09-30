@@ -10,6 +10,7 @@ const answers: Record<string, unknown> = {}
 const fetched: { url: string; params: unknown }[] = []
 const reloaded: string[] = []
 const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }))
+const pending = vi.hoisted(() => ({ load: vi.fn() }))
 
 vi.mock('frappe-ui', () => ({
 	createResource: (config: { url: string; makeParams?: () => unknown }) => {
@@ -49,6 +50,11 @@ vi.mock('frappe-ui', () => ({
 			>{{ a.label }}</button>
 		</div>`,
 	},
+}))
+
+// The count by the menu item follows every action (learning-services#452).
+vi.mock('@/stores/homeworkQueue', () => ({
+	loadPendingCount: pending.load,
 }))
 
 vi.mock('@/stores/session', () => ({
@@ -179,6 +185,7 @@ beforeEach(() => {
 	reloaded.length = 0
 	toast.error.mockReset()
 	toast.success.mockReset()
+	pending.load.mockReset()
 	fetchMock = vi
 		.spyOn(globalThis, 'fetch')
 		.mockResolvedValue(serverAnswers({ ok: true, data: card() }))
@@ -284,6 +291,7 @@ describe('HomeworkReview', () => {
 		expect(form.has('comment')).toBe(false)
 		expect(toast.success).toHaveBeenCalledWith('Homework accepted')
 		expect(reloaded).toContain(READ)
+		expect(pending.load).toHaveBeenCalled()
 	})
 
 	it('returns with a comment, and not without one', async () => {
