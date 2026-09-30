@@ -15,6 +15,7 @@ const replaceMock = vi.hoisted(() => vi.fn())
 const socketOnMock = vi.hoisted(() => vi.fn())
 const socketOffMock = vi.hoisted(() => vi.fn())
 const created = vi.hoisted(() => ({ list: [] as any[] }))
+const routeQuery = vi.hoisted(() => ({}) as Record<string, string>)
 const stub = vi.hoisted(() => (name: string) => ({
 	name,
 	template: `<div><slot /></div>`,
@@ -40,7 +41,7 @@ vi.mock('@/stores/space', () => ({
 vi.mock('vue-router', () => ({
 	useRoute: () => ({
 		params: { chapterNumber: '1', lessonNumber: '1' },
-		query: {},
+		query: routeQuery,
 	}),
 	useRouter: () => ({ push: pushMock, replace: replaceMock }),
 }))
@@ -627,6 +628,20 @@ describe('Lesson.vue homework block', () => {
 
 		expect(wrapper.findComponent({ name: 'LessonEntry' }).exists()).toBe(false)
 		expect(wrapper.findAllComponents({ name: 'LessonHomework' })).toHaveLength(1)
+	})
+
+	it('leaves it out of Student View without an enrolment', async () => {
+		routeQuery.studentView = '1'
+		try {
+			await openLesson({}, { data: { title: 'Lesson 1' } })
+
+			expect(wrapper.findComponent({ name: 'LessonEntry' }).exists()).toBe(true)
+			expect(wrapper.findComponent({ name: 'LessonHomework' }).exists()).toBe(
+				false
+			)
+		} finally {
+			delete routeQuery.studentView
+		}
 	})
 
 	it('leaves it out for a visitor who is not enrolled', async () => {

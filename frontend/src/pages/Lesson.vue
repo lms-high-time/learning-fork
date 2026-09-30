@@ -110,7 +110,12 @@
 						:title="lesson.data.title"
 					/>
 					<!-- The homework the session leads to (learning-services#439). -->
-					<LessonHomework :lesson="lesson.data.name" :course="courseName" />
+					<!-- Student View reaches here without an enrolment: no homework then. -->
+					<LessonHomework
+						v-if="lesson.data.membership"
+						:lesson="lesson.data.name"
+						:course="courseName"
+					/>
 				</div>
 				<!-- v-show, not v-if: EditorJS renders into #editor by id, and the
 				holder has to exist whichever way the entry resolves. -->
