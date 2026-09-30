@@ -93,7 +93,7 @@ function tidy(parts: DiffPart[]): DiffPart[] {
 		const tail = commonTail(del, add)
 		const head = commonHead(
 			del.slice(0, del.length - tail.length),
-			add.slice(0, add.length - tail.length),
+			add.slice(0, add.length - tail.length)
 		)
 		if (head) result.push({ type: 'same', text: head })
 		const taken = del.slice(head.length, del.length - tail.length)
@@ -162,7 +162,7 @@ export function diffWords(before: string, after: string): DiffPart[] {
 /** The files of two versions by id: which came, which went, which stayed. */
 export function diffFiles<T extends { id: string }>(
 	before: readonly T[],
-	after: readonly T[],
+	after: readonly T[]
 ): { added: T[]; removed: T[]; kept: T[] } {
 	const was = new Set(before.map((file) => file.id))
 	const is = new Set(after.map((file) => file.id))

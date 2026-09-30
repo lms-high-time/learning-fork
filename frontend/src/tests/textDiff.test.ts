@@ -24,7 +24,7 @@ describe('diffWords', () => {
 
 	it('marks the words taken out and the words added', () => {
 		expect(
-			diffWords('Провёл встречу вчера', 'Провёл две встречи вчера'),
+			diffWords('Провёл встречу вчера', 'Провёл две встречи вчера')
 		).toEqual([
 			{ type: 'same', text: 'Провёл ' },
 			{ type: 'del', text: 'встречу' },
@@ -101,7 +101,7 @@ describe('diffFiles', () => {
 	it('sorts the files into added, removed and kept', () => {
 		const result = diffFiles(
 			[file('F-1'), file('F-2')],
-			[file('F-2'), file('F-3')],
+			[file('F-2'), file('F-3')]
 		)
 		expect(result.added.map((f) => f.id)).toEqual(['F-3'])
 		expect(result.removed.map((f) => f.id)).toEqual(['F-1'])
