@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { diffFiles, diffWords, type DiffPart } from '@/utils/textDiff'
+import {
+	DIFF_BUDGET,
+	diffFiles,
+	diffWords,
+	type DiffPart,
+} from '@/utils/textDiff'
 
 // The tutor compares an answer with the version they last reviewed
 // (learning-services#452): words added and taken out, and files.
@@ -76,8 +81,10 @@ describe('diffWords', () => {
 	})
 
 	it('shows both texts whole when even lines are too many', () => {
-		const a = Array.from({ length: 1500 }, (_, i) => `a${i}`).join('\n')
-		const b = Array.from({ length: 1500 }, (_, i) => `b${i}`).join('\n')
+		// The table is (n + 1) × (m + 1): 2100 lines a side is past the budget.
+		expect(2101 * 2101).toBeGreaterThan(DIFF_BUDGET)
+		const a = Array.from({ length: 2100 }, (_, i) => `a${i}`).join('\n')
+		const b = Array.from({ length: 2100 }, (_, i) => `b${i}`).join('\n')
 		expect(diffWords(a, b)).toEqual([
 			{ type: 'del', text: a },
 			{ type: 'add', text: b },
@@ -91,6 +98,53 @@ describe('diffWords', () => {
 		expect(parts.filter((part) => part.type !== 'same')).toEqual([
 			{ type: 'del', text: 'старое' },
 			{ type: 'add', text: 'новое' },
+		])
+	})
+})
+
+describe('diffWords on any text', () => {
+	// A fixed generator, so a failure is the same failure on every run.
+	const generator = (seed: number) => () => {
+		seed = (seed * 1103515245 + 12345) % 2 ** 31
+		return seed / 2 ** 31
+	}
+	const VOCABULARY = ['а', 'б', 'встреча', 'план', ' ', '  ', '\n', '\t', 'x']
+	const text = (random: () => number, length: number) =>
+		Array.from(
+			{ length },
+			() => VOCABULARY[Math.floor(random() * VOCABULARY.length)]
+		).join('')
+
+	it('keeps its promises on a thousand pairs', () => {
+		const random = generator(452)
+		for (let round = 0; round < 1000; round++) {
+			const a = text(random, Math.floor(random() * 30))
+			const b = text(random, Math.floor(random() * 30))
+			const parts = diffWords(a, b)
+			const where = JSON.stringify({ a, b, parts })
+			// The parts join back into both texts.
+			expect(before(parts), where).toBe(a)
+			expect(after(parts), where).toBe(b)
+			parts.forEach((part, index) => {
+				// No empty part, no two of a kind side by side.
+				expect(part.text, where).not.toBe('')
+				if (index) expect(part.type, where).not.toBe(parts[index - 1].type)
+				// What was taken out comes before what was put in.
+				if (part.type === 'del' && index)
+					expect(parts[index - 1].type, where).not.toBe('add')
+			})
+		}
+	})
+
+	it('reads Windows line breaks as line breaks', () => {
+		expect(diffWords('Цели:\r\nодна', 'Цели:\nодна')).toEqual([
+			{ type: 'same', text: 'Цели:\nодна' },
+		])
+		expect(
+			diffWords('раз\r\nдва', 'раз\r\nтри').filter((p) => p.type !== 'same')
+		).toEqual([
+			{ type: 'del', text: 'два' },
+			{ type: 'add', text: 'три' },
 		])
 	})
 })

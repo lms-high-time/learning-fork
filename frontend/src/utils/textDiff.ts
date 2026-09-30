@@ -5,10 +5,12 @@
 export type DiffPart = { type: 'same' | 'add' | 'del'; text: string }
 
 /**
- * The most cells the comparison table may hold. Words first; past it, lines;
- * past it again, the two texts whole — a pasted book must not hang the tab.
+ * The most cells the comparison table, (n + 1) × (m + 1), may hold: 8 MB of
+ * 16-bit cells. Words first; past it, lines; past it again, the two texts
+ * whole — a pasted book must not hang the tab. Within it the shorter side is
+ * under 2000 tokens, so a cell never outgrows 16 bits.
  */
-export const DIFF_BUDGET = 2_000_000
+export const DIFF_BUDGET = 4_000_000
 
 const words = (text: string): string[] =>
 	text.split(/(\s+)/).filter((token) => token !== '')
@@ -32,14 +34,14 @@ function compare(a: string[], b: string[]): DiffPart[] | null {
 	}
 	const n = endA - start
 	const m = endB - start
-	if (n * m > DIFF_BUDGET) return null
+	if ((n + 1) * (m + 1) > DIFF_BUDGET) return null
 
 	const parts: DiffPart[] = a
 		.slice(0, start)
 		.map((text) => ({ type: 'same' as const, text }))
 	// lcs[i][j]: the common length of a[i..] and b[j..], flattened.
 	const width = m + 1
-	const lcs = new Uint32Array((n + 1) * width)
+	const lcs = new Uint16Array((n + 1) * width)
 	for (let i = n - 1; i >= 0; i--)
 		for (let j = m - 1; j >= 0; j--)
 			lcs[i * width + j] =
@@ -149,8 +151,9 @@ function commonHead(a: string, b: string): string {
 
 /** What changed from `before` to `after`, word by word. */
 export function diffWords(before: string, after: string): DiffPart[] {
-	const a = before ?? ''
-	const b = after ?? ''
+	// A line break is a line break, whichever system typed it.
+	const a = (before ?? '').replace(/\r\n?/g, '\n')
+	const b = (after ?? '').replace(/\r\n?/g, '\n')
 	const parts = compare(words(a), words(b)) ?? compare(lines(a), lines(b))
 	if (parts) return tidy(merge(parts))
 	return merge([
