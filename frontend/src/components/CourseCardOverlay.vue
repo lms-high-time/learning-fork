@@ -201,7 +201,7 @@
 			<ul
 				v-if="programs.length"
 				data-testid="course-programs"
-				class="mt-4 space-y-1 border-t pt-3"
+				class="mt-4 space-y-3 border-t pt-3"
 			>
 				<li v-for="program in programs" :key="program.program">
 					<router-link
