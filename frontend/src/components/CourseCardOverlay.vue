@@ -216,6 +216,18 @@
 							)
 						}}
 					</router-link>
+					<!-- What the chain leads to after this course (learning-services#443). -->
+					<router-link
+						v-if="program.next"
+						:to="{
+							name: 'CourseDetail',
+							params: { courseName: program.next.id },
+						}"
+						data-testid="course-program-next"
+						class="block text-p-sm text-ink-gray-7 underline-offset-2 hover:underline"
+					>
+						{{ __('Next course: «{0}»').format(program.next.title) }}
+					</router-link>
 				</li>
 			</ul>
 		</div>
@@ -335,6 +347,8 @@ interface CourseProgram {
 	number: number
 	total: number
 	member: boolean
+	// Absent from a server older than learning-app#136.
+	next?: { id: string; title: string } | null
 	locked_by: { id: string; title: string } | null
 }
 
