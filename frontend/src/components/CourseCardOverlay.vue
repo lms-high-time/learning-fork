@@ -224,7 +224,7 @@
 							params: { courseName: program.next.id },
 						}"
 						data-testid="course-program-next"
-						class="block text-p-sm text-ink-gray-7 underline-offset-2 hover:underline"
+						class="mt-1.5 block text-p-sm text-ink-gray-7 underline-offset-2 hover:underline"
 					>
 						{{ __('Next course: «{0}»').format(program.next.title) }}
 					</router-link>
