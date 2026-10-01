@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { reactive } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
@@ -49,6 +49,8 @@ const __ = (message: string) => {
 }
 const open = () => mount(Agent, { global: { mocks: { __ } } })
 
+afterEach(() => vi.unstubAllGlobals())
+
 beforeEach(() => {
 	vi.stubGlobal('__', __)
 	session.isLoggedIn = true
@@ -94,7 +96,7 @@ describe('one-click installs', () => {
 		expect(commandName('MCP-LMS')).toBe('mcp-lms')
 		expect(commandName('Школа Ромашка')).toBe('learning')
 		expect(claudeCodeCommand('MCP-LMS', url)).toBe(
-			'claude mcp add --transport http mcp-lms https://lms.example/mcp'
+			'claude mcp add --scope user --transport http mcp-lms https://lms.example/mcp'
 		)
 	})
 })
@@ -157,7 +159,7 @@ describe('the agent page', () => {
 		)
 		await wrapper.get('[data-testid="agent-tab-claude-code"]').trigger('click')
 		expect(wrapper.get('[data-testid="agent-claude-code"]').text()).toBe(
-			`claude mcp add --transport http mcp-lms ${window.location.origin}/mcp`
+			`claude mcp add --scope user --transport http mcp-lms ${window.location.origin}/mcp`
 		)
 	})
 
@@ -170,7 +172,6 @@ describe('the agent page', () => {
 		expect(assign).toHaveBeenCalledWith(
 			cursorInstallLink('MCP-LMS', `${window.location.origin}/mcp`)
 		)
-		vi.unstubAllGlobals()
 	})
 
 	it('offers ready phrases to start with', () => {

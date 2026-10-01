@@ -53,5 +53,7 @@ export const commandName = (name: string): string =>
 		.replace(/[^a-z0-9]+/g, '-')
 		.replace(/^-+|-+$/g, '') || 'learning'
 
+// User scope: the default (`local`) would tie the server to the folder the
+// command ran in, and Claude Code started elsewhere would not see it.
 export const claudeCodeCommand = (name: string, url: string): string =>
-	`claude mcp add --transport http ${commandName(name)} ${url}`
+	`claude mcp add --scope user --transport http ${commandName(name)} ${url}`

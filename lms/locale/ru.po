@@ -11532,8 +11532,8 @@ msgid "source code"
 msgstr "исходный код"
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "Ask the agent to call authoring_guide first: it is the build order and the platform rules."
-msgstr "Первым вызовом попросите агента вызвать authoring_guide: это порядок сборки и правила платформы."
+msgid "Ask the assistant to call authoring_guide first: it is the build order and the platform rules."
+msgstr "Попросите ассистента начать с authoring_guide: там порядок сборки и правила платформы."
 
 #: frontend/src/pages/Agent/Agent.vue
 msgid "Connect an agent"
@@ -11545,7 +11545,7 @@ msgstr "Заниматься в браузере"
 
 #: frontend/src/pages/Agent/Agent.vue
 msgid "Study with your own AI assistant: it runs the lesson, explains and asks questions, while the platform keeps your progress, grades and documents. The assistant connects to the site over MCP and signs in with your account."
-msgstr "Учитесь с вашим AI-ассистентом: он ведёт урок, объясняет и задаёт вопросы, а платформа хранит прогресс, зачёты и документы. Ассистент подключается к сайту по протоколу MCP и входит вашей учётной записью."
+msgstr "Учитесь со своим ИИ-ассистентом: он ведёт урок, объясняет и задаёт вопросы, а платформа хранит прогресс, зачёты и документы. Ассистент подключается к сайту по протоколу MCP и входит вашей учётной записью."
 
 #: frontend/src/pages/Agent/Agent.vue
 msgid "Connection address"
@@ -11592,32 +11592,32 @@ msgid "In a chat, click «+» → Connectors and check that «{0}» is on."
 msgstr "В чате нажмите «+» → Connectors и проверьте, что «{0}» включён."
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "A connector added once works on the site, in the desktop app and in the Claude mobile app. On the free plan Claude allows one custom connector."
-msgstr "Добавленный один раз коннектор работает и на сайте, и в программе на компьютере, и в мобильном приложении Claude. На бесплатном плане Claude разрешает один свой коннектор."
+msgid "A connector added once works on the site, in the desktop app and in the Claude mobile app. On the free plan Claude allows one custom connector. On a Team or Enterprise plan the connector is added by an administrator — send them the address."
+msgstr "Добавленный один раз коннектор работает и на сайте, и в программе на компьютере, и в мобильном приложении Claude. На бесплатном плане Claude разрешает один свой коннектор. На командных планах Team и Enterprise коннектор добавляет администратор — передайте ему адрес."
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "ChatGPT connects your own connectors only on paid plans and in developer mode; full access to the tools is on Business, Enterprise and Edu. On other plans choose another assistant or study in the browser."
-msgstr "ChatGPT подключает свои коннекторы только на платных планах и в режиме разработчика; полный доступ к инструментам — на Business, Enterprise и Edu. На других планах выберите другого ассистента или занимайтесь в браузере."
+msgid "ChatGPT needs a paid plan (Plus, Pro, Business, Enterprise or Education) and developer mode, in the web version. On the free plan choose another assistant or study in the browser."
+msgstr "ChatGPT нужен платный план (Plus, Pro, Business, Enterprise или Education) и режим разработчика, в веб-версии. На бесплатном плане выберите другого ассистента или занимайтесь в браузере."
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "Settings → Apps & Connectors → Advanced settings: turn on Developer mode."
-msgstr "Settings → Apps & Connectors → Advanced settings: включите Developer mode."
+msgid "Open chatgpt.com, go to Settings → Security and login and turn on Developer mode."
+msgstr "Откройте chatgpt.com, перейдите в настройки, раздел «Безопасность и вход» (Security and login), и включите режим разработчика (Developer mode)."
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "Back in Apps & Connectors, click Create."
-msgstr "Вернитесь в Apps & Connectors и нажмите Create."
+msgid "Open Plugins, click «+» and create an app for the platform."
+msgstr "Откройте раздел Plugins, нажмите «+» и создайте приложение для платформы."
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "Name — «{0}», URL — the address above, authentication — OAuth. Click Create."
-msgstr "Name — «{0}», URL — адрес выше, авторизация — OAuth. Нажмите Create."
+msgid "Name — «{0}», URL — the address above, authentication — OAuth."
+msgstr "Название — «{0}», URL — адрес выше, авторизация — OAuth."
 
 #: frontend/src/pages/Agent/Agent.vue
 msgid "Sign in to this site with your account and allow access."
 msgstr "Войдите на этот сайт своей учётной записью и разрешите доступ."
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "In a chat, click «+» → More and choose «{0}»."
-msgstr "В чате нажмите «+» → More и выберите «{0}»."
+msgid "In a chat, open the «+» menu, choose Developer mode and turn on «{0}»."
+msgstr "В чате откройте меню «+», выберите режим разработчика (Developer mode) и включите «{0}»."
 
 #: frontend/src/pages/Agent/Agent.vue
 msgid "One click: Cursor opens and offers to install the connector. Then sign in to this site when Cursor asks."
@@ -11641,7 +11641,7 @@ msgstr "Добавить в VS Code"
 
 #: frontend/src/pages/Agent/Agent.vue
 msgid "VS Code did not open? Command Palette → MCP: Add Server → HTTP, and paste the address above."
-msgstr "VS Code не открылся? Command Palette → MCP: Add Server → HTTP, и вставьте адрес выше."
+msgstr "VS Code не открылся? Command Palette → MCP: Add Server → HTTP — и вставьте адрес выше."
 
 #: frontend/src/pages/Agent/Agent.vue
 msgid "Run in the terminal:"
@@ -11696,8 +11696,8 @@ msgid "Copy the authoring address"
 msgstr "Скопировать адрес для авторов"
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "Add the address to your AI assistant"
-msgstr "Добавьте адрес в своего AI-ассистента"
+msgid "Add the address to your assistant's settings"
+msgstr "Добавьте адрес в настройки ассистента"
 
 #: frontend/src/pages/Agent/Agent.vue
 msgid "Sign in with your account on this site"
@@ -11712,8 +11712,8 @@ msgid "Show my courses"
 msgstr "Покажи мои курсы"
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "Let's continue with the next lesson"
-msgstr "Продолжим следующий урок"
+msgid "Let's move on to the next lesson"
+msgstr "Перейдём к следующему уроку"
 
 #: frontend/src/pages/Agent/Agent.vue
 msgid "What about my homework?"
@@ -11728,16 +11728,16 @@ msgid "The assistant does not see the platform"
 msgstr "Ассистент не видит платформу"
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "Check that the connector is on in this chat (in Claude: «+» → Connectors). If it is on, disconnect it in the assistant settings and connect again."
-msgstr "Проверьте, что коннектор включён в этом чате (в Claude: «+» → Connectors). Если включён — отключите его в настройках ассистента и подключите заново."
+msgid "Check that the connector is on in this chat (in Claude: «+» → Connectors; in ChatGPT: «+» → Developer mode). If it is on, disconnect it in the assistant settings and connect again."
+msgstr "Проверьте, что коннектор включён в этом чате (в Claude: «+» → Connectors; в ChatGPT: «+» → Developer mode). Если включён — отключите его в настройках ассистента и подключите заново."
 
 #: frontend/src/pages/Agent/Agent.vue
 msgid "The assistant asks permission at every step"
 msgstr "Ассистент спрашивает разрешение на каждый шаг"
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "That is how assistants protect you. For this connector you can choose «Allow always»: it only works with your studies on this site."
-msgstr "Так ассистенты вас защищают. Для этого коннектора можно выбрать «Allow always»: он работает только с вашей учёбой на этом сайте."
+msgid "That is how assistants protect you before the platform records your answers. In Claude you can choose «Allow always» for this connector: it works only with your studies on this site."
+msgstr "Так ассистенты вас защищают: платформа записывает ваши ответы и прогресс. В Claude для этого коннектора можно выбрать «Allow always» — он работает только с вашей учёбой на этом сайте."
 
 #: frontend/src/pages/Agent/Agent.vue
 msgid "Sign-in fails or says there are too many connections"

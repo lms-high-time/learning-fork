@@ -141,7 +141,7 @@
 						<p class="text-p-sm text-ink-gray-6">
 							{{
 								__(
-									'A connector added once works on the site, in the desktop app and in the Claude mobile app. On the free plan Claude allows one custom connector.'
+									'A connector added once works on the site, in the desktop app and in the Claude mobile app. On the free plan Claude allows one custom connector. On a Team or Enterprise plan the connector is added by an administrator — send them the address.'
 								)
 							}}
 						</p>
@@ -154,7 +154,7 @@
 						>
 							{{
 								__(
-									'ChatGPT connects your own connectors only on paid plans and in developer mode; full access to the tools is on Business, Enterprise and Edu. On other plans choose another assistant or study in the browser.'
+									'ChatGPT needs a paid plan (Plus, Pro, Business, Enterprise or Education) and developer mode, in the web version. On the free plan choose another assistant or study in the browser.'
 								)
 							}}
 						</p>
@@ -162,15 +162,21 @@
 							<li>
 								{{
 									__(
-										'Settings → Apps & Connectors → Advanced settings: turn on Developer mode.'
+										'Open chatgpt.com, go to Settings → Security and login and turn on Developer mode.'
 									)
 								}}
 							</li>
-							<li>{{ __('Back in Apps & Connectors, click Create.') }}</li>
 							<li>
 								{{
 									__(
-										'Name — «{0}», URL — the address above, authentication — OAuth. Click Create.'
+										'Open Plugins, click «+» and create an app for the platform.'
+									)
+								}}
+							</li>
+							<li>
+								{{
+									__(
+										'Name — «{0}», URL — the address above, authentication — OAuth.'
 									).format(name)
 								}}
 							</li>
@@ -181,9 +187,9 @@
 							</li>
 							<li>
 								{{
-									__('In a chat, click «+» → More and choose «{0}».').format(
-										name
-									)
+									__(
+										'In a chat, open the «+» menu, choose Developer mode and turn on «{0}».'
+									).format(name)
 								}}
 							</li>
 						</ol>
@@ -367,7 +373,7 @@
 				<p class="text-p-sm text-ink-gray-6">
 					{{
 						__(
-							'Ask the agent to call authoring_guide first: it is the build order and the platform rules.'
+							'Ask the assistant to call authoring_guide first: it is the build order and the platform rules.'
 						)
 					}}
 				</p>
@@ -418,7 +424,7 @@ const curatorUrl = computed(
 const name = computed(() => session.branding?.data?.app_name || 'Learning')
 
 const steps = [
-	__('Add the address to your AI assistant'),
+	__("Add the address to your assistant's settings"),
 	__('Sign in with your account on this site'),
 	__('Write: «Show my courses»'),
 ]
@@ -460,7 +466,7 @@ const moveTab = async (event: KeyboardEvent) => {
 
 const prompts = [
 	__('Show my courses'),
-	__("Let's continue with the next lesson"),
+	__("Let's move on to the next lesson"),
 	__('What about my homework?'),
 	__('How is my progress in the course?'),
 ]
@@ -469,13 +475,13 @@ const faq = [
 	{
 		question: __('The assistant does not see the platform'),
 		answer: __(
-			'Check that the connector is on in this chat (in Claude: «+» → Connectors). If it is on, disconnect it in the assistant settings and connect again.'
+			'Check that the connector is on in this chat (in Claude: «+» → Connectors; in ChatGPT: «+» → Developer mode). If it is on, disconnect it in the assistant settings and connect again.'
 		),
 	},
 	{
 		question: __('The assistant asks permission at every step'),
 		answer: __(
-			'That is how assistants protect you. For this connector you can choose «Allow always»: it only works with your studies on this site.'
+			'That is how assistants protect you before the platform records your answers. In Claude you can choose «Allow always» for this connector: it works only with your studies on this site.'
 		),
 	},
 	{
