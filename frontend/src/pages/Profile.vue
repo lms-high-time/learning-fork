@@ -12,37 +12,9 @@
 				/>
 			</template>
 		</PageHeader>
-		<div class="group relative h-[130px] w-full">
-			<img
-				v-if="profile.data.cover_image"
-				:src="safeUrl(profile.data.cover_image)"
-				alt=""
-				class="h-[130px] w-full object-cover object-center"
-			/>
-			<div
-				v-else
-				:class="{ 'bg-surface-gray-2': !profile.data.cover_image }"
-				class="h-[130px] w-full"
-			></div>
-			<div
-				class="absolute bottom-[30%] md:bottom-0 start-[50%] mb-4 flex -translate-x-1/2 gap-x-2 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100"
-				v-if="isSessionUser()"
-			>
-				<EditCoverImage
-					@select="(imageUrl) => coverImage.submit({ url: imageUrl })"
-				>
-					<template #default>
-						<Button v-if="!readOnlyMode" variant="outline">
-							<template #prefix>
-								<span class="lucide-edit size-4 text-ink-gray-7" />
-							</template>
-							{{ __('Edit') }}
-						</Button>
-					</template>
-				</EditCoverImage>
-			</div>
-		</div>
-		<div class="mx-auto -mt-10 md:-mt-4 max-w-4xl translate-x-0 px-5">
+		<!-- No cover, socials, «Open to» or headline: the profile is what the
+		mentor knows, shown below (learning-services#463). -->
+		<div class="mx-auto mt-8 max-w-4xl translate-x-0 px-5">
 			<div class="flex flex-col md:flex-row items-center">
 				<div>
 					<div class="relative">
@@ -58,65 +30,12 @@
 						>
 							{{ profile.data.full_name.charAt(0).toUpperCase() }}
 						</div>
-						<Tooltip
-							v-if="profile.data.open_to"
-							:text="
-								profile.data.open_to === 'Work'
-									? __('Open to Work')
-									: __('Hiring')
-							"
-							placement="right"
-						>
-							<div
-								class="absolute bottom-3 end-1 p-0.5 bg-surface-base rounded-full"
-							>
-								<div
-									class="rounded-full w-fit"
-									:class="
-										profile.data.open_to === 'Work'
-											? 'bg-surface-green-7 text-ink-green-1'
-											: 'bg-surface-violet-7 text-ink-violet-1'
-									"
-								>
-									<span class="lucide-badge-check size-5" />
-								</div>
-							</div>
-						</Tooltip>
 					</div>
 				</div>
 				<div class="ms-6 mt-5">
 					<h1 class="text-4xl-semibold text-ink-gray-9">
 						{{ profile.data.full_name }}
 					</h1>
-					<div class="text-base text-ink-gray-7 mt-1">
-						{{ profile.data.headline }}
-					</div>
-					<div class="flex items-center gap-x-4 mt-2">
-						<a
-							v-if="profile.data.twitter"
-							:href="safeUrl(profile.data.twitter)"
-							v-external
-							:aria-label="__('Twitter')"
-						>
-							<Twitter class="size-4 text-ink-gray-5 cursor-pointer" />
-						</a>
-						<a
-							v-if="profile.data.linkedin"
-							:href="safeUrl(profile.data.linkedin)"
-							v-external
-							:aria-label="__('LinkedIn')"
-						>
-							<Linkedin class="size-4 text-ink-gray-5 cursor-pointer" />
-						</a>
-						<a
-							v-if="profile.data.github"
-							:href="safeUrl(profile.data.github)"
-							v-external
-							:aria-label="__('GitHub')"
-						>
-							<Github class="size-4 text-ink-gray-5 cursor-pointer" />
-						</a>
-					</div>
 				</div>
 				<Button
 					v-if="isSessionUser() && !readOnlyMode"
@@ -152,7 +71,6 @@ import {
 	call,
 	createResource,
 	TabButtons,
-	Tooltip,
 	toast,
 	usePageMeta,
 } from 'frappe-ui'
@@ -160,14 +78,12 @@ import { computed, inject, watch, ref, onMounted, watchEffect } from 'vue'
 import PageHeader from '@/components/Layouts/PageHeader.vue'
 import HeaderButton from '@/components/HeaderButton.vue'
 import { sessionStore } from '@/stores/session'
-import { Github, Linkedin, Twitter } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
 import { convertToTitleCase } from '@/utils'
 import { useScreenSize } from '@/utils/composables'
 import UserAvatar from '@/components/UserAvatar.vue'
 import NoPermission from '@/components/NoPermission.vue'
 import NotFound from '@/pages/NotFound.vue'
-import EditCoverImage from '@/components/Modals/EditCoverImage.vue'
 import { openFormRoute } from '@/composables/useFormRoute'
 import { safeUrl } from '@/utils/safeUrl'
 
@@ -197,21 +113,6 @@ const profile = createResource({
 		return {
 			username: props.username,
 		}
-	},
-})
-
-const coverImage = createResource({
-	url: 'frappe.client.set_value',
-	makeParams(values) {
-		return {
-			doctype: 'User',
-			name: profile.data?.name,
-			fieldname: 'cover_image',
-			value: values.url,
-		}
-	},
-	onSuccess() {
-		profile.reload()
 	},
 })
 
@@ -272,7 +173,7 @@ const isEvaluatorOrModerator = () => {
 
 const getTabButtons = () => {
 	let buttons = [
-		{ label: __('About'), value: 'About' },
+		{ label: __('About me'), value: 'About' },
 		{ label: __('Certificates'), value: 'Certificates' },
 	]
 	if ($user.data?.is_moderator) {

@@ -43,9 +43,8 @@
 				<div class="mt-5 max-w-full truncate text-2xl-semibold text-ink-gray-9">
 					{{ user.full_name }}
 				</div>
-				<p v-if="userHeadline" class="max-w-sm text-p-base text-ink-gray-6">
-					{{ userHeadline }}
-				</p>
+				<!-- No headline under the name: it left the profile and its form
+				(learning-services#463), so one set before would be stuck here. -->
 				<router-link
 					v-if="user.username"
 					:to="{ name: 'Profile', params: { username: user.username } }"
@@ -54,6 +53,18 @@
 					{{ viewProfileLabel }}
 				</router-link>
 			</div>
+
+			<!-- The sidebar's suggested action; a phone has no sidebar
+			(learning-services#463). -->
+			<SuggestedAction
+				v-if="isStudent && profileSummary && !profileSummary.complete"
+				class="mt-4"
+				:title="__('Tell your mentor about yourself')"
+				:text="__('Lessons will use examples from your work. About 5 minutes.')"
+				:actionLabel="__('Start')"
+				scenario="profile"
+				:url="profileSummary.interview_url"
+			/>
 
 			<!-- A wrapper, not an attribute on the list: it renders a fragment. -->
 			<div data-testid="you-spaces">
@@ -118,6 +129,8 @@ import MobilePageLayout from '@/components/Layouts/MobilePageLayout.vue'
 import BottomSheet from '@/components/BottomSheet.vue'
 import SettingsRowList from '@/components/Settings/Mobile/SettingsRowList.vue'
 import { buildYouRows } from '@/components/Settings/youRows'
+import SuggestedAction from '@/components/SuggestedAction.vue'
+import { useProfileSummary } from '@/composables/useProfileSummary'
 import { useSpace, PERSONAL, type Space } from '@/stores/space'
 import { spaceLabel } from '@/utils/space'
 import {
@@ -142,6 +155,9 @@ const isSignedIn = computed(
 const user = computed<SettingsUser | undefined>(
 	() => (userResource.data as SettingsUser | null) ?? undefined
 )
+
+const isStudent = computed(() => Boolean(userResource.data?.is_student))
+const { summary: profileSummary } = useProfileSummary(() => isStudent.value)
 
 // Gated on the src having LOADED, not on it existing: a `user_image` pointing
 // at a deleted or unreadable file still renders an <img>, and `alt=""` tells
@@ -176,10 +192,6 @@ const userInitials = computed(() =>
 		.join('')
 		.toUpperCase()
 )
-
-// `headline`, not `bio`: LMS has both, and `bio` is long-form prose that would
-// truncate into nonsense.
-const userHeadline = computed(() => user.value?.headline?.trim())
 
 // Asked of the same function MobileLayout asks, rather than restating which
 // labels are on the bar: a destination that is a tab must not also be a row.

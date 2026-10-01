@@ -11420,6 +11420,77 @@ msgstr "Дней после закрытия урока — {0}"
 msgid "Date for {0}"
 msgstr "Дата срока — {0}"
 
+#: frontend/src/components/Sidebar/AppSidebar.vue
+#: frontend/src/pages/MobileYou.vue
+msgid "Tell your mentor about yourself"
+msgstr "Расскажите наставнику о себе"
+
+#: frontend/src/components/Sidebar/AppSidebar.vue
+#: frontend/src/pages/MobileYou.vue
+msgid "Lessons will use examples from your work. About 5 minutes."
+msgstr "Уроки будут на примерах из вашей работы. Около 5 минут."
+
+#: frontend/src/components/AssistantPanel/AssistantPanel.vue
+msgid "Chat with your mentor"
+msgstr "Чат с наставником"
+
+#: frontend/src/pages/Profile.vue
+#: frontend/src/pages/ProfileAbout.vue
+msgid "About me"
+msgstr "Обо мне"
+
+#: frontend/src/pages/ProfileAbout.vue
+msgid "Your mentor also knows"
+msgstr "Наставник также знает"
+
+#: frontend/src/pages/ProfileAbout.vue
+msgid "Fill in with your mentor"
+msgstr "Заполнить с наставником"
+
+#: frontend/src/pages/ProfileAbout.vue
+msgid "Could not load the profile"
+msgstr "Не удалось загрузить профиль"
+
+#: frontend/src/pages/ProfileAbout.vue
+msgid "Delete this fact?"
+msgstr "Удалить этот факт?"
+
+#: frontend/src/pages/ProfileAbout.vue
+msgid "Your mentor will forget it."
+msgstr "Наставник это забудет."
+
+#: frontend/src/pages/ProfileAbout.vue
+msgid "Could not delete"
+msgstr "Не удалось удалить"
+
+#: frontend/src/components/Profile/ProfileFact.vue
+msgid "Fix"
+msgstr "Исправить"
+
+#: frontend/src/components/Profile/ProfileFact.vue
+msgid "Updated {0}"
+msgstr "Обновлено {0}"
+
+#: frontend/src/components/AssistantPanel/AssistantPanel.vue
+msgid "Your mentor"
+msgstr "Ваш наставник"
+
+#: frontend/src/components/Profile/ProfileFact.vue
+msgid "Fix: {0}"
+msgstr "Исправить: {0}"
+
+#: frontend/src/components/Profile/ProfileFact.vue
+msgid "Fill in: {0}"
+msgstr "Заполнить: {0}"
+
+#: frontend/src/components/Profile/ProfileFact.vue
+msgid "Delete: {0}"
+msgstr "Удалить: {0}"
+
+#: frontend/src/components/Profile/ProfileFact.vue
+msgid "What your mentor knows"
+msgstr "Что знает наставник"
+
 #: frontend/src/pages/Documents/Documents.vue
 msgid "Course documents are built as you study. Log in to see yours."
 msgstr "Документы курса собираются по ходу обучения. Войдите, чтобы увидеть свои."

@@ -1,17 +1,78 @@
 <template>
-	<div class="mt-7 mb-10">
-		<h2 class="mb-3 text-lg-semibold text-ink-gray-9">
-			{{ __('About') }}
-		</h2>
-		<div
-			v-if="profile.data.bio"
-			v-safe-html:bio="decodeEntities(profile.data.bio)"
-			class="ProseMirror prose prose-table:table-fixed prose-td:p-2 prose-th:p-2 prose-td:border prose-th:border prose-td:border-outline-gray-2 prose-th:border-outline-gray-2 prose-td:relative prose-th:relative prose-th:bg-surface-gray-2 prose-sm max-w-none !whitespace-normal"
-		></div>
-		<div v-else class="text-ink-gray-7 text-sm italic">
-			{{ __('No introduction') }}
+	<!-- What the mentor knows in place of the bio (learning-services#463). The
+	server answers only the owner and the platform's roles: anyone else gets a
+	refusal, and the page shows nothing for it. -->
+	<div
+		v-if="facts"
+		ref="factsRoot"
+		class="mt-7 mb-10 space-y-4"
+		data-testid="profile-facts"
+	>
+		<div class="flex flex-wrap items-center justify-between gap-2">
+			<h2 class="text-lg-semibold text-ink-gray-9">
+				{{ __('About me') }}
+			</h2>
+			<Button
+				v-if="canEdit && facts.interview_url"
+				data-testid="profile-interview"
+				@click="panel.open('profile', facts.interview_url)"
+			>
+				<template #prefix>
+					<span class="lucide-message-circle size-4 text-ink-gray-7" />
+				</template>
+				{{ __('Fill in with your mentor') }}
+			</Button>
 		</div>
+		<div class="grid gap-4 md:grid-cols-2">
+			<section
+				v-for="block in facts.blocks"
+				:key="block.id"
+				class="rounded-md border border-outline-gray-1 px-4 pt-3"
+				data-testid="profile-block"
+			>
+				<h3 class="text-base font-semibold text-ink-gray-9">
+					{{ block.title }}
+				</h3>
+				<ul class="divide-y divide-outline-gray-1">
+					<ProfileFact
+						v-for="fact in block.facts"
+						:key="fact.key"
+						:data-fact-key="fact.key"
+						:fact="fact"
+						:editable="canEdit"
+						:save="(text) => saveFact(fact.key, text)"
+						:remove="() => forgetFact(fact.key)"
+					/>
+				</ul>
+			</section>
+		</div>
+		<section v-if="facts.other_facts?.length" data-testid="profile-other-facts">
+			<h3 class="text-base font-semibold text-ink-gray-9">
+				{{ __('Your mentor also knows') }}
+			</h3>
+			<ul class="divide-y divide-outline-gray-1">
+				<ProfileFact
+					v-for="fact in facts.other_facts"
+					:key="fact.key"
+					:data-fact-key="fact.key"
+					:fact="fact"
+					:editable="canEdit"
+					:save="(text) => saveFact(fact.key, text)"
+					:remove="() => forgetFact(fact.key)"
+				/>
+			</ul>
+		</section>
 	</div>
+	<div v-else-if="isOwn && state === 'loading'" class="mt-7 flex py-6">
+		<LoadingIndicator class="size-5 text-ink-gray-5" />
+	</div>
+	<p
+		v-else-if="showFailure"
+		class="mt-7 text-p-base text-ink-gray-6"
+		role="alert"
+	>
+		{{ failure }}
+	</p>
 	<div class="mt-7 mb-10" v-if="badges.data?.length">
 		<h2 class="mb-3 text-lg-semibold text-ink-gray-9">
 			{{ __('Achievements') }}
@@ -102,14 +163,24 @@
 	</div>
 </template>
 <script setup>
-import { inject } from 'vue'
-import { createResource, HoverCard, Button } from 'frappe-ui'
+import { computed, inject, ref, watch } from 'vue'
+import {
+	call,
+	createResource,
+	HoverCard,
+	Button,
+	LoadingIndicator,
+	toast,
+} from 'frappe-ui'
 import { LinkedinIcon, Twitter } from 'lucide-vue-next'
 import { sessionStore } from '@/stores/session'
-import { decodeEntities } from '@/utils'
 import { getLmsRoute } from '@/utils/basePath'
 import { safeUrl } from '@/utils/safeUrl'
 import { openExternal } from '@/utils/openExternal'
+import { confirmAction } from '@/utils/confirm'
+import { useContractResource } from '@/composables/useContractResource'
+import { useAssistantPanel } from '@/stores/assistantPanel'
+import ProfileFact from '@/components/Profile/ProfileFact.vue'
 
 const dayjs = inject('$dayjs')
 const user = inject('$user')
@@ -121,6 +192,136 @@ const props = defineProps({
 		required: true,
 	},
 })
+
+const panel = useAssistantPanel()
+const isOwn = computed(() => user.data?.name === props.profile.data.name)
+// Someone else's profile, shown to the platform's roles, is read-only; so is
+// every profile while the site is being updated — the interview included, as
+// the chat's saves would fail too.
+const canEdit = computed(() => isOwn.value && !window.read_only_mode)
+
+const { data, answer, state, failure, load } = useContractResource({
+	url: 'lms_frappe_app.api.student.my_profile',
+	makeParams: () => ({ user: props.profile.data.name }),
+	fallback: () => __('Could not load the profile'),
+})
+load()
+
+// The last profile read, kept through a re-read that failed: the learner
+// keeps what they were looking at and is told the refresh did not come.
+const lastRead = ref(null)
+watch(
+	data,
+	(value) => {
+		if (value) lastRead.value = value
+	},
+	{ immediate: true }
+)
+const facts = computed(() => data.value ?? lastRead.value)
+
+// A refusal of someone else's profile shows nothing: that is the server saying
+// the blocks are not this viewer's to see. Anything else that went wrong is
+// said, whoever is looking.
+const refusal = computed(() =>
+	answer.value && !answer.value.ok ? answer.value.error?.code : null
+)
+const showFailure = computed(
+	() =>
+		state.value === 'error' &&
+		(isOwn.value || refusal.value !== 'not_your_profile')
+)
+
+const reread = async () => {
+	await load({ quiet: true })
+	if (showFailure.value) toast.error(failure.value)
+}
+
+// A fact was saved — by the chat or here: this page reads the profile again,
+// and so does the card offering the interview, which counts what is filled.
+// The facts saved are always the viewer's own, so someone else's profile on
+// screen has nothing new to show and is not asked again.
+// `sync`, so the read has started when `notifyRefresh()` returns and a save
+// here can wait for it: one read per change, the page's own included.
+let reading = Promise.resolve()
+watch(
+	() => panel.refreshTick,
+	() => {
+		if (!isOwn.value) return
+		reading = reread()
+	},
+	{ flush: 'sync' }
+)
+const refreshed = () => {
+	panel.notifyRefresh()
+	return reading
+}
+
+// A fact the learner words themselves is the same fact the agent writes.
+const saveFact = async (key, text) => {
+	if (
+		await write(
+			'lms_frappe_app.api.student.remember',
+			{ kind: 'fact', key, text },
+			__('Could not save')
+		)
+	) {
+		await refreshed()
+		return true
+	}
+	return false
+}
+
+const forgetFact = (key) =>
+	confirmAction({
+		title: __('Delete this fact?'),
+		message: __('Your mentor will forget it.'),
+		label: __('Delete'),
+		async onConfirm() {
+			if (
+				await write(
+					'lms_frappe_app.api.student.forget',
+					{ key },
+					__('Could not delete')
+				)
+			) {
+				await refreshed()
+				focusFillIn(key)
+			}
+		},
+	})
+
+// After a delete, focus goes to the row's «Fill in» — the Delete button left
+// with the text. The confirmation, as it leaves, hands focus back to what
+// opened it (that same Delete button, so nowhere): the move waits until the
+// dialog is gone, or it would be pulled back into it or dropped after.
+const factsRoot = ref(null)
+const focusFillIn = (key) => {
+	let frames = 60
+	const step = () => {
+		if (document.querySelector('[role="dialog"][data-state]') && frames-- > 0)
+			return requestAnimationFrame(step)
+		setTimeout(() => {
+			const row = Array.from(
+				factsRoot.value?.querySelectorAll('[data-fact-key]') ?? []
+			).find((element) => element.dataset.factKey === key)
+			row?.querySelector('[data-testid="profile-fact-edit"]')?.focus()
+		})
+	}
+	step()
+}
+
+// A refusal says why; a failure without words gets ours.
+const write = async (method, params, fallback) => {
+	let answer = null
+	try {
+		answer = await call(method, params)
+	} catch {
+		// Said below, in our words.
+	}
+	if (answer?.ok) return true
+	toast.error(answer?.error?.message || fallback)
+	return false
+}
 
 const badges = createResource({
 	url: 'lms.lms.api.get_badges',

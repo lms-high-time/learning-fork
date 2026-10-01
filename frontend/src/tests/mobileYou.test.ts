@@ -100,7 +100,24 @@ vi.mock('@/stores/space', () => ({
 	PERSONAL: 'personal',
 }))
 
+// The offer to tell the mentor about yourself (learning-services#463): its
+// read and its card have their own tests; here only whether the page shows it.
+vi.mock('@/composables/useProfileSummary', async () => {
+	const { ref } = await import('vue')
+	const summary = ref<Record<string, unknown> | null>(null)
+	return { useProfileSummary: () => ({ summary }), summary }
+})
+vi.mock('@/components/SuggestedAction.vue', () => ({
+	default: {
+		props: ['url', 'scenario'],
+		template:
+			'<div data-testid="suggested-action">{{ scenario }} {{ url }}</div>',
+	},
+}))
+
 import MobileYou from '@/pages/MobileYou.vue'
+// @ts-expect-error -- exported by the mock above only
+import { summary as profileSummary } from '@/composables/useProfileSummary'
 
 const Blank = defineComponent({ render: () => h('div') })
 
@@ -163,6 +180,7 @@ beforeEach(() => {
 		user_image: '/files/raiza.png',
 		is_moderator: true,
 	}
+	profileSummary.value = null
 })
 
 describe('a cold deep link to /you', () => {
@@ -181,6 +199,17 @@ describe('a cold deep link to /you', () => {
 
 		expect(picture.attributes('src')).toBe('/files/raiza.png')
 		expect(picture.attributes('alt')).toBe('')
+	})
+
+	// The headline left the profile and its form (learning-services#463): one
+	// set before could no longer be changed, so it is not shown either.
+	it('shows no headline under the name', async () => {
+		userResource.data = {
+			full_name: 'Raiza Safeel',
+			headline: 'Open to work',
+		}
+		const { wrapper } = await openYou()
+		expect(wrapper.text()).not.toContain('Open to work')
 	})
 
 	it('offers no back control, because it is a root tab', async () => {
@@ -227,6 +256,36 @@ describe('what the page shows', () => {
 		const { wrapper } = await openYou()
 		expect(rowLabelled(wrapper, 'Settings')).toBeUndefined()
 		expect(rowLabelled(wrapper, 'Colour mode')).toBeDefined()
+	})
+})
+
+describe('the offer to tell the mentor about yourself', () => {
+	const INTERVIEW = '/chat?mode=profile'
+
+	it('is made to a student whose profile is not complete', async () => {
+		userResource.data = { full_name: 'Raiza Safeel', is_student: true }
+		profileSummary.value = { complete: false, interview_url: INTERVIEW }
+		const { wrapper } = await openYou()
+		expect(wrapper.get('[data-testid="suggested-action"]').text()).toBe(
+			`profile ${INTERVIEW}`
+		)
+	})
+
+	it('is not made once the profile is complete', async () => {
+		userResource.data = { full_name: 'Raiza Safeel', is_student: true }
+		profileSummary.value = { complete: true, interview_url: INTERVIEW }
+		const { wrapper } = await openYou()
+		expect(wrapper.find('[data-testid="suggested-action"]').exists()).toBe(
+			false
+		)
+	})
+
+	it('is not made to staff', async () => {
+		profileSummary.value = { complete: false, interview_url: INTERVIEW }
+		const { wrapper } = await openYou()
+		expect(wrapper.find('[data-testid="suggested-action"]').exists()).toBe(
+			false
+		)
 	})
 })
 
