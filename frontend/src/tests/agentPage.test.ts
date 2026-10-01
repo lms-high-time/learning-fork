@@ -25,7 +25,15 @@ vi.mock('@/stores/user', () => ({
 import Agent from '@/pages/Agent/Agent.vue'
 import { agentConnections } from '@/utils/agentConnection'
 
-const __ = (text: string) => text
+const __ = (message: string) => {
+	if (!/{\d+}/.test(message)) return message
+	return {
+		format: (...args: unknown[]) =>
+			message.replace(/{(\d+)}/g, (m, n) =>
+				args[Number(n)] === undefined ? m : String(args[Number(n)])
+			),
+	}
+}
 const open = () => mount(Agent, { global: { mocks: { __ } } })
 
 beforeEach(() => {
@@ -67,6 +75,12 @@ describe('the agent page', () => {
 		expect(
 			wrapper.find('[data-testid="agent-connection-curator"]').text()
 		).toContain(`${window.location.origin}/authoring`)
+		// Two «Copy» buttons, told apart for a screen reader.
+		expect(
+			wrapper
+				.find('[data-testid="agent-connection-curator"] button')
+				.attributes('aria-label')
+		).toBe('Copy the address: Build courses')
 	})
 
 	it('asks a guest to log in instead of listing addresses', () => {

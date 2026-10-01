@@ -2,13 +2,13 @@
 	<div>
 		<PageHeader
 			:breadcrumbs="[
-				{ label: __('Connect your agent'), route: { name: 'Agent' } },
+				{ label: __('Connect an agent'), route: { name: 'Agent' } },
 			]"
 		/>
 
 		<div class="mx-auto max-w-3xl space-y-6 p-4 sm:p-5">
 			<h1 class="text-xl-semibold text-ink-gray-9">
-				{{ __('Connect your agent') }}
+				{{ __('Connect an agent') }}
 			</h1>
 			<p class="text-p-base text-ink-gray-7">
 				{{
@@ -18,15 +18,14 @@
 				}}
 			</p>
 			<p class="text-p-base text-ink-gray-7" data-testid="agent-web-chat">
-				{{ __('No agent of your own yet? Try the trial lessons') }}
-				<a href="/chat" class="text-ink-gray-9 underline">{{
-					__('in the browser')
-				}}</a>
 				{{
 					__(
-						'— with the platform agent, along the same route and with the same grading. Later you continue with your own agent, and the progress is kept.'
+						'No agent of your own yet? While you have trial lessons left, you can take them with the platform agent, along the same route and with the same grading. Later you continue with your own agent, and the progress is kept.'
 					)
 				}}
+				<a href="/chat" class="text-ink-gray-9 underline">{{
+					__('Study in the browser')
+				}}</a>
 			</p>
 
 			<p
@@ -34,11 +33,10 @@
 				class="text-p-base text-ink-gray-7"
 				data-testid="agent-login"
 			>
-				{{ __('To see the connection addresses,') }}
+				{{ __('The connection addresses are shown after you log in.') }}
 				<a href="/login?redirect-to=/lms/agent" class="underline">{{
-					__('log in')
-				}}</a
-				>.
+					__('Log in')
+				}}</a>
 			</p>
 
 			<template v-else>
@@ -63,6 +61,9 @@
 							<Button
 								variant="subtle"
 								:label="__('Copy')"
+								:aria-label="
+									__('Copy the address: {0}').format(titles[connection.role])
+								"
 								@click="copy(connection.url)"
 							/>
 						</div>
@@ -165,5 +166,5 @@ const copy = async (url: string) => {
 	}
 }
 
-usePageMeta(() => ({ title: __('Connect your agent') }))
+usePageMeta(() => ({ title: __('Connect an agent') }))
 </script>

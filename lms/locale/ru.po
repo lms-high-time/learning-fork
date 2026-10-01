@@ -11456,25 +11456,10 @@ msgstr "Документ собран"
 msgid "Lessons and course building on this platform go through your AI agent: it connects to the site over MCP and signs in with the same account as you."
 msgstr "Занятия и сборка курсов на этой платформе идут через вашего AI-агента: он подключается к сайту по протоколу MCP и входит той же учётной записью, что и вы."
 
-#: frontend/src/pages/Agent/Agent.vue
-msgid "No agent of your own yet? Try the trial lessons"
-msgstr "Своего агента пока нет? Пробные уроки можно пройти"
 
-#: frontend/src/pages/Agent/Agent.vue
-msgid "in the browser"
-msgstr "в браузере"
 
-#: frontend/src/pages/Agent/Agent.vue
-msgid "— with the platform agent, along the same route and with the same grading. Later you continue with your own agent, and the progress is kept."
-msgstr "— с агентом платформы, по тому же маршруту и с тем же зачётом. Дальше занятия продолжаются через вашего агента, прогресс сохраняется."
 
-#: frontend/src/pages/Agent/Agent.vue
-msgid "To see the connection addresses,"
-msgstr "Чтобы увидеть адреса подключения,"
 
-#: frontend/src/pages/Agent/Agent.vue
-msgid "log in"
-msgstr "войдите"
 
 #: frontend/src/pages/Agent/Agent.vue
 msgid "Where to connect"
@@ -11531,3 +11516,23 @@ msgstr "Попросите агента показать ваши курсы и 
 #: frontend/src/pages/Agent/Agent.vue
 msgid "Ask the agent to call authoring_guide first: it is the build order and the platform rules."
 msgstr "Первым вызовом попросите агента вызвать authoring_guide: это порядок сборки и правила платформы."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Connect an agent"
+msgstr "Подключить агента"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "No agent of your own yet? While you have trial lessons left, you can take them with the platform agent, along the same route and with the same grading. Later you continue with your own agent, and the progress is kept."
+msgstr "Своего агента пока нет? Пока остались пробные уроки, их можно пройти с агентом платформы — по тому же маршруту и с тем же зачётом. Дальше занятия продолжаются через вашего агента, прогресс сохраняется."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Study in the browser"
+msgstr "Заниматься в браузере"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "The connection addresses are shown after you log in."
+msgstr "Адреса подключения видны после входа."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Copy the address: {0}"
+msgstr "Скопировать адрес: {0}"
