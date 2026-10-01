@@ -15,16 +15,17 @@ class TestCountryByIp(UnitTestCase):
 	таймаута. IP — персональные данные, а зависший сервис вешал страницу с ценой.
 	"""
 
-	def test_страна_по_ip_не_запрашивается(self):
-		with patch("lms.lms.utils.requests.get") as запрос:
+	def test_country_is_not_requested_by_ip(self):
+		with patch("lms.lms.utils.requests.get") as request_get:
 			self.assertIsNone(get_country_code())
-		запрос.assert_not_called()
+		request_get.assert_not_called()
 
-	def test_цена_без_страны_в_профиле_не_ходит_в_сеть(self):
+	def test_price_without_profile_country_skips_network(self):
+		previous_user = frappe.session.user
 		frappe.set_user("Guest")
 		try:
-			with patch("lms.lms.utils.requests.get") as запрос:
+			with patch("lms.lms.utils.requests.get") as request_get:
 				self.assertEqual(check_multicurrency(100, "RUB"), (100, "RUB"))
-			запрос.assert_not_called()
+			request_get.assert_not_called()
 		finally:
-			frappe.set_user("Administrator")
+			frappe.set_user(previous_user)
