@@ -97,6 +97,7 @@ const texts = (wrapper: Awaited<ReturnType<typeof open>>, id: string) =>
 enableAutoUnmount(afterEach)
 
 beforeEach(() => {
+	delete (window as any).read_only_mode
 	setActivePinia(createPinia())
 	server.clear()
 	viewer.data = { name: 'me@x' }
@@ -167,6 +168,14 @@ describe('About me', () => {
 		expect(panel.url).toBe(INTERVIEW)
 	})
 
+	it('offers neither the interview nor edits while the site is read-only', async () => {
+		;(window as any).read_only_mode = true
+		server.answers[URL] = { ok: true, data: profileOf() }
+		const wrapper = await open()
+		expect(texts(wrapper, 'profile-block')).toHaveLength(1)
+		expect(wrapper.findAll('button')).toHaveLength(0)
+	})
+
 	it('offers no interview without the chat', async () => {
 		server.answers[URL] = {
 			ok: true,
@@ -198,7 +207,9 @@ describe('About me', () => {
 			key: 'industry',
 			text: 'Строительство',
 		})
+		// One read again, and the card offering the interview hears of it too.
 		expect(server.fetched).toHaveLength(2)
+		expect(useAssistantPanel().refreshTick).toBe(1)
 		expect(wrapper.find('textarea').exists()).toBe(false)
 	})
 
@@ -231,7 +242,9 @@ describe('About me', () => {
 		expect(call).toHaveBeenCalledWith('lms_frappe_app.api.student.forget', {
 			key: 'role',
 		})
+		// One read again, and the card offering the interview hears of it too.
 		expect(server.fetched).toHaveLength(2)
+		expect(useAssistantPanel().refreshTick).toBe(1)
 	})
 
 	it('reads the profile again when the chat saved a fact', async () => {

@@ -8,7 +8,7 @@
 				{{ __('About me') }}
 			</h2>
 			<Button
-				v-if="isOwn && facts.interview_url"
+				v-if="canEdit && facts.interview_url"
 				data-testid="profile-interview"
 				@click="panel.open('profile', facts.interview_url)"
 			>
@@ -189,7 +189,8 @@ const props = defineProps({
 const panel = useAssistantPanel()
 const isOwn = computed(() => user.data?.name === props.profile.data.name)
 // Someone else's profile, shown to the platform's roles, is read-only; so is
-// every profile while the site is being updated.
+// every profile while the site is being updated — the interview included, as
+// the chat's saves would fail too.
 const canEdit = computed(() => isOwn.value && !window.read_only_mode)
 
 const {
@@ -204,11 +205,22 @@ const {
 })
 load()
 
-// The chat saved a fact while the profile is on screen: its block fills in.
+// A fact was saved — by the chat or here: this page reads the profile again,
+// and so does the card offering the interview, which counts what is filled.
+// `sync`, so the read has started when `notifyRefresh()` returns and a save
+// here can wait for it: one read per change, the page's own included.
+let reading = Promise.resolve()
 watch(
 	() => panel.refreshTick,
-	() => load({ quiet: true })
+	() => {
+		reading = load({ quiet: true })
+	},
+	{ flush: 'sync' }
 )
+const refreshed = () => {
+	panel.notifyRefresh()
+	return reading
+}
 
 // A fact the learner words themselves is the same fact the agent writes.
 const saveFact = async (key, text) => {
@@ -219,7 +231,7 @@ const saveFact = async (key, text) => {
 			__('Could not save')
 		)
 	) {
-		await load({ quiet: true })
+		await refreshed()
 		return true
 	}
 	return false
@@ -238,7 +250,7 @@ const forgetFact = (key) =>
 					__('Could not delete')
 				)
 			)
-				await load({ quiet: true })
+				await refreshed()
 		},
 	})
 

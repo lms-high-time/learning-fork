@@ -201,6 +201,17 @@ describe('a cold deep link to /you', () => {
 		expect(picture.attributes('alt')).toBe('')
 	})
 
+	// The headline left the profile and its form (learning-services#463): one
+	// set before could no longer be changed, so it is not shown either.
+	it('shows no headline under the name', async () => {
+		userResource.data = {
+			full_name: 'Raiza Safeel',
+			headline: 'Open to work',
+		}
+		const { wrapper } = await openYou()
+		expect(wrapper.text()).not.toContain('Open to work')
+	})
+
 	it('offers no back control, because it is a root tab', async () => {
 		const { wrapper } = await openYou()
 		expect(wrapper.find('[data-testid="mobile-page-back"]').exists()).toBe(

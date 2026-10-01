@@ -43,9 +43,8 @@
 				<div class="mt-5 max-w-full truncate text-2xl-semibold text-ink-gray-9">
 					{{ user.full_name }}
 				</div>
-				<p v-if="userHeadline" class="max-w-sm text-p-base text-ink-gray-6">
-					{{ userHeadline }}
-				</p>
+				<!-- No headline under the name: it left the profile and its form
+				(learning-services#463), so one set before would be stuck here. -->
 				<router-link
 					v-if="user.username"
 					:to="{ name: 'Profile', params: { username: user.username } }"
@@ -193,10 +192,6 @@ const userInitials = computed(() =>
 		.join('')
 		.toUpperCase()
 )
-
-// `headline`, not `bio`: LMS has both, and `bio` is long-form prose that would
-// truncate into nonsense.
-const userHeadline = computed(() => user.value?.headline?.trim())
 
 // Asked of the same function MobileLayout asks, rather than restating which
 // labels are on the bar: a destination that is a tab must not also be a row.
