@@ -99,7 +99,9 @@
 							"The course is behind you, and the company's document is not complete yet. Fill it in here, or ask your agent: “let's fill in the document for the company”."
 						)
 					}}
-					<a href="/agent" class="underline">{{ __('Connect your agent') }}</a>
+					<router-link :to="{ name: 'Agent' }" class="underline">{{
+						__('Connect your agent')
+					}}</router-link>
 				</p>
 				<DocumentRow
 					v-for="doc in course.documents"

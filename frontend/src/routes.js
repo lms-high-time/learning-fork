@@ -158,6 +158,15 @@ export const routes = [
 		component: () => import('@/pages/Documents/Documents.vue'),
 		meta: { sidebarLink: 'artifacts-sidebar' },
 	},
+	// «Подключить агента» (learning-services#470): MCP addresses and how to
+	// connect, in the app's own layout. The Frappe page `/agent` stays for the
+	// links from outside the app.
+	{
+		path: '/agent',
+		name: 'Agent',
+		component: () => import('@/pages/Agent/Agent.vue'),
+		meta: { sidebarLink: 'agent-sidebar' },
+	},
 	// «Команда» (learning-services#358): the organization's members and the
 	// documents they build in its space, side by side.
 	// Starting one's own organization (learning-services#366). Before `/team`
@@ -188,6 +197,11 @@ export const routes = [
 		path: '/artifacts-sidebar',
 		name: 'artifacts-sidebar',
 		redirect: { name: 'Documents' },
+	},
+	{
+		path: '/agent-sidebar',
+		name: 'agent-sidebar',
+		redirect: { name: 'Agent' },
 	},
 	{
 		// `view` — a lesson's document by its key, or `table`, `report`, `canvas`,
