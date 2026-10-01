@@ -1,17 +1,71 @@
 <template>
-	<div class="mt-7 mb-10">
-		<h2 class="mb-3 text-lg-semibold text-ink-gray-9">
-			{{ __('About') }}
-		</h2>
-		<div
-			v-if="profile.data.bio"
-			v-safe-html:bio="decodeEntities(profile.data.bio)"
-			class="ProseMirror prose prose-table:table-fixed prose-td:p-2 prose-th:p-2 prose-td:border prose-th:border prose-td:border-outline-gray-2 prose-th:border-outline-gray-2 prose-td:relative prose-th:relative prose-th:bg-surface-gray-2 prose-sm max-w-none !whitespace-normal"
-		></div>
-		<div v-else class="text-ink-gray-7 text-sm italic">
-			{{ __('No introduction') }}
+	<!-- What the mentor knows in place of the bio (learning-services#463). The
+	server answers only the owner and the platform's roles: anyone else gets a
+	refusal, and the page shows nothing for it. -->
+	<div v-if="facts" class="mt-7 mb-10 space-y-4" data-testid="profile-facts">
+		<div class="flex flex-wrap items-center justify-between gap-2">
+			<h2 class="text-lg-semibold text-ink-gray-9">
+				{{ __('About me') }}
+			</h2>
+			<Button
+				v-if="isOwn && facts.interview_url"
+				data-testid="profile-interview"
+				@click="panel.open('profile', facts.interview_url)"
+			>
+				<template #prefix>
+					<span class="lucide-message-circle size-4 text-ink-gray-7" />
+				</template>
+				{{ __('Fill in with your mentor') }}
+			</Button>
 		</div>
+		<div class="grid gap-4 md:grid-cols-2">
+			<section
+				v-for="block in facts.blocks"
+				:key="block.id"
+				class="rounded-md border border-outline-gray-1 px-4 pt-3"
+				data-testid="profile-block"
+			>
+				<h3 class="text-base font-semibold text-ink-gray-9">
+					{{ block.title }}
+				</h3>
+				<ul class="divide-y divide-outline-gray-1">
+					<ProfileFact
+						v-for="fact in block.facts"
+						:key="fact.key"
+						:fact="fact"
+						:editable="canEdit"
+						:save="(text) => saveFact(fact.key, text)"
+						:remove="() => forgetFact(fact.key)"
+					/>
+				</ul>
+			</section>
+		</div>
+		<section v-if="facts.other_facts?.length" data-testid="profile-other-facts">
+			<h3 class="text-base font-semibold text-ink-gray-9">
+				{{ __('The agent also knows') }}
+			</h3>
+			<ul class="divide-y divide-outline-gray-1">
+				<ProfileFact
+					v-for="fact in facts.other_facts"
+					:key="fact.key"
+					:fact="fact"
+					:editable="canEdit"
+					:save="(text) => saveFact(fact.key, text)"
+					:remove="() => forgetFact(fact.key)"
+				/>
+			</ul>
+		</section>
 	</div>
+	<div v-else-if="isOwn && state === 'loading'" class="mt-7 flex py-6">
+		<LoadingIndicator class="size-5 text-ink-gray-5" />
+	</div>
+	<p
+		v-else-if="isOwn && state === 'error'"
+		class="mt-7 text-p-base text-ink-gray-6"
+		role="alert"
+	>
+		{{ failure }}
+	</p>
 	<div class="mt-7 mb-10" v-if="badges.data?.length">
 		<h2 class="mb-3 text-lg-semibold text-ink-gray-9">
 			{{ __('Achievements') }}
@@ -102,14 +156,24 @@
 	</div>
 </template>
 <script setup>
-import { inject } from 'vue'
-import { createResource, HoverCard, Button } from 'frappe-ui'
+import { computed, inject, watch } from 'vue'
+import {
+	call,
+	createResource,
+	HoverCard,
+	Button,
+	LoadingIndicator,
+	toast,
+} from 'frappe-ui'
 import { LinkedinIcon, Twitter } from 'lucide-vue-next'
 import { sessionStore } from '@/stores/session'
-import { decodeEntities } from '@/utils'
 import { getLmsRoute } from '@/utils/basePath'
 import { safeUrl } from '@/utils/safeUrl'
 import { openExternal } from '@/utils/openExternal'
+import { confirmAction } from '@/utils/confirm'
+import { useContractResource } from '@/composables/useContractResource'
+import { useAssistantPanel } from '@/stores/assistantPanel'
+import ProfileFact from '@/components/Profile/ProfileFact.vue'
 
 const dayjs = inject('$dayjs')
 const user = inject('$user')
@@ -121,6 +185,75 @@ const props = defineProps({
 		required: true,
 	},
 })
+
+const panel = useAssistantPanel()
+const isOwn = computed(() => user.data?.name === props.profile.data.name)
+// Someone else's profile, shown to the platform's roles, is read-only; so is
+// every profile while the site is being updated.
+const canEdit = computed(() => isOwn.value && !window.read_only_mode)
+
+const {
+	data: facts,
+	state,
+	failure,
+	load,
+} = useContractResource({
+	url: 'lms_frappe_app.api.student.my_profile',
+	makeParams: () => ({ user: props.profile.data.name }),
+	fallback: () => __('Could not load the profile'),
+})
+load()
+
+// The chat saved a fact while the profile is on screen: its block fills in.
+watch(
+	() => panel.refreshTick,
+	() => load({ quiet: true })
+)
+
+// A fact the learner words themselves is the same fact the agent writes.
+const saveFact = async (key, text) => {
+	if (
+		await write(
+			'lms_frappe_app.api.student.remember',
+			{ kind: 'fact', key, text },
+			__('Could not save')
+		)
+	) {
+		await load({ quiet: true })
+		return true
+	}
+	return false
+}
+
+const forgetFact = (key) =>
+	confirmAction({
+		title: __('Delete this fact?'),
+		message: __('The agent will forget it.'),
+		label: __('Delete'),
+		async onConfirm() {
+			if (
+				await write(
+					'lms_frappe_app.api.student.forget',
+					{ key },
+					__('Could not delete')
+				)
+			)
+				await load({ quiet: true })
+		},
+	})
+
+// A refusal says why; a failure without words gets ours.
+const write = async (method, params, fallback) => {
+	let answer = null
+	try {
+		answer = await call(method, params)
+	} catch {
+		// Said below, in our words.
+	}
+	if (answer?.ok) return true
+	toast.error(answer?.error?.message || fallback)
+	return false
+}
 
 const badges = createResource({
 	url: 'lms.lms.api.get_badges',

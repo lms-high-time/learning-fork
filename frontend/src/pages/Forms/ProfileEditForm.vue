@@ -29,35 +29,13 @@
 						:required="true"
 					/>
 					<FormControl v-model="profile.last_name" :label="__('Last Name')" />
-					<FormControl v-model="profile.headline" :label="__('Headline')" />
-					<FormControl v-model="profile.linkedin" :label="__('LinkedIn ID')" />
-					<FormControl v-model="profile.github" :label="__('GitHub ID')" />
-					<FormControl v-model="profile.twitter" :label="__('Twitter ID')" />
 				</div>
 				<div class="space-y-4">
-					<FormControl
-						v-model="profile.open_to"
-						type="select"
-						:options="[{ label: '', value: '' }, 'Work', 'Hiring']"
-						:label="__('Open to')"
-						:placeholder="__('Looking for new work or hiring talent?')"
-					/>
 					<Link
 						:label="__('Language')"
 						v-model="profile.language"
 						doctype="Language"
 					/>
-					<div>
-						<div class="mb-1.5 text-p-sm-medium text-ink-gray-7">
-							{{ __('Bio') }}
-						</div>
-						<RichTextEditor
-							:fixedMenu="true"
-							@change="(val) => (profile.bio = val)"
-							:content="profile.bio"
-							editorClass="prose-sm py-2 px-2 min-h-[280px] border-outline-gray-2 hover:border-outline-gray-3 rounded-b-md bg-surface-gray-3"
-						/>
-					</div>
 				</div>
 			</div>
 		</template>
@@ -78,12 +56,10 @@
 import { Badge, createResource, FormControl, toast } from 'frappe-ui'
 import { computed, inject, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { sanitizeOnWrite } from '@/utils/sanitizeOnWrite'
 import FormShell from '@/components/FormShell.vue'
 import HeaderButton from '@/components/HeaderButton.vue'
 import Link from '@/components/Controls/Link.vue'
 import Uploader from '@/components/Controls/Uploader.vue'
-import RichTextEditor from '@/components/RichTextEditor.vue'
 import { useFormRoute } from '@/composables/useFormRoute'
 import { submitResource } from '@/utils/resource'
 
@@ -127,17 +103,14 @@ const refusal = computed(() => {
 
 const profileData = computed(() => props.profile?.data ?? null)
 
+// Headline, socials, «Open to» and bio left the form: the profile is what the
+// mentor knows, edited on the profile page (learning-services#463). The fields
+// stay on User; this form just no longer writes them.
 const profile = reactive({
 	first_name: '',
 	last_name: '',
-	headline: '',
 	language: '',
-	bio: '',
 	image: '',
-	open_to: '',
-	linkedin: '',
-	github: '',
-	twitter: '',
 })
 
 // Every key above is a User fieldname except `image`, which edits `user_image`.
@@ -182,7 +155,6 @@ const saveProfile = () => {
 	// which onSuccess reloads out from under it.
 	const languageChanged = hasLanguageChanged.value
 
-	profile.bio = sanitizeOnWrite(profile.bio)
 	submitResource(
 		updateProfile,
 		{},

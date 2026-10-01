@@ -220,7 +220,6 @@ const MANIFEST: Record<string, Privacy[]> = {
 	'pages/Forms/NewCourseForm.vue': ['undeclared'],
 	'pages/JobApplications.vue': ['undeclared'],
 	'pages/Forms/JobForm.vue': ['undeclared'],
-	'pages/Forms/ProfileEditForm.vue': ['undeclared'],
 	'pages/Forms/ProgrammingExerciseForm.vue': ['undeclared'],
 }
 
