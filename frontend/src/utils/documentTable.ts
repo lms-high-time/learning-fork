@@ -478,7 +478,7 @@ export function defaultView(
 	doc: DocumentData,
 	groups: OutlineGroup[],
 	currentLesson: string | null | undefined,
-	lessons: { id: string }[] = []
+	lessons: { id: string }[]
 ): string {
 	const ahead = lessonAhead(lessons, currentLesson, (l) =>
 		groups.some((g) => g.lesson?.id === l.id)

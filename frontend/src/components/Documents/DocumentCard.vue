@@ -50,7 +50,7 @@
 				<template v-else-if="finished">{{
 					__('The course is behind you')
 				}}</template>
-				<template v-else-if="mapData?.next_lesson">{{
+				<template v-else-if="behind">{{
 					__('Its lessons are behind you')
 				}}</template>
 			</p>
@@ -117,23 +117,32 @@ const mapData = computed(
 			} | null
 		)?.data
 )
+const lessons = computed(
+	() => mapData.value?.chapters?.flatMap((c) => c.lessons) ?? []
+)
+const builds = (l: Lesson) =>
+	(l.blocks ?? []).some((b) => b.artifact === props.doc.artifact)
 // The lesson this document grows on next — the course's next lesson may build
 // nothing of it (learning-services#462). The document opens on the same lesson.
 const lesson = computed(() =>
-	lessonAhead(
-		mapData.value?.chapters?.flatMap((c) => c.lessons) ?? [],
-		mapData.value?.next_lesson,
-		(l) => (l.blocks ?? []).some((b) => b.artifact === props.doc.artifact)
-	)
+	lessonAhead(lessons.value, mapData.value?.next_lesson, builds)
 )
 // A student's map without a next lesson: every lesson is closed.
 const finished = computed(
 	() => Boolean(mapData.value) && mapData.value?.next_lesson === null
 )
+// The course goes on, the document's lessons are passed. A document with no
+// lesson of its own has none to pass.
+const behind = computed(
+	() =>
+		Boolean(mapData.value?.next_lesson) &&
+		!lesson.value &&
+		lessons.value.some(builds)
+)
 
-// After the course, the whole table's own dates: the most urgent one, named by
-// its field — which date matters is the course's to say, not a key's
-// (learning-services#360).
+// After the course or the document's lessons, the whole table's own dates: the
+// most urgent one, named by its field — which date matters is the course's to
+// say, not a key's (learning-services#360).
 const document = createResource({
 	url: 'lms_frappe_app.api.student.artifact',
 	method: 'GET',
@@ -152,7 +161,7 @@ const due = computed(() =>
 		: null
 )
 watch(
-	finished,
+	() => finished.value || behind.value,
 	(done) => {
 		if (done) document.fetch()
 	},

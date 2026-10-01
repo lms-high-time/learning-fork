@@ -362,8 +362,8 @@ describe('workspace', () => {
 			{ register }
 		)
 		const groups = outline(d, [{ id: 'l2', number: 2, title: 'Цели' }])
-		expect(defaultView(d, groups, 'l2')).toBe('stages')
-		expect(defaultView(d, groups, null)).toBe(TABLE_VIEW)
+		expect(defaultView(d, groups, 'l2', [])).toBe('stages')
+		expect(defaultView(d, groups, null, [])).toBe(TABLE_VIEW)
 	})
 
 	it('names the lesson the document grows on next, not the course’s next', () => {
@@ -380,9 +380,7 @@ describe('workspace', () => {
 		expect(lessonAhead(lessons, 'l2', builds)?.id).toBe('l2')
 		expect(lessonAhead(lessons, 'l3', builds)?.id).toBe('l4')
 		// Its lessons are behind, or the course is: no lesson to name.
-		expect(
-			lessonAhead(lessons.slice(0, 3), 'l3', builds)
-		).toBeNull()
+		expect(lessonAhead(lessons.slice(0, 3), 'l3', builds)).toBeNull()
 		expect(lessonAhead(lessons, null, builds)).toBeNull()
 	})
 
@@ -401,6 +399,11 @@ describe('workspace', () => {
 		// behind — the document opens on lesson 4, where it is written next.
 		expect(defaultView(d, groups, 'l2', course)).toBe('review')
 		expect(defaultView(d, groups, 'l1', course)).toBe('worries')
+		// Past all its lessons: the whole document, as after the course.
+		const table = doc([lesson('worries', 'l1')], { register })
+		expect(defaultView(table, outline(table, course), 'l2', course)).toBe(
+			TABLE_VIEW
+		)
 	})
 
 	it('names a row by the first required text column, whatever its key', () => {
