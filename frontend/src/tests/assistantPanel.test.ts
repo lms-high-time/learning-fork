@@ -19,10 +19,10 @@ vi.mock('frappe-ui', async () => {
 	}
 })
 
-const route = reactive({ fullPath: '/courses' })
+const route = reactive({ path: '/courses' })
 vi.mock('vue-router', () => ({ useRoute: () => route }))
 
-import { server } from './helpers/fakeResource'
+import { hold, server } from './helpers/fakeResource'
 import AssistantPanel from '@/components/AssistantPanel/AssistantPanel.vue'
 import SuggestedAction from '@/components/SuggestedAction.vue'
 import {
@@ -41,21 +41,36 @@ beforeEach(() => {
 	setActivePinia(createPinia())
 	server.clear()
 	resetProfileSummary()
-	route.fullPath = '/courses'
+	route.path = '/courses'
 })
 
 describe('the panel', () => {
-	const openPanel = async () => {
+	const setWidth = (width: number) =>
+		Object.defineProperty(window, 'innerWidth', {
+			value: width,
+			writable: true,
+			configurable: true,
+		})
+
+	const openPanel = async (url = CHAT) => {
 		const wrapper = mount(AssistantPanel, { global, attachTo: document.body })
 		const panel = useAssistantPanel()
-		panel.open('profile', CHAT)
-		await nextTick()
+		panel.open('profile', url)
+		await flushPromises()
 		const frame = wrapper.get('iframe').element as HTMLIFrameElement
 		return { wrapper, panel, frame, chat: frame.contentWindow! }
 	}
 
 	const post = (data: unknown, source: Window | null, origin = ORIGIN) =>
 		window.dispatchEvent(new MessageEvent('message', { data, origin, source }))
+
+	const esc = () =>
+		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+
+	beforeEach(() => setWidth(1280))
+	afterEach(() => {
+		document.body.innerHTML = ''
+	})
 
 	it('has no iframe before it is first opened', () => {
 		const wrapper = mount(AssistantPanel, { global })
@@ -71,6 +86,28 @@ describe('the panel', () => {
 		expect(wrapper.get('[data-testid="assistant-panel"]').isVisible()).toBe(
 			false
 		)
+	})
+
+	it('starts a new chat for a new address', async () => {
+		const { wrapper, panel, frame } = await openPanel()
+		panel.open('profile', `${CHAT}&fresh=1`)
+		await nextTick()
+		expect(wrapper.get('iframe').element).not.toBe(frame)
+	})
+
+	it('opens nothing but a web page', async () => {
+		const wrapper = mount(AssistantPanel, { global })
+		const panel = useAssistantPanel()
+		panel.open('profile', 'javascript:alert(1)')
+		await nextTick()
+		expect(panel.isOpen).toBe(false)
+		expect(wrapper.find('iframe').exists()).toBe(false)
+	})
+
+	it('closes from its own header, whatever the chat shows', async () => {
+		const { wrapper, panel } = await openPanel()
+		await wrapper.get('[data-testid="assistant-panel-close"]').trigger('click')
+		expect(panel.isOpen).toBe(false)
 	})
 
 	it('passes on a refresh from its chat', async () => {
@@ -94,20 +131,70 @@ describe('the panel', () => {
 
 	it('closes on Esc', async () => {
 		const { panel } = await openPanel()
-		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+		esc()
 		expect(panel.isOpen).toBe(false)
+	})
+
+	it('leaves Esc alone while closed', async () => {
+		const { panel } = await openPanel()
+		panel.close()
+		const actions: string[] = []
+		panel.$onAction(({ name }) => void actions.push(name))
+		esc()
+		expect(actions).toEqual([])
+	})
+
+	it('leaves Esc to a dialog of the page', async () => {
+		const { panel } = await openPanel()
+		const dialog = document.createElement('div')
+		dialog.setAttribute('role', 'dialog')
+		dialog.setAttribute('data-state', 'open')
+		document.body.appendChild(dialog)
+		esc()
+		expect(panel.isOpen).toBe(true)
 	})
 
 	it('tells its chat where the learner is, to the chat’s origin only', async () => {
 		const { frame, chat } = await openPanel()
 		const send = vi.spyOn(chat, 'postMessage')
 		frame.dispatchEvent(new Event('load'))
-		route.fullPath = '/courses/pm/learn/1-1'
+		route.path = '/courses/pm/learn/1-1'
 		await nextTick()
+		// The path, not the query.
 		expect(send.mock.calls).toEqual([
 			[{ type: 'context', route: '/courses' }, ORIGIN],
 			[{ type: 'context', route: '/courses/pm/learn/1-1' }, ORIGIN],
 		])
+	})
+
+	it('sits beside the page on a desktop', async () => {
+		const { wrapper } = await openPanel()
+		const panel = wrapper.get('[data-testid="assistant-panel"]')
+		expect(panel.attributes('role')).toBe('complementary')
+		expect(panel.attributes('aria-modal')).toBeUndefined()
+		expect(panel.attributes('aria-label')).toBe('Your mentor')
+	})
+
+	it('covers the page on a phone, and Back closes it', async () => {
+		setWidth(390)
+		const { wrapper, panel } = await openPanel()
+		const root = wrapper.get('[data-testid="assistant-panel"]')
+		expect(root.attributes('role')).toBe('dialog')
+		expect(root.attributes('aria-modal')).toBe('true')
+		route.path = '/you'
+		await nextTick()
+		expect(panel.isOpen).toBe(false)
+	})
+
+	it('gives focus back to what opened it', async () => {
+		const button = document.createElement('button')
+		document.body.appendChild(button)
+		button.focus()
+		const { panel, frame } = await openPanel()
+		expect(document.activeElement).toBe(frame)
+		panel.close()
+		await nextTick()
+		expect(document.activeElement).toBe(button)
 	})
 
 	it('stops listening once unmounted', async () => {
@@ -197,6 +284,20 @@ describe('the profile summary', () => {
 		await flushPromises()
 		expect(server.fetched).toHaveLength(2)
 		expect(wrapper.text()).toBe('4')
+	})
+
+	it('drops a read overtaken by a newer one', async () => {
+		server.answers[URL] = { ok: true, data: SUMMARY }
+		const first = hold(URL)
+		const wrapper = mount(asker(() => true))
+		// Only the first read waits; the second answers at once.
+		delete server.gates[URL]
+		server.answers[URL] = { ok: true, data: { ...SUMMARY, filled: 5 } }
+		useAssistantPanel().notifyRefresh()
+		await flushPromises()
+		first.release()
+		await flushPromises()
+		expect(wrapper.text()).toBe('5')
 	})
 
 	it('offers nothing when the read fails', async () => {

@@ -40,6 +40,8 @@ export function useProfileSummary(enabled: () => boolean) {
 		([on, tick]) => {
 			if (!on || readFor === tick) return
 			readFor = tick
+			// The newer answer wins: a read still on its way is dropped.
+			read.abort?.()
 			read.fetch().catch(() => {})
 		},
 		{ immediate: true }

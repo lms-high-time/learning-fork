@@ -27,3 +27,13 @@ export function readPanelMessage(
 export function panelOriginOf(url: string): string {
 	return new URL(url, window.location.href).origin
 }
+
+// A web address or a path on this site; never a script, data, mail or bare
+// fragment URL, nor a protocol-relative `//host` (or `/\host`, which the URL
+// parser reads the same way). Stricter than safeUrl: a frame has to load a page.
+const PANEL_URL = /^(https?:\/\/|\/(?![/\\]))/i
+
+/** Whether the panel may load `url`. */
+export function isPanelUrl(url: string): boolean {
+	return PANEL_URL.test(url)
+}

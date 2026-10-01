@@ -2,7 +2,7 @@
 	<Tooltip v-if="url && collapsed" :text="title">
 		<button
 			type="button"
-			class="flex items-center justify-center"
+			class="flex items-center justify-center rounded p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
 			:aria-label="title"
 			data-testid="suggested-action"
 			@click="start"

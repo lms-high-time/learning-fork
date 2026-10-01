@@ -4,21 +4,42 @@
 	<div
 		v-if="store.url"
 		v-show="store.isOpen"
-		class="fixed z-40 bg-surface-base"
+		ref="root"
+		class="fixed z-40 flex flex-col bg-surface-base"
 		:class="
 			isMobile
-				? 'inset-0'
+				? 'inset-0 pt-safe-0 pb-safe-0'
 				: 'inset-y-0 end-0 w-[400px] shadow-2xl border-s border-outline-gray-2'
 		"
+		:role="isMobile ? 'dialog' : 'complementary'"
+		:aria-modal="isMobile ? 'true' : undefined"
+		:aria-label="__('Your mentor')"
 		data-testid="assistant-panel"
 	>
-		<!-- No header of its own: the chat inside has its Close button. -->
+		<!-- Ours, not the chat's: a chat that failed to load (offline, refused to
+		be framed) must still be closable, and a phone has no Esc. -->
+		<header
+			class="flex h-11 shrink-0 items-center justify-between border-b border-outline-gray-2 ps-4 pe-2"
+		>
+			<span class="text-base font-medium text-ink-gray-9">
+				{{ __('Your mentor') }}
+			</span>
+			<button
+				type="button"
+				class="rounded p-1.5 text-ink-gray-7 transition-colors hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
+				:aria-label="__('Close')"
+				data-testid="assistant-panel-close"
+				@click="store.close()"
+			>
+				<span class="lucide-x block size-4" aria-hidden="true" />
+			</button>
+		</header>
 		<iframe
 			:key="store.url"
 			ref="frame"
 			:src="safeUrl(store.url)"
 			:title="__('Chat with your mentor')"
-			class="size-full border-0"
+			class="min-h-0 w-full flex-1 border-0"
 			@load="sendContext"
 		/>
 	</div>
@@ -34,12 +55,13 @@ import { safeUrl } from '@/utils/safeUrl'
 
 // The web chat beside the page (learning-services#463). It talks to the page
 // only by postMessage: it says `refresh` when it saved something the page
-// shows and `close` from its own button; the page tells it where the learner
-// is (`context`). Messages go to the chat's origin by name, never `*`.
+// shows and `close`; the page tells it where the learner is (`context`).
+// Messages go to the chat's origin by name, never `*`.
 
 const store = useAssistantPanel()
 const route = useRoute()
 const { isMobile } = useScreenSize()
+const root = ref<HTMLElement | null>(null)
 const frame = ref<HTMLIFrameElement | null>(null)
 
 const panelOrigin = computed(() => {
@@ -51,13 +73,11 @@ const panelOrigin = computed(() => {
 	}
 })
 
+// The path only: a query can carry what the chat has no business reading.
 function sendContext() {
 	const target = frame.value?.contentWindow
 	if (!target || !panelOrigin.value) return
-	target.postMessage(
-		{ type: 'context', route: route.fullPath },
-		panelOrigin.value
-	)
+	target.postMessage({ type: 'context', route: route.path }, panelOrigin.value)
 }
 
 function onMessage(event: MessageEvent) {
@@ -71,21 +91,45 @@ function onMessage(event: MessageEvent) {
 	else if (message?.type === 'close') store.close()
 }
 
+// A dialog of the page's own, open over or beside the panel, takes Esc first.
+const PAGE_DIALOG = '[role="dialog"][data-state="open"], [aria-modal="true"]'
+const pageDialogOpen = () =>
+	Array.from(document.querySelectorAll(PAGE_DIALOG)).some(
+		(dialog) => !root.value?.contains(dialog)
+	)
+
 // Esc while focus is on the page; inside the iframe the chat has its own keys.
 function onKeydown(event: KeyboardEvent) {
-	if (event.key === 'Escape' && store.isOpen && !event.defaultPrevented)
-		store.close()
+	if (event.key !== 'Escape' || !store.isOpen || event.defaultPrevented) return
+	if (pageDialogOpen()) return
+	store.close()
 }
 
-watch(() => route.fullPath, sendContext)
+watch(
+	() => route.path,
+	() => {
+		// Full screen on a phone: Back leaves the page, and the panel with it.
+		if (isMobile.value && store.isOpen) store.close()
+		else sendContext()
+	}
+)
 
-// Typing goes to the chat as soon as it opens.
+// Typing goes to the chat as soon as it opens; on close, focus goes back where
+// it was — the button that opened it, if it is still on the page.
+let returnFocusTo: HTMLElement | null = null
 watch(
 	() => store.isOpen,
 	async (open) => {
-		if (!open) return
-		await nextTick()
-		frame.value?.focus()
+		if (open) {
+			returnFocusTo = document.activeElement as HTMLElement | null
+			await nextTick()
+			frame.value?.focus()
+			// The learner may have moved on while it was closed.
+			sendContext()
+			return
+		}
+		if (returnFocusTo?.isConnected) returnFocusTo.focus()
+		returnFocusTo = null
 	}
 )
 
