@@ -180,6 +180,18 @@ describe('the agent page', () => {
 			'Show my courses'
 		)
 	})
+
+	// AGPL-3.0, section 13: a user of the network service sees where to get
+	// the source — a guest too.
+	it('links to the platform source code for everyone', () => {
+		for (const loggedIn of [true, false]) {
+			session.isLoggedIn = loggedIn
+			const wrapper = open()
+			expect(
+				wrapper.find('a[href="https://github.com/lms-high-time/learning-app"]').exists()
+			).toBe(true)
+		}
+	})
 })
 
 describe('the agent route', () => {

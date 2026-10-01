@@ -158,9 +158,9 @@ export const routes = [
 		component: () => import('@/pages/Documents/Documents.vue'),
 		meta: { sidebarLink: 'artifacts-sidebar' },
 	},
-	// «Подключить агента» (learning-services#470): MCP addresses and how to
-	// connect, in the app's own layout. The Frappe page `/agent` stays for the
-	// links from outside the app.
+	// «Подключить ассистента» (learning-services#470, #471): MCP addresses and
+	// how to connect, in the app's own layout. `/agent` on the site redirects
+	// here (learning-app).
 	{
 		path: '/agent',
 		name: 'Agent',
