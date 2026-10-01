@@ -67,7 +67,7 @@ import { focusedElementOwnsLayer, trapTab } from '@/composables/useFocusTrap'
 
 // The web chat beside the page (learning-services#463). It talks to the page
 // only by postMessage: it says `refresh` when it saved something the page
-// shows and `close`; the page tells it where the learner is (`context`).
+// shows; the page tells it where the learner is (`context`).
 // Messages go to the chat's origin by name, never `*`.
 
 const store = useAssistantPanel()
@@ -101,7 +101,6 @@ function onMessage(event: MessageEvent) {
 		panelOrigin.value
 	)
 	if (message?.type === 'refresh') store.notifyRefresh()
-	else if (message?.type === 'close') store.close()
 }
 
 // A dialog of the page's own, open over or beside the panel, takes Esc first.

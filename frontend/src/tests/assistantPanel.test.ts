@@ -116,17 +116,17 @@ describe('the panel', () => {
 		expect(panel.refreshTick).toBe(1)
 	})
 
-	it('closes when its chat says so', async () => {
+	it('is closed by its own header only, not by the chat', async () => {
 		const { panel, chat } = await openPanel()
 		post({ type: 'close' }, chat)
-		expect(panel.isOpen).toBe(false)
+		expect(panel.isOpen).toBe(true)
 	})
 
 	it('does not listen to another window or origin', async () => {
 		const { panel, chat } = await openPanel()
-		post({ type: 'close' }, window)
-		post({ type: 'close' }, chat, 'https://evil.example')
-		expect(panel.isOpen).toBe(true)
+		post({ type: 'refresh', what: 'profile' }, window)
+		post({ type: 'refresh', what: 'profile' }, chat, 'https://evil.example')
+		expect(panel.refreshTick).toBe(0)
 	})
 
 	it('closes on Esc', async () => {

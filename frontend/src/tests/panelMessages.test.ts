@@ -9,6 +9,8 @@ const ORIGIN = 'https://lms.example'
 const frame = {} as Window
 const stranger = {} as Window
 
+const REFRESH = { type: 'refresh', what: 'profile' }
+
 const event = (data: unknown, overrides: Partial<MessageEvent> = {}) =>
 	({ data, origin: ORIGIN, source: frame, ...overrides } as MessageEvent)
 
@@ -23,16 +25,10 @@ describe('readPanelMessage', () => {
 		).toEqual({ type: 'refresh', what: 'profile' })
 	})
 
-	it('reads a close from the panel', () => {
-		expect(readPanelMessage(event({ type: 'close' }), frame, ORIGIN)).toEqual({
-			type: 'close',
-		})
-	})
-
 	it('ignores another origin', () => {
 		expect(
 			readPanelMessage(
-				event({ type: 'close' }, { origin: 'https://evil.example' }),
+				event(REFRESH, { origin: 'https://evil.example' }),
 				frame,
 				ORIGIN
 			)
@@ -41,24 +37,19 @@ describe('readPanelMessage', () => {
 
 	it('ignores another window of the same origin', () => {
 		expect(
-			readPanelMessage(
-				event({ type: 'close' }, { source: stranger }),
-				frame,
-				ORIGIN
-			)
+			readPanelMessage(event(REFRESH, { source: stranger }), frame, ORIGIN)
 		).toBeNull()
 	})
 
 	it('ignores everything while there is no frame', () => {
 		expect(
-			readPanelMessage(event({ type: 'close' }, { source: null }), null, ORIGIN)
+			readPanelMessage(event(REFRESH, { source: null }), null, ORIGIN)
 		).toBeNull()
 	})
 
 	it('ignores a type it does not know', () => {
-		expect(
-			readPanelMessage(event({ type: 'navigate', to: '/' }), frame, ORIGIN)
-		).toBeNull()
+		for (const data of [{ type: 'navigate', to: '/' }, { type: 'close' }])
+			expect(readPanelMessage(event(data), frame, ORIGIN)).toBeNull()
 	})
 
 	it('ignores a refresh that does not say what', () => {
@@ -68,7 +59,7 @@ describe('readPanelMessage', () => {
 	})
 
 	it('ignores a string instead of an object', () => {
-		expect(readPanelMessage(event('close'), frame, ORIGIN)).toBeNull()
+		expect(readPanelMessage(event('refresh'), frame, ORIGIN)).toBeNull()
 		expect(readPanelMessage(event(null), frame, ORIGIN)).toBeNull()
 	})
 })

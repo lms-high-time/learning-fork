@@ -1,10 +1,9 @@
 // What the assistant panel's iframe may say to the page (learning-services#463):
-// `refresh` after the chat saved something the page shows, `close` from the
-// chat's own Close button. Any window can post to ours, so a message counts
-// only from the panel's frame, from the chat's origin, with a type on this
-// list; anything else is dropped without a word.
+// `refresh` after the chat saved something the page shows. Any window can post
+// to ours, so a message counts only from the panel's frame, from the chat's
+// origin, with a type on this list; anything else is dropped without a word.
 
-export type PanelMessage = { type: 'refresh'; what: string } | { type: 'close' }
+export type PanelMessage = { type: 'refresh'; what: string }
 
 /** A message from the panel's iframe, or null when it is not ours. */
 export function readPanelMessage(
@@ -17,7 +16,6 @@ export function readPanelMessage(
 	if (event.origin !== panelOrigin) return null
 	const data = event.data
 	if (!data || typeof data !== 'object') return null
-	if (data.type === 'close') return { type: 'close' }
 	if (data.type === 'refresh' && typeof data.what === 'string')
 		return { type: 'refresh', what: data.what }
 	return null
