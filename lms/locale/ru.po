@@ -11451,3 +11451,83 @@ msgstr "Изменён {0}, {1}"
 #: frontend/src/components/Documents/DocumentRow.vue
 msgid "Document is complete"
 msgstr "Документ собран"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Lessons and course building on this platform go through your AI agent: it connects to the site over MCP and signs in with the same account as you."
+msgstr "Занятия и сборка курсов на этой платформе идут через вашего AI-агента: он подключается к сайту по протоколу MCP и входит той же учётной записью, что и вы."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "No agent of your own yet? Try the trial lessons"
+msgstr "Своего агента пока нет? Пробные уроки можно пройти"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "in the browser"
+msgstr "в браузере"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "— with the platform agent, along the same route and with the same grading. Later you continue with your own agent, and the progress is kept."
+msgstr "— с агентом платформы, по тому же маршруту и с тем же зачётом. Дальше занятия продолжаются через вашего агента, прогресс сохраняется."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "To see the connection addresses,"
+msgstr "Чтобы увидеть адреса подключения,"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "log in"
+msgstr "войдите"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Where to connect"
+msgstr "Куда подключаться"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "How to connect in Claude Desktop"
+msgstr "Как подключить в Claude Desktop"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Settings → Connectors → Add custom connector."
+msgstr "Settings → Connectors → Add custom connector."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Name — anything, URL — the address above. Leave the OAuth fields empty."
+msgstr "Name — любое, URL — адрес из блока выше. Поля OAuth оставьте пустыми."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "In the window that opens, sign in to this site with your account and confirm access."
+msgstr "В открывшемся окне войдите на этот сайт своей учётной записью и подтвердите доступ."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "On the first tool call, allow it: Allow always."
+msgstr "При первом вызове инструмента разрешите его: Allow always."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Other MCP clients (Claude Code, Cursor) connect with the same address over OAuth."
+msgstr "Другие MCP-клиенты (Claude Code, Cursor) подключаются тем же адресом через OAuth."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "No more than 5 connections per 10 minutes: each new connection registers the client anew, so do not reconnect without need."
+msgstr "Не больше 5 подключений за 10 минут: каждое новое подключение регистрирует клиента заново, так что не переподключайте коннектор без нужды."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "The platform application is open under AGPL-3.0:"
+msgstr "Приложение платформы открыто под AGPL-3.0:"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "source code"
+msgstr "исходный код"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Study"
+msgstr "Учиться"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Build courses"
+msgstr "Собирать курсы"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Ask the agent to show your courses and start a lesson."
+msgstr "Попросите агента показать ваши курсы и начать урок."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Ask the agent to call authoring_guide first: it is the build order and the platform rules."
+msgstr "Первым вызовом попросите агента вызвать authoring_guide: это порядок сборки и правила платформы."

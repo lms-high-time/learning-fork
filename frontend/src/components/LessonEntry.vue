@@ -72,11 +72,11 @@
 
 			<div v-if="inWebChat" class="mt-6 text-p-sm text-ink-gray-6">
 				{{ __('Have your own AI agent?') }}
-				<a
-					href="/agent"
+				<router-link
+					:to="{ name: 'Agent' }"
 					data-testid="lesson-own-agent"
 					class="text-ink-gray-8 underline"
-					>{{ __('Connect it') }}</a
+					>{{ __('Connect it') }}</router-link
 				>
 			</div>
 		</div>
