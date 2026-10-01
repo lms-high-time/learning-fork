@@ -52,6 +52,7 @@ import { useAssistantPanel } from '@/stores/assistantPanel'
 import { useScreenSize } from '@/utils/composables'
 import { panelOriginOf, readPanelMessage } from '@/utils/panelMessages'
 import { safeUrl } from '@/utils/safeUrl'
+import { trapTab } from '@/composables/useFocusTrap'
 
 // The web chat beside the page (learning-services#463). It talks to the page
 // only by postMessage: it says `refresh` when it saved something the page
@@ -98,8 +99,18 @@ const pageDialogOpen = () =>
 		(dialog) => !root.value?.contains(dialog)
 	)
 
+// Full screen on a phone, the panel says it is modal, so Tab stays within its
+// header and the chat, as in FormShell and BottomSheet. This sees only the
+// page's side: Tab inside the iframe is the chat's own. On a desktop the panel
+// sits beside the page and Tab goes on into it.
+const modal = computed(() => isMobile.value && store.isOpen)
+
 // Esc while focus is on the page; inside the iframe the chat has its own keys.
 function onKeydown(event: KeyboardEvent) {
+	if (event.key === 'Tab') {
+		if (modal.value) trapTab(event, root.value)
+		return
+	}
 	if (event.key !== 'Escape' || !store.isOpen || event.defaultPrevented) return
 	if (pageDialogOpen()) return
 	store.close()

@@ -186,6 +186,39 @@ describe('the panel', () => {
 		expect(panel.isOpen).toBe(false)
 	})
 
+	const tab = (shiftKey = false) =>
+		document.activeElement!.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Tab', shiftKey, bubbles: true })
+		)
+
+	it('keeps Tab within its header and chat on a phone', async () => {
+		setWidth(390)
+		const { wrapper, frame } = await openPanel()
+		const close = wrapper.get('[data-testid="assistant-panel-close"]')
+			.element as HTMLElement
+		close.focus()
+		tab(true)
+		expect(document.activeElement).toBe(frame)
+		tab()
+		expect(document.activeElement).toBe(close)
+	})
+
+	it('lets Tab go on into the page on a desktop', async () => {
+		const { wrapper } = await openPanel()
+		const close = wrapper.get('[data-testid="assistant-panel-close"]')
+			.element as HTMLElement
+		close.focus()
+		const shiftTab = new KeyboardEvent('keydown', {
+			key: 'Tab',
+			shiftKey: true,
+			bubbles: true,
+			cancelable: true,
+		})
+		close.dispatchEvent(shiftTab)
+		expect(shiftTab.defaultPrevented).toBe(false)
+		expect(document.activeElement).toBe(close)
+	})
+
 	it('gives focus back to what opened it', async () => {
 		const button = document.createElement('button')
 		document.body.appendChild(button)
