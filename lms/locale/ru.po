@@ -10138,10 +10138,6 @@ msgid "Could not upload the file"
 msgstr "Не удалось загрузить файл"
 
 #: frontend/src/pages/Documents/Document.vue
-msgid "Course documents are built as you study and are visible only to you."
-msgstr "Документы курса собираются по ходу обучения и видны только вам."
-
-#: frontend/src/pages/Documents/Document.vue
 msgid "Delete {0}"
 msgstr "Удалить {0}"
 
@@ -10220,10 +10216,6 @@ msgstr "Под фильтр ничего не подходит"
 #: frontend/src/pages/Documents/Document.vue
 msgid "No rows yet"
 msgstr "Строк пока нет"
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "None of your courses builds a document yet. It will appear here once the course has one."
-msgstr "Ни один из ваших курсов пока не собирает документ. Он появится здесь, как только в курсе будет документ."
 
 #: frontend/src/pages/Documents/Document.vue
 msgid "Not scored yet: {0}"
@@ -10492,14 +10484,6 @@ msgstr "Скопировано"
 #: frontend/src/components/Documents/ReportPanel.vue
 msgid "Could not copy"
 msgstr "Не удалось скопировать"
-
-#: frontend/src/components/Documents/ReportPanel.vue
-msgid "The course is behind you"
-msgstr "Курс пройден"
-
-#: frontend/src/components/Documents/DocumentCard.vue
-msgid "Its lessons are behind you"
-msgstr "Уроки этого документа пройдены"
 
 #: frontend/src/components/Documents/ReportPanel.vue
 msgid "Continue"
@@ -11435,3 +11419,35 @@ msgstr "Дней после закрытия урока — {0}"
 #: frontend/src/components/Team/TeamHomeworkDue.vue
 msgid "Date for {0}"
 msgstr "Дата срока — {0}"
+
+#: frontend/src/pages/Documents/Documents.vue
+msgid "Course documents are built as you study. Log in to see yours."
+msgstr "Документы курса собираются по ходу обучения. Войдите, чтобы увидеть свои."
+
+#: frontend/src/pages/Documents/Documents.vue
+msgid "Could not load your documents. What you wrote is safe — try again."
+msgstr "Не удалось загрузить документы. Ваши записи на месте — попробуйте ещё раз."
+
+#: frontend/src/pages/Documents/Documents.vue
+msgid "Try again"
+msgstr "Повторить"
+
+#: frontend/src/pages/Documents/Documents.vue
+msgid "None of your courses builds a document yet. Documents appear here once you start a course that builds them."
+msgstr "Пока ни один ваш курс не собирает документ. Документы появятся здесь, когда вы начнёте курс, который их строит."
+
+#: frontend/src/pages/Documents/Documents.vue
+msgid "To courses"
+msgstr "К курсам"
+
+#: frontend/src/pages/Documents/Documents.vue
+msgid "Course: {0}"
+msgstr "Курс: {0}"
+
+#: frontend/src/utils/documentList.ts
+msgid "Changed {0}, {1}"
+msgstr "Изменён {0}, {1}"
+
+#: frontend/src/components/Documents/DocumentRow.vue
+msgid "Document is complete"
+msgstr "Документ собран"
