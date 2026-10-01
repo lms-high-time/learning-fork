@@ -11524,65 +11524,12 @@ msgid "Document is complete"
 msgstr "Документ собран"
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "Lessons and course building on this platform go through your AI agent: it connects to the site over MCP and signs in with the same account as you."
-msgstr "Занятия и сборка курсов на этой платформе идут через вашего AI-агента: он подключается к сайту по протоколу MCP и входит той же учётной записью, что и вы."
-
-
-
-
-
-
-#: frontend/src/pages/Agent/Agent.vue
-msgid "Where to connect"
-msgstr "Куда подключаться"
-
-#: frontend/src/pages/Agent/Agent.vue
-msgid "How to connect in Claude Desktop"
-msgstr "Как подключить в Claude Desktop"
-
-#: frontend/src/pages/Agent/Agent.vue
-msgid "Settings → Connectors → Add custom connector."
-msgstr "Settings → Connectors → Add custom connector."
-
-#: frontend/src/pages/Agent/Agent.vue
-msgid "Name — anything, URL — the address above. Leave the OAuth fields empty."
-msgstr "Name — любое, URL — адрес из блока выше. Поля OAuth оставьте пустыми."
-
-#: frontend/src/pages/Agent/Agent.vue
-msgid "In the window that opens, sign in to this site with your account and confirm access."
-msgstr "В открывшемся окне войдите на этот сайт своей учётной записью и подтвердите доступ."
-
-#: frontend/src/pages/Agent/Agent.vue
-msgid "On the first tool call, allow it: Allow always."
-msgstr "При первом вызове инструмента разрешите его: Allow always."
-
-#: frontend/src/pages/Agent/Agent.vue
-msgid "Other MCP clients (Claude Code, Cursor) connect with the same address over OAuth."
-msgstr "Другие MCP-клиенты (Claude Code, Cursor) подключаются тем же адресом через OAuth."
-
-#: frontend/src/pages/Agent/Agent.vue
-msgid "No more than 5 connections per 10 minutes: each new connection registers the client anew, so do not reconnect without need."
-msgstr "Не больше 5 подключений за 10 минут: каждое новое подключение регистрирует клиента заново, так что не переподключайте коннектор без нужды."
-
-#: frontend/src/pages/Agent/Agent.vue
 msgid "The platform application is open under AGPL-3.0:"
 msgstr "Приложение платформы открыто под AGPL-3.0:"
 
 #: frontend/src/pages/Agent/Agent.vue
 msgid "source code"
 msgstr "исходный код"
-
-#: frontend/src/pages/Agent/Agent.vue
-msgid "Study"
-msgstr "Учиться"
-
-#: frontend/src/pages/Agent/Agent.vue
-msgid "Build courses"
-msgstr "Собирать курсы"
-
-#: frontend/src/pages/Agent/Agent.vue
-msgid "Ask the agent to show your courses and start a lesson."
-msgstr "Попросите агента показать ваши курсы и начать урок."
 
 #: frontend/src/pages/Agent/Agent.vue
 msgid "Ask the agent to call authoring_guide first: it is the build order and the platform rules."
@@ -11593,17 +11540,217 @@ msgid "Connect an agent"
 msgstr "Подключить агента"
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "No agent of your own yet? While you have trial lessons left, you can take them with the platform agent, along the same route and with the same grading. Later you continue with your own agent, and the progress is kept."
-msgstr "Своего агента пока нет? Пока остались пробные уроки, их можно пройти с агентом платформы — по тому же маршруту и с тем же зачётом. Дальше занятия продолжаются через вашего агента, прогресс сохраняется."
-
-#: frontend/src/pages/Agent/Agent.vue
 msgid "Study in the browser"
 msgstr "Заниматься в браузере"
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "The connection addresses are shown after you log in."
-msgstr "Адреса подключения видны после входа."
+msgid "Study with your own AI assistant: it runs the lesson, explains and asks questions, while the platform keeps your progress, grades and documents. The assistant connects to the site over MCP and signs in with your account."
+msgstr "Учитесь с вашим AI-ассистентом: он ведёт урок, объясняет и задаёт вопросы, а платформа хранит прогресс, зачёты и документы. Ассистент подключается к сайту по протоколу MCP и входит вашей учётной записью."
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "Copy the address: {0}"
-msgstr "Скопировать адрес: {0}"
+msgid "Connection address"
+msgstr "Адрес для подключения"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Copy the address"
+msgstr "Скопировать адрес"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "The assistant signs in with your account on this site. No account yet?"
+msgstr "Ассистент входит вашей учётной записью на этом сайте. Ещё нет учётной записи?"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Log in or sign up"
+msgstr "Войдите или зарегистрируйтесь"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "How to connect"
+msgstr "Как подключить"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Assistant"
+msgstr "Ассистент"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Open claude.ai or the Claude desktop app and go to Customize → Connectors."
+msgstr "Откройте claude.ai или программу Claude на компьютере и перейдите в Customize → Connectors."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Click «+», then Add custom connector."
+msgstr "Нажмите «+», затем Add custom connector."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Name — for example «{0}», URL — the address above. Click Add."
+msgstr "Name — например, «{0}», URL — адрес выше. Нажмите Add."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Click Connect, sign in to this site with your account and allow access."
+msgstr "Нажмите Connect, войдите на этот сайт своей учётной записью и разрешите доступ."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "In a chat, click «+» → Connectors and check that «{0}» is on."
+msgstr "В чате нажмите «+» → Connectors и проверьте, что «{0}» включён."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "A connector added once works on the site, in the desktop app and in the Claude mobile app. On the free plan Claude allows one custom connector."
+msgstr "Добавленный один раз коннектор работает и на сайте, и в программе на компьютере, и в мобильном приложении Claude. На бесплатном плане Claude разрешает один свой коннектор."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "ChatGPT connects your own connectors only on paid plans and in developer mode; full access to the tools is on Business, Enterprise and Edu. On other plans choose another assistant or study in the browser."
+msgstr "ChatGPT подключает свои коннекторы только на платных планах и в режиме разработчика; полный доступ к инструментам — на Business, Enterprise и Edu. На других планах выберите другого ассистента или занимайтесь в браузере."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Settings → Apps & Connectors → Advanced settings: turn on Developer mode."
+msgstr "Settings → Apps & Connectors → Advanced settings: включите Developer mode."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Back in Apps & Connectors, click Create."
+msgstr "Вернитесь в Apps & Connectors и нажмите Create."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Name — «{0}», URL — the address above, authentication — OAuth. Click Create."
+msgstr "Name — «{0}», URL — адрес выше, авторизация — OAuth. Нажмите Create."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Sign in to this site with your account and allow access."
+msgstr "Войдите на этот сайт своей учётной записью и разрешите доступ."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "In a chat, click «+» → More and choose «{0}»."
+msgstr "В чате нажмите «+» → More и выберите «{0}»."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "One click: Cursor opens and offers to install the connector. Then sign in to this site when Cursor asks."
+msgstr "Один клик: откроется Cursor и предложит установить коннектор. Затем войдите на этот сайт, когда Cursor попросит."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Add to Cursor"
+msgstr "Добавить в Cursor"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Cursor did not open? Add an MCP server in Cursor settings and paste the address above."
+msgstr "Cursor не открылся? Добавьте MCP-сервер в настройках Cursor и вставьте адрес выше."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "One click: VS Code with GitHub Copilot opens and offers to install the connector. Then sign in to this site when VS Code asks."
+msgstr "Один клик: откроется VS Code с GitHub Copilot и предложит установить коннектор. Затем войдите на этот сайт, когда VS Code попросит."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Add to VS Code"
+msgstr "Добавить в VS Code"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "VS Code did not open? Command Palette → MCP: Add Server → HTTP, and paste the address above."
+msgstr "VS Code не открылся? Command Palette → MCP: Add Server → HTTP, и вставьте адрес выше."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Run in the terminal:"
+msgstr "Выполните в терминале:"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Copy the command"
+msgstr "Скопировать команду"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Then type /mcp in Claude Code and sign in to this site."
+msgstr "Затем наберите /mcp в Claude Code и войдите на этот сайт."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Any assistant that supports remote MCP servers connects with the same address. Sign-in is OAuth: the assistant opens this site, you sign in and allow access. No keys or tokens are needed."
+msgstr "Любой ассистент с поддержкой удалённых MCP-серверов подключается тем же адресом. Вход — через OAuth: ассистент откроет этот сайт, вы войдёте и разрешите доступ. Ключи и токены не нужны."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "What to say first"
+msgstr "С чего начать"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Write to the assistant in your own words — for example, one of these:"
+msgstr "Пишите ассистенту своими словами — например, так:"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Copy the phrase: {0}"
+msgstr "Скопировать фразу: {0}"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "No suitable assistant?"
+msgstr "Нет подходящего ассистента?"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "While you have trial lessons left, take them in the browser with the platform agent — along the same route and with the same grading. Later you continue with your own assistant, and the progress is kept."
+msgstr "Пока остались пробные уроки, их можно пройти в браузере с агентом платформы — по тому же маршруту и с тем же зачётом. Дальше занятия продолжаются через вашего ассистента, прогресс сохраняется."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Questions and problems"
+msgstr "Вопросы и проблемы"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "For course authors"
+msgstr "Для авторов курсов"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Courses are built through a second connector — connect it the same way, with this address:"
+msgstr "Курсы собираются через второй коннектор — подключите его так же, по этому адресу:"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Copy the authoring address"
+msgstr "Скопировать адрес для авторов"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Add the address to your AI assistant"
+msgstr "Добавьте адрес в своего AI-ассистента"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Sign in with your account on this site"
+msgstr "Войдите учётной записью этого сайта"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Write: «Show my courses»"
+msgstr "Напишите: «Покажи мои курсы»"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Show my courses"
+msgstr "Покажи мои курсы"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Let's continue with the next lesson"
+msgstr "Продолжим следующий урок"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "What about my homework?"
+msgstr "Что у меня с домашними заданиями?"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "How is my progress in the course?"
+msgstr "Какой у меня прогресс по курсу?"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "The assistant does not see the platform"
+msgstr "Ассистент не видит платформу"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Check that the connector is on in this chat (in Claude: «+» → Connectors). If it is on, disconnect it in the assistant settings and connect again."
+msgstr "Проверьте, что коннектор включён в этом чате (в Claude: «+» → Connectors). Если включён — отключите его в настройках ассистента и подключите заново."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "The assistant asks permission at every step"
+msgstr "Ассистент спрашивает разрешение на каждый шаг"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "That is how assistants protect you. For this connector you can choose «Allow always»: it only works with your studies on this site."
+msgstr "Так ассистенты вас защищают. Для этого коннектора можно выбрать «Allow always»: он работает только с вашей учёбой на этом сайте."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Sign-in fails or says there are too many connections"
+msgstr "Вход не проходит или пишет, что подключений слишком много"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "No more than 5 connections per 10 minutes: each new connection registers the assistant anew. Wait ten minutes and do not reconnect without need."
+msgstr "Не больше 5 подключений за 10 минут: каждое новое подключение регистрирует ассистента заново. Подождите десять минут и не переподключайтесь без нужды."
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "Is it safe?"
+msgstr "Это безопасно?"
+
+#: frontend/src/pages/Agent/Agent.vue
+msgid "The assistant never sees your password: you sign in on this site, and the assistant gets access only to your studies here. You can disconnect it at any time in the assistant settings."
+msgstr "Ассистент не видит ваш пароль: вы входите на этом сайте, а ассистент получает доступ только к вашей учёбе здесь. Отключить его можно в любой момент в настройках ассистента."
