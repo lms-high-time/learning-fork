@@ -29,11 +29,24 @@ export function panelOriginOf(url: string): string {
 }
 
 // A web address or a path on this site; never a script, data, mail or bare
-// fragment URL, nor a protocol-relative `//host` (or `/\host`, which the URL
-// parser reads the same way). Stricter than safeUrl: a frame has to load a page.
-const PANEL_URL = /^(https?:\/\/|\/(?![/\\]))/i
+// fragment URL. Read the way the browser will read it: the URL parser drops
+// tabs and line breaks, so `/\t/evil.example` is `//evil.example` — another
+// host — and a regex on the raw string would pass it. Any control character or
+// whitespace is refused outright (a URL the server built has none), the rest
+// is parsed, and a path has to land on this origin.
+const CONTROL_OR_SPACE = /[\u0000-\u0020\u007f]/
+const ABSOLUTE = /^https?:/i
 
 /** Whether the panel may load `url`. */
 export function isPanelUrl(url: string): boolean {
-	return PANEL_URL.test(url)
+	if (!url || CONTROL_OR_SPACE.test(url)) return false
+	if (!ABSOLUTE.test(url) && !url.startsWith('/')) return false
+	let parsed: URL
+	try {
+		parsed = new URL(url, window.location.origin)
+	} catch {
+		return false
+	}
+	if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false
+	return ABSOLUTE.test(url) || parsed.origin === window.location.origin
 }

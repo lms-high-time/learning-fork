@@ -91,6 +91,12 @@ describe('isPanelUrl', () => {
 			'/\\evil.example/chat',
 			'chat',
 			'',
+			// The URL parser drops tabs and line breaks: each of these is
+			// https://evil.example to a browser.
+			'/\t/evil.example/chat',
+			'/\n/evil.example/chat',
+			'/\r/evil.example/chat',
+			'https://\t/x',
 		])
 			expect(isPanelUrl(url), url).toBe(false)
 	})

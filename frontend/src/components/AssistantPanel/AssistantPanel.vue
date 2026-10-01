@@ -27,6 +27,7 @@
 			<button
 				type="button"
 				class="rounded p-1.5 text-ink-gray-7 transition-colors hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3"
+				ref="closeButton"
 				:aria-label="__('Close')"
 				data-testid="assistant-panel-close"
 				@click="store.close()"
@@ -43,6 +44,16 @@
 			@load="sendContext"
 		/>
 	</div>
+	<!-- Tab off the chat's last field never reaches the page as a key: the
+	browser just moves focus to what follows the iframe. This is what follows it
+	while the panel is modal, and it sends focus round to the top. Outside the
+	panel, so the trap's own stops stay the header and the chat. -->
+	<span
+		v-if="store.url && modal"
+		tabindex="0"
+		data-testid="assistant-panel-sentinel"
+		@focus="closeButton?.focus()"
+	/>
 </template>
 
 <script setup lang="ts">
@@ -52,7 +63,7 @@ import { useAssistantPanel } from '@/stores/assistantPanel'
 import { useScreenSize } from '@/utils/composables'
 import { panelOriginOf, readPanelMessage } from '@/utils/panelMessages'
 import { safeUrl } from '@/utils/safeUrl'
-import { trapTab } from '@/composables/useFocusTrap'
+import { focusedElementOwnsLayer, trapTab } from '@/composables/useFocusTrap'
 
 // The web chat beside the page (learning-services#463). It talks to the page
 // only by postMessage: it says `refresh` when it saved something the page
@@ -64,6 +75,7 @@ const route = useRoute()
 const { isMobile } = useScreenSize()
 const root = ref<HTMLElement | null>(null)
 const frame = ref<HTMLIFrameElement | null>(null)
+const closeButton = ref<HTMLButtonElement | null>(null)
 
 const panelOrigin = computed(() => {
 	if (!store.url) return null
@@ -112,7 +124,8 @@ function onKeydown(event: KeyboardEvent) {
 		return
 	}
 	if (event.key !== 'Escape' || !store.isOpen || event.defaultPrevented) return
-	if (pageDialogOpen()) return
+	// A dialog, or a menu or listbox the focused control opened, closes first.
+	if (pageDialogOpen() || focusedElementOwnsLayer()) return
 	store.close()
 }
 

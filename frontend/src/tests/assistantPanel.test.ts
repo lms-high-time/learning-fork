@@ -154,6 +154,20 @@ describe('the panel', () => {
 		expect(panel.isOpen).toBe(true)
 	})
 
+	it('leaves Esc to a menu the focused control opened', async () => {
+		const { panel } = await openPanel()
+		const layer = document.createElement('div')
+		layer.setAttribute('data-dismissable-layer', '')
+		layer.innerHTML = '<ul id="options" role="listbox"></ul>'
+		const combobox = document.createElement('button')
+		combobox.setAttribute('aria-expanded', 'true')
+		combobox.setAttribute('aria-controls', 'options')
+		document.body.append(layer, combobox)
+		combobox.focus()
+		esc()
+		expect(panel.isOpen).toBe(true)
+	})
+
 	it('tells its chat where the learner is, to the chat’s origin only', async () => {
 		const { frame, chat } = await openPanel()
 		const send = vi.spyOn(chat, 'postMessage')
@@ -199,7 +213,14 @@ describe('the panel', () => {
 		close.focus()
 		tab(true)
 		expect(document.activeElement).toBe(frame)
-		tab()
+		// Tab off the chat's last field lands on what follows the iframe — the
+		// sentinel — which sends focus round to the header.
+		const sentinel = wrapper.get('[data-testid="assistant-panel-sentinel"]')
+			.element as HTMLElement
+		expect(frame.compareDocumentPosition(sentinel)).toBe(
+			Node.DOCUMENT_POSITION_FOLLOWING
+		)
+		sentinel.focus()
 		expect(document.activeElement).toBe(close)
 	})
 
@@ -217,6 +238,9 @@ describe('the panel', () => {
 		close.dispatchEvent(shiftTab)
 		expect(shiftTab.defaultPrevented).toBe(false)
 		expect(document.activeElement).toBe(close)
+		expect(
+			wrapper.find('[data-testid="assistant-panel-sentinel"]').exists()
+		).toBe(false)
 	})
 
 	it('gives focus back to what opened it', async () => {
