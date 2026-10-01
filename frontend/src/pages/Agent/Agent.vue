@@ -95,11 +95,7 @@
 							}}
 						</li>
 						<li>
-							{{
-								__(
-									'On the first tool call, allow it: Allow always.'
-								)
-							}}
+							{{ __('On the first tool call, allow it: Allow always.') }}
 						</li>
 					</ol>
 					<p class="text-p-base text-ink-gray-7">
@@ -124,7 +120,8 @@
 				<a
 					href="https://github.com/lms-high-time/learning-app"
 					class="underline"
-					>{{ __('source code') }}</a>.
+					>{{ __('source code') }}</a
+				>.
 			</p>
 		</div>
 	</div>
