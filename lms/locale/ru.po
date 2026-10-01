@@ -9873,26 +9873,6 @@ msgstr "{} Прошел"
 msgid "{} Published"
 msgstr "{} Опубликовано"
 
-#: frontend/src/pages/Courses/CourseOverview.vue
-msgid "Course map"
-msgstr "Карта курса"
-
-#: frontend/src/components/CourseMap.vue
-msgid "Covered"
-msgstr "Разобрано"
-
-#: frontend/src/components/CourseMap.vue
-msgid "Partly covered"
-msgstr "Задето вскользь"
-
-#: frontend/src/components/CourseMap.vue
-msgid "Not yet"
-msgstr "Не дошли"
-
-#: frontend/src/components/CourseMap.vue
-msgid "No objectives yet"
-msgstr "Цели пока не заданы"
-
 #: frontend/src/components/LessonEntry.vue
 msgid "This lesson is a conversation with an agent"
 msgstr "Этот урок — разговор с агентом"
