@@ -86,6 +86,8 @@ const open = async (name = 'me@x') => {
 			mocks: { __: (globalThis as any).__ },
 			provide: { $user: viewer, $dayjs: () => ({ format: () => '' }) },
 		},
+		// Focus is only real in a document.
+		attachTo: document.body,
 	})
 	await flushPromises()
 	return wrapper
@@ -123,7 +125,7 @@ describe('About me', () => {
 		expect(texts(wrapper, 'profile-fact-empty')).toEqual(['Not filled yet'])
 	})
 
-	it('shows what else the agent knows', async () => {
+	it('shows what else the mentor knows', async () => {
 		server.answers[URL] = {
 			ok: true,
 			data: profileOf({
@@ -145,6 +147,46 @@ describe('About me', () => {
 		expect(wrapper.find('[data-testid="profile-facts"]').exists()).toBe(false)
 		expect(wrapper.find('[role="alert"]').exists()).toBe(false)
 		expect(wrapper.findAll('button')).toHaveLength(0)
+	})
+
+	it('says why the own profile could not be read', async () => {
+		server.answers[URL] = {
+			ok: false,
+			error: { code: 'broken', message: 'Сломалось' },
+		}
+		const wrapper = await open()
+		expect(wrapper.get('[role="alert"]').text()).toBe('Сломалось')
+	})
+
+	it('says so in its own words when the read fails without any', async () => {
+		server.failures[URL] = { error: new Error('offline'), quiet: true }
+		const wrapper = await open()
+		expect(wrapper.get('[role="alert"]').text()).toBe(
+			'Could not load the profile'
+		)
+	})
+
+	it('tells the platform of anything but a refusal on someone else’s profile', async () => {
+		viewer.data = { name: 'admin@x' }
+		server.answers[URL] = {
+			ok: false,
+			error: { code: 'broken', message: 'Сломалось' },
+		}
+		const wrapper = await open('other@x')
+		expect(wrapper.get('[role="alert"]').text()).toBe('Сломалось')
+	})
+
+	it('keeps the profile on screen when a re-read fails', async () => {
+		server.answers[URL] = { ok: true, data: profileOf() }
+		const wrapper = await open()
+		server.failures[URL] = { error: new Error('offline'), quiet: true }
+		useAssistantPanel().notifyRefresh()
+		await flushPromises()
+		expect(texts(wrapper, 'profile-fact-text')).toEqual([
+			'Руководитель проектов',
+		])
+		expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+		expect(toast.error).toHaveBeenCalledWith('Could not load the profile')
 	})
 
 	it('shows someone else’s profile read-only to the platform', async () => {
@@ -272,5 +314,58 @@ describe('About me', () => {
 		useAssistantPanel().notifyRefresh()
 		await flushPromises()
 		expect(texts(wrapper, 'profile-fact-text')).toEqual(['Строительство'])
+	})
+})
+
+describe('a fact', () => {
+	it('names the fact its buttons are for', async () => {
+		server.answers[URL] = { ok: true, data: profileOf() }
+		const wrapper = await open()
+		const edits = wrapper.findAll('[data-testid="profile-fact-edit"]')
+		expect(edits.map((button) => button.text())).toEqual(['Fix', 'Fill in'])
+		expect(edits.map((button) => button.attributes('aria-label'))).toEqual([
+			'Fix: Роль',
+			'Fill in: Отрасль',
+		])
+		expect(
+			wrapper
+				.get('[data-testid="profile-fact-delete"]')
+				.attributes('aria-label')
+		).toBe('Delete: Роль')
+	})
+
+	it('takes focus into the editor and back to its button', async () => {
+		server.answers[URL] = { ok: true, data: profileOf() }
+		const wrapper = await open()
+		const edit = wrapper.findAll('[data-testid="profile-fact-edit"]')[0]
+		await edit.trigger('click')
+		await flushPromises()
+		expect(document.activeElement).toBe(wrapper.get('textarea').element)
+		await wrapper
+			.findAll('button')
+			.find((button) => button.text() === 'Cancel')!
+			.trigger('click')
+		await flushPromises()
+		expect(document.activeElement).toBe(
+			wrapper.findAll('[data-testid="profile-fact-edit"]')[0].element
+		)
+	})
+
+	it('gives the editor a name when the fact has no label', async () => {
+		server.answers[URL] = {
+			ok: true,
+			data: profileOf({
+				blocks: [],
+				other_facts: [{ key: 'pet', text: 'Кот Борис', updated: null }],
+			}),
+		}
+		const wrapper = await open()
+		expect(
+			wrapper.get('[data-testid="profile-fact-edit"]').attributes('aria-label')
+		).toBe('Fix: Кот Борис')
+		await wrapper.get('[data-testid="profile-fact-edit"]').trigger('click')
+		expect(wrapper.get('textarea').attributes('aria-label')).toBe(
+			'What your mentor knows'
+		)
 	})
 })

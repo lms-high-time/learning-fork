@@ -11456,8 +11456,8 @@ msgid "About me"
 msgstr "Обо мне"
 
 #: frontend/src/pages/ProfileAbout.vue
-msgid "The agent also knows"
-msgstr "Агент также знает"
+msgid "Your mentor also knows"
+msgstr "Наставник также знает"
 
 #: frontend/src/pages/ProfileAbout.vue
 msgid "Fill in with your mentor"
@@ -11472,8 +11472,8 @@ msgid "Delete this fact?"
 msgstr "Удалить этот факт?"
 
 #: frontend/src/pages/ProfileAbout.vue
-msgid "The agent will forget it."
-msgstr "Агент это забудет."
+msgid "Your mentor will forget it."
+msgstr "Наставник это забудет."
 
 #: frontend/src/pages/ProfileAbout.vue
 msgid "Could not delete"
@@ -11486,3 +11486,23 @@ msgstr "Исправить"
 #: frontend/src/components/Profile/ProfileFact.vue
 msgid "Updated {0}"
 msgstr "Обновлено {0}"
+
+#: frontend/src/components/AssistantPanel/AssistantPanel.vue
+msgid "Your mentor"
+msgstr "Ваш наставник"
+
+#: frontend/src/components/Profile/ProfileFact.vue
+msgid "Fix: {0}"
+msgstr "Исправить: {0}"
+
+#: frontend/src/components/Profile/ProfileFact.vue
+msgid "Fill in: {0}"
+msgstr "Заполнить: {0}"
+
+#: frontend/src/components/Profile/ProfileFact.vue
+msgid "Delete: {0}"
+msgstr "Удалить: {0}"
+
+#: frontend/src/components/Profile/ProfileFact.vue
+msgid "What your mentor knows"
+msgstr "Что знает наставник"

@@ -42,7 +42,7 @@
 		</div>
 		<section v-if="facts.other_facts?.length" data-testid="profile-other-facts">
 			<h3 class="text-base font-semibold text-ink-gray-9">
-				{{ __('The agent also knows') }}
+				{{ __('Your mentor also knows') }}
 			</h3>
 			<ul class="divide-y divide-outline-gray-1">
 				<ProfileFact
@@ -60,7 +60,7 @@
 		<LoadingIndicator class="size-5 text-ink-gray-5" />
 	</div>
 	<p
-		v-else-if="isOwn && state === 'error'"
+		v-else-if="showFailure"
 		class="mt-7 text-p-base text-ink-gray-6"
 		role="alert"
 	>
@@ -156,7 +156,7 @@
 	</div>
 </template>
 <script setup>
-import { computed, inject, watch } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
 import {
 	call,
 	createResource,
@@ -193,17 +193,40 @@ const isOwn = computed(() => user.data?.name === props.profile.data.name)
 // the chat's saves would fail too.
 const canEdit = computed(() => isOwn.value && !window.read_only_mode)
 
-const {
-	data: facts,
-	state,
-	failure,
-	load,
-} = useContractResource({
+const { data, answer, state, failure, load } = useContractResource({
 	url: 'lms_frappe_app.api.student.my_profile',
 	makeParams: () => ({ user: props.profile.data.name }),
 	fallback: () => __('Could not load the profile'),
 })
 load()
+
+// The last profile read, kept through a re-read that failed: the learner
+// keeps what they were looking at and is told the refresh did not come.
+const lastRead = ref(null)
+watch(
+	data,
+	(value) => {
+		if (value) lastRead.value = value
+	},
+	{ immediate: true }
+)
+const facts = computed(() => data.value ?? lastRead.value)
+
+// A learner refused someone else's profile sees nothing; anything else that
+// went wrong is said — to the owner, and to the platform's roles.
+const refusal = computed(() =>
+	answer.value && !answer.value.ok ? answer.value.error?.code : null
+)
+const showFailure = computed(
+	() =>
+		state.value === 'error' &&
+		(isOwn.value || refusal.value !== 'not_your_profile')
+)
+
+const reread = async () => {
+	await load({ quiet: true })
+	if (state.value === 'error') toast.error(failure.value)
+}
 
 // A fact was saved — by the chat or here: this page reads the profile again,
 // and so does the card offering the interview, which counts what is filled.
@@ -213,7 +236,7 @@ let reading = Promise.resolve()
 watch(
 	() => panel.refreshTick,
 	() => {
-		reading = load({ quiet: true })
+		reading = reread()
 	},
 	{ flush: 'sync' }
 )
@@ -240,7 +263,7 @@ const saveFact = async (key, text) => {
 const forgetFact = (key) =>
 	confirmAction({
 		title: __('Delete this fact?'),
-		message: __('The agent will forget it.'),
+		message: __('Your mentor will forget it.'),
 		label: __('Delete'),
 		async onConfirm() {
 			if (
