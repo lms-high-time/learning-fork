@@ -2,7 +2,12 @@
 	<!-- What the mentor knows in place of the bio (learning-services#463). The
 	server answers only the owner and the platform's roles: anyone else gets a
 	refusal, and the page shows nothing for it. -->
-	<div v-if="facts" class="mt-7 mb-10 space-y-4" data-testid="profile-facts">
+	<div
+		v-if="facts"
+		ref="factsRoot"
+		class="mt-7 mb-10 space-y-4"
+		data-testid="profile-facts"
+	>
 		<div class="flex flex-wrap items-center justify-between gap-2">
 			<h2 class="text-lg-semibold text-ink-gray-9">
 				{{ __('About me') }}
@@ -32,6 +37,7 @@
 					<ProfileFact
 						v-for="fact in block.facts"
 						:key="fact.key"
+						:data-fact-key="fact.key"
 						:fact="fact"
 						:editable="canEdit"
 						:save="(text) => saveFact(fact.key, text)"
@@ -48,6 +54,7 @@
 				<ProfileFact
 					v-for="fact in facts.other_facts"
 					:key="fact.key"
+					:data-fact-key="fact.key"
 					:fact="fact"
 					:editable="canEdit"
 					:save="(text) => saveFact(fact.key, text)"
@@ -212,8 +219,9 @@ watch(
 )
 const facts = computed(() => data.value ?? lastRead.value)
 
-// A learner refused someone else's profile sees nothing; anything else that
-// went wrong is said — to the owner, and to the platform's roles.
+// A refusal of someone else's profile shows nothing: that is the server saying
+// the blocks are not this viewer's to see. Anything else that went wrong is
+// said, whoever is looking.
 const refusal = computed(() =>
 	answer.value && !answer.value.ok ? answer.value.error?.code : null
 )
@@ -225,17 +233,20 @@ const showFailure = computed(
 
 const reread = async () => {
 	await load({ quiet: true })
-	if (state.value === 'error') toast.error(failure.value)
+	if (showFailure.value) toast.error(failure.value)
 }
 
 // A fact was saved — by the chat or here: this page reads the profile again,
 // and so does the card offering the interview, which counts what is filled.
+// The facts saved are always the viewer's own, so someone else's profile on
+// screen has nothing new to show and is not asked again.
 // `sync`, so the read has started when `notifyRefresh()` returns and a save
 // here can wait for it: one read per change, the page's own included.
 let reading = Promise.resolve()
 watch(
 	() => panel.refreshTick,
 	() => {
+		if (!isOwn.value) return
 		reading = reread()
 	},
 	{ flush: 'sync' }
@@ -272,10 +283,32 @@ const forgetFact = (key) =>
 					{ key },
 					__('Could not delete')
 				)
-			)
+			) {
 				await refreshed()
+				focusFillIn(key)
+			}
 		},
 	})
+
+// After a delete, focus goes to the row's «Fill in» — the Delete button left
+// with the text. The confirmation, as it leaves, hands focus back to what
+// opened it (that same Delete button, so nowhere): the move waits until the
+// dialog is gone, or it would be pulled back into it or dropped after.
+const factsRoot = ref(null)
+const focusFillIn = (key) => {
+	let frames = 60
+	const step = () => {
+		if (document.querySelector('[role="dialog"][data-state]') && frames-- > 0)
+			return requestAnimationFrame(step)
+		setTimeout(() => {
+			const row = Array.from(
+				factsRoot.value?.querySelectorAll('[data-fact-key]') ?? []
+			).find((element) => element.dataset.factKey === key)
+			row?.querySelector('[data-testid="profile-fact-edit"]')?.focus()
+		})
+	}
+	step()
+}
 
 // A refusal says why; a failure without words gets ours.
 const write = async (method, params, fallback) => {

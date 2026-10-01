@@ -189,6 +189,21 @@ describe('About me', () => {
 		expect(toast.error).toHaveBeenCalledWith('Could not load the profile')
 	})
 
+	it('does not ask again for someone else’s profile when the chat saved a fact', async () => {
+		// A learner on a classmate's page, filling in their own profile in the
+		// panel: each saved fact must not bring the classmate's refusal back.
+		server.answers[URL] = {
+			ok: false,
+			error: { code: 'not_your_profile', message: 'Not yours' },
+		}
+		await open('other@x')
+		useAssistantPanel().notifyRefresh()
+		useAssistantPanel().notifyRefresh()
+		await flushPromises()
+		expect(server.fetched).toHaveLength(1)
+		expect(toast.error).not.toHaveBeenCalled()
+	})
+
 	it('shows someone else’s profile read-only to the platform', async () => {
 		// The server sends no chat for another person's profile.
 		server.answers[URL] = {
@@ -287,6 +302,33 @@ describe('About me', () => {
 		// One read again, and the card offering the interview hears of it too.
 		expect(server.fetched).toHaveLength(2)
 		expect(useAssistantPanel().refreshTick).toBe(1)
+	})
+
+	it('puts focus on «Fill in» of the fact it deleted', async () => {
+		server.answers[URL] = { ok: true, data: profileOf() }
+		call.mockResolvedValue({ ok: true, data: { key: 'role' } })
+		const wrapper = await open()
+		server.answers[URL] = {
+			ok: true,
+			data: profileOf({
+				blocks: [
+					{
+						id: 'work',
+						title: 'Контекст работы',
+						facts: [
+							{ key: 'role', label: 'Роль', text: null, updated: null },
+							{ key: 'industry', label: 'Отрасль', text: null, updated: null },
+						],
+					},
+				],
+			}),
+		}
+		await wrapper.get('[data-testid="profile-fact-delete"]').trigger('click')
+		await flushPromises()
+		await new Promise((resolve) => setTimeout(resolve))
+		const role = wrapper.findAll('[data-testid="profile-fact-edit"]')[0]
+		expect(role.attributes('aria-label')).toBe('Fill in: Роль')
+		expect(document.activeElement).toBe(role.element)
 	})
 
 	it('reads the profile again when the chat saved a fact', async () => {
