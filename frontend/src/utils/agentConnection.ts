@@ -1,4 +1,4 @@
-// «Connect your agent» (learning-services#470): where an MCP client connects
+// «Connect an assistant» (learning-services#470): where an MCP client connects
 // for each role. The agent service lives on the site's own domain, next to
 // the web chat (`/chat`), so the addresses follow the page's origin.
 

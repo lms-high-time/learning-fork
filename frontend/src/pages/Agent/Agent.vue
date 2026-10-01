@@ -2,14 +2,14 @@
 	<div>
 		<PageHeader
 			:breadcrumbs="[
-				{ label: __('Connect an agent'), route: { name: 'Agent' } },
+				{ label: __('Connect an assistant'), route: { name: 'Agent' } },
 			]"
 		/>
 
 		<div class="mx-auto max-w-3xl space-y-8 p-4 sm:p-5">
 			<section class="space-y-4">
 				<h1 class="text-xl-semibold text-ink-gray-9">
-					{{ __('Connect an agent') }}
+					{{ __('Connect an assistant') }}
 				</h1>
 				<p class="text-p-base text-ink-gray-7">
 					{{
@@ -404,7 +404,7 @@ import {
 	vscodeInstallLink,
 } from '@/utils/agentConnection'
 
-// «Connect an agent»: where an assistant connects and how, for people who
+// «Connect an assistant»: where an assistant connects and how, for people who
 // have never added a connector (learning-services#470, #471). The address is
 // shown to a guest too: the assistant asks to sign in anyway.
 
@@ -511,5 +511,5 @@ const copy = async (text: string) => {
 	}
 }
 
-usePageMeta(() => ({ title: __('Connect an agent') }))
+usePageMeta(() => ({ title: __('Connect an assistant') }))
 </script>

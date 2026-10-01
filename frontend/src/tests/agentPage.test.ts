@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils'
 import { reactive } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
-// «Connect an agent» (learning-services#470, #471): the MCP addresses inside
+// «Connect an assistant» (learning-services#470, #471): the MCP addresses inside
 // the app, the authoring one only for those who build courses, and the way to
 // connect them for each assistant.
 

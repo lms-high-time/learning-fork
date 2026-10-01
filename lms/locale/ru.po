@@ -9891,7 +9891,7 @@ msgstr "Повторить с агентом"
 
 #: frontend/src/components/LessonEntry.vue
 msgid "Connect your agent"
-msgstr "Подключить своего агента"
+msgstr "Подключить своего ассистента"
 
 #: frontend/src/components/LessonEntry.vue
 msgid "Trial lessons in the browser are used up. Lessons continue with your own agent, and your progress is kept."
@@ -11536,8 +11536,8 @@ msgid "Ask the assistant to call authoring_guide first: it is the build order an
 msgstr "Попросите ассистента начать с authoring_guide: там порядок сборки и правила платформы."
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "Connect an agent"
-msgstr "Подключить агента"
+msgid "Connect an assistant"
+msgstr "Подключить ассистента"
 
 #: frontend/src/pages/Agent/Agent.vue
 msgid "Study in the browser"

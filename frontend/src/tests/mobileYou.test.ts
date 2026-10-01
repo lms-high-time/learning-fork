@@ -304,11 +304,11 @@ describe('a signed-out visitor who types the URL', () => {
 		isLoggedIn.value = false
 		userResource.data = null
 		otherLinks.value = [
-			{ label: 'Подключить агента', icon: 'Bot', to: 'agent-sidebar' },
+			{ label: 'Подключить ассистента', icon: 'Bot', to: 'agent-sidebar' },
 			{ label: 'Log in', icon: 'LogIn', to: '' },
 		]
 		const { wrapper } = await openYou()
-		expect(wrapper.text()).toContain('Подключить агента')
+		expect(wrapper.text()).toContain('Подключить ассистента')
 		expect(wrapper.text()).not.toContain('Colour mode')
 	})
 })
