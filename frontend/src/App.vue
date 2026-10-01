@@ -4,6 +4,10 @@
 			<router-view />
 		</Layout>
 		<NotificationPanel />
+		<!-- Outside <Layout>: switching layouts (desktop, mobile, no sidebar on
+		lessons) would unmount the panel's iframe and lose the conversation
+		(learning-services#463). -->
+		<AssistantPanel />
 		<InstallPrompt v-if="isMobile && !settings.data?.disable_pwa" />
 		<Dialogs />
 	</FrappeUIProvider>
@@ -20,6 +24,7 @@ import MobileLayout from './components/Layouts/MobileLayout.vue'
 import NoSidebarLayout from './components/Layouts/NoSidebarLayout.vue'
 import InstallPrompt from './components/InstallPrompt.vue'
 import NotificationPanel from '@/components/Notifications/NotificationPanel.vue'
+import AssistantPanel from '@/components/AssistantPanel/AssistantPanel.vue'
 
 const { isMobile } = useScreenSize()
 const route = useRoute()
