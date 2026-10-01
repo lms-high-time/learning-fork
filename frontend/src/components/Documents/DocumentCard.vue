@@ -27,9 +27,9 @@
 			</span>
 		</div>
 
-		<!-- The next step: the lesson in progress during the course, after it
-		the table's most urgent date under its own title (learning-services#342,
-		#360). -->
+		<!-- The next step: the lesson the document grows on next during the
+		course, after it the table's most urgent date under its own title
+		(learning-services#342, #360, #462). -->
 		<div class="flex flex-wrap items-center justify-between gap-3 ps-9">
 			<p class="text-p-sm text-ink-gray-6" data-testid="document-next">
 				<template v-if="lesson">
@@ -50,6 +50,9 @@
 				<template v-else-if="finished">{{
 					__('The course is behind you')
 				}}</template>
+				<template v-else-if="behind">{{
+					__('Its lessons are behind you')
+				}}</template>
 			</p>
 			<router-link :to="open()">
 				<Button
@@ -68,6 +71,7 @@ import ProgressBar from '@/components/ProgressBar.vue'
 import {
 	formatCell,
 	isSharedTable,
+	lessonAhead,
 	tableDates,
 	urgentDate,
 	type DocumentData,
@@ -96,7 +100,12 @@ const map = createResource({
 	cache: ['course_map', props.course],
 	auto: true,
 })
-type Lesson = { id: string; number: number; title: string }
+type Lesson = {
+	id: string
+	number: number
+	title: string
+	blocks?: { artifact: string }[]
+}
 const mapData = computed(
 	() =>
 		(
@@ -108,22 +117,32 @@ const mapData = computed(
 			} | null
 		)?.data
 )
-const lesson = computed(() => {
-	const id = mapData.value?.next_lesson
-	return id
-		? mapData.value?.chapters
-				?.flatMap((c) => c.lessons)
-				.find((l) => l.id === id) ?? null
-		: null
-})
+const lessons = computed(
+	() => mapData.value?.chapters?.flatMap((c) => c.lessons) ?? []
+)
+const builds = (l: Lesson) =>
+	(l.blocks ?? []).some((b) => b.artifact === props.doc.artifact)
+// The lesson this document grows on next — the course's next lesson may build
+// nothing of it (learning-services#462). The document opens on the same lesson.
+const lesson = computed(() =>
+	lessonAhead(lessons.value, mapData.value?.next_lesson, builds)
+)
 // A student's map without a next lesson: every lesson is closed.
 const finished = computed(
 	() => Boolean(mapData.value) && mapData.value?.next_lesson === null
 )
+// The course goes on, the document's lessons are passed. A document with no
+// lesson of its own has none to pass.
+const behind = computed(
+	() =>
+		Boolean(mapData.value?.next_lesson) &&
+		!lesson.value &&
+		lessons.value.some(builds)
+)
 
-// After the course, the whole table's own dates: the most urgent one, named by
-// its field — which date matters is the course's to say, not a key's
-// (learning-services#360).
+// After the course or the document's lessons, the whole table's own dates: the
+// most urgent one, named by its field — which date matters is the course's to
+// say, not a key's (learning-services#360).
 const document = createResource({
 	url: 'lms_frappe_app.api.student.artifact',
 	method: 'GET',
@@ -142,7 +161,7 @@ const due = computed(() =>
 		: null
 )
 watch(
-	finished,
+	() => finished.value || behind.value,
 	(done) => {
 		if (done) document.fetch()
 	},

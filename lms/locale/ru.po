@@ -10497,6 +10497,10 @@ msgstr "Не удалось скопировать"
 msgid "The course is behind you"
 msgstr "Курс пройден"
 
+#: frontend/src/components/Documents/DocumentCard.vue
+msgid "Its lessons are behind you"
+msgstr "Уроки этого документа пройдены"
+
 #: frontend/src/components/Documents/ReportPanel.vue
 msgid "Continue"
 msgstr "Продолжить"

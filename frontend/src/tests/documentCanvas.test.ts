@@ -260,9 +260,9 @@ describe('canvas helpers', () => {
 
 	it('opens on the canvas after the course, on the lesson during it', () => {
 		const groups = outline(doc, [{ id: 'l1', number: 1, title: 'Набросок' }])
-		expect(defaultView(doc, groups, null)).toBe(CANVAS_VIEW)
-		expect(defaultView(doc, groups, 'l1')).toBe('first_sketch')
-		expect(defaultView({ ...doc, canvas: null }, groups, null)).toBe(
+		expect(defaultView(doc, groups, null, [])).toBe(CANVAS_VIEW)
+		expect(defaultView(doc, groups, 'l1', [])).toBe('first_sketch')
+		expect(defaultView({ ...doc, canvas: null }, groups, null, [])).toBe(
 			'first_sketch'
 		)
 	})

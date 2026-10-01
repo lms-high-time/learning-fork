@@ -140,12 +140,12 @@ describe('ReportPanel', () => {
 })
 
 describe('DocumentCard', () => {
-	const card = () =>
+	const card = (artifact = 'risk_register') =>
 		mount(DocumentCard, {
 			props: {
 				course: 'c1',
 				doc: {
-					artifact: 'risk_register',
+					artifact,
 					title: 'Реестр',
 					blocks_total: 14,
 					blocks_filled: 4,
@@ -154,23 +154,74 @@ describe('DocumentCard', () => {
 			global,
 		})
 
-	it('names the lesson in progress and continues there', () => {
+	const during = (next: string) => {
+		const builds = [{ artifact: 'risk_register' }]
 		resources['lms_frappe_app.api.public.course_map'] = {
 			data: {
 				data: {
-					next_lesson: 'l5',
+					next_lesson: next,
 					chapters: [
-						{ lessons: [{ id: 'l5', number: 5, title: 'Ответ и мера' }] },
+						{
+							lessons: [
+								{ id: 'l5', number: 5, title: 'Ответ и мера', blocks: builds },
+								{ id: 'l6', number: 6, title: 'Владельцы', blocks: [] },
+								{
+									id: 'l7',
+									number: 7,
+									title: 'Резюме',
+									blocks: [{ artifact: 'summary' }],
+								},
+							],
+						},
 					],
 				},
 			},
 			fetch: vi.fn(),
 		}
+	}
+
+	it('names the lesson in progress and continues there', () => {
+		during('l5')
 		const wrapper = card()
 		expect(wrapper.get('[data-testid="document-next"]').text()).toBe(
 			'Lesson 5 · Ответ и мера'
 		)
 		expect(wrapper.text()).toContain('Continue')
+	})
+
+	// The course's next lesson builds nothing of this document: the card named
+	// it anyway, «Урок 1» on four registers begun later (learning-services#462).
+	it('names the later lesson the document grows on', () => {
+		during('l6')
+		const wrapper = card('summary')
+		expect(wrapper.get('[data-testid="document-next"]').text()).toBe(
+			'Lesson 7 · Резюме'
+		)
+		expect(wrapper.text()).toContain('Continue')
+	})
+
+	it('says the document’s lessons are passed while the course goes on', () => {
+		during('l6')
+		const wrapper = card()
+		expect(wrapper.get('[data-testid="document-next"]').text()).toBe(
+			'Its lessons are behind you'
+		)
+		expect(wrapper.text()).toContain('Open')
+		expect(wrapper.text()).not.toContain('Continue')
+	})
+
+	it('claims no passed lessons for a document no lesson builds', () => {
+		during('l5')
+		const wrapper = card('free_notes')
+		expect(wrapper.get('[data-testid="document-next"]').text()).toBe('')
+	})
+
+	it('says nothing on a map without the student’s next lesson', () => {
+		resources['lms_frappe_app.api.public.course_map'] = {
+			data: { data: { chapters: [] } },
+			fetch: vi.fn(),
+		}
+		expect(card().get('[data-testid="document-next"]').text()).toBe('')
 	})
 
 	// After the course: the table's most urgent date, under the field's own
