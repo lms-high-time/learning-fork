@@ -7,7 +7,6 @@ import {
 	referringTables,
 	tableDates,
 	toCsv,
-	urgentDate,
 	type DocBlock,
 	type DocTable,
 	type DocumentData,
@@ -225,18 +224,6 @@ describe('whole table helpers', () => {
 				days: -8,
 			},
 		])
-	})
-
-	it('picks the most urgent date, an overdue one first', () => {
-		const at = (key: string, days: number) => ({
-			key,
-			title: key,
-			value: '',
-			days,
-		})
-		expect(urgentDate([])).toBeNull()
-		expect(urgentDate([at('a', 30), at('b', 3)])?.key).toBe('b')
-		expect(urgentDate([at('a', 3), at('b', -2), at('c', -1)])?.key).toBe('b')
 	})
 
 	it('writes the view as CSV, quoting what needs it', () => {

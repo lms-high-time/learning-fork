@@ -593,17 +593,6 @@ export function tableDates(
 	return out
 }
 
-/**
- * The date that asks first: the nearest one, an overdue one before any. Which
- * date matters is not told by its key — every course names its own
- * (learning-services#360).
- */
-export const urgentDate = (dates: TableDate[]): TableDate | null =>
-	dates.reduce<TableDate | null>(
-		(first, d) => (!first || d.days < first.days ? d : first),
-		null
-	)
-
 /** The document's report: the first table with a report view, and the view. */
 export function reportOf(
 	doc: DocumentData
