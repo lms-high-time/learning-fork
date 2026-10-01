@@ -15,9 +15,13 @@
 					__('Course documents are built as you study. Log in to see yours.')
 				}}
 			</p>
-			<a href="/login?redirect-to=/lms/documents">
-				<Button variant="solid" :label="__('Log in')" />
-			</a>
+			<!-- The login page is outside the app: a plain link in the same tab,
+			drawn as frappe-ui's solid button (its `link` opens a new tab). -->
+			<a
+				href="/login?redirect-to=/lms/documents"
+				class="inline-flex h-8 items-center rounded-4 bg-surface-gray-10 px-2.5 text-base-medium text-ink-base hover:bg-surface-gray-9"
+				>{{ __('Log in') }}</a
+			>
 		</div>
 
 		<div
@@ -39,7 +43,7 @@
 					)
 				}}
 			</p>
-			<Button :label="__('Try again')" @click="progress.reload()" />
+			<Button :label="__('Try again')" @click="refresh" />
 		</div>
 
 		<div
@@ -54,9 +58,7 @@
 					)
 				}}
 			</p>
-			<router-link :to="{ name: 'Courses' }">
-				<Button :label="__('To courses')" />
-			</router-link>
+			<Button :route="{ name: 'Courses' }" :label="__('To courses')" />
 		</div>
 
 		<div v-else class="mx-auto max-w-3xl space-y-7 px-2 py-6 sm:px-4">
@@ -148,8 +150,10 @@ const answer = computed(
 )
 // A refusal or a failed request is not «no documents»: the student would
 // think what they wrote is gone.
+// A failed refresh keeps the list it had: frappe-ui leaves the previous data
+// in place, and the page shouldn't empty under the student's eyes.
 const failed = computed(
-	() => Boolean(progress.error) || answer.value?.ok === false
+	() => (!answer.value && Boolean(progress.error)) || answer.value?.ok === false
 )
 
 // Courses with documents, the most recently written first.
@@ -180,7 +184,8 @@ const socket = inject<{
 	on: (event: string, handler: () => void) => void
 	off: (event: string, handler: () => void) => void
 } | null>('$socket', null)
-const refresh = () => progress.reload()
+// frappe-ui rethrows a failed request; the page shows it, nothing to catch.
+const refresh = () => progress.reload().catch(() => {})
 onMounted(() => socket?.on('artifact_updated', refresh))
 onBeforeUnmount(() => socket?.off('artifact_updated', refresh))
 

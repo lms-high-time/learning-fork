@@ -9,7 +9,12 @@ const progress: {
 	error: unknown
 	loading: boolean
 	reload: ReturnType<typeof vi.fn>
-} = { data: null, error: null, loading: false, reload: vi.fn() }
+} = {
+	data: null,
+	error: null,
+	loading: false,
+	reload: vi.fn().mockResolvedValue(undefined),
+}
 const query: Record<string, string> = {}
 
 vi.mock('frappe-ui', () => ({

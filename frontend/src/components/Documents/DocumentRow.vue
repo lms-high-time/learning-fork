@@ -7,7 +7,7 @@
 			name: 'Document',
 			params: { courseName: course, artifact: doc.artifact },
 		}"
-		class="grid grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-4 rounded-lg px-3 py-3 hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3 sm:px-4"
+		class="grid grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-4 rounded-lg px-3 py-3 hover:bg-surface-gray-2 sm:px-4"
 		:data-testid="`document-${doc.artifact}`"
 	>
 		<span
@@ -54,7 +54,7 @@
 			<span
 				v-else
 				aria-hidden="true"
-				class="absolute inset-0 flex items-center justify-center text-[10px] font-medium tabular-nums"
+				class="absolute inset-0 flex items-center justify-center text-[11px] font-medium tabular-nums"
 				:class="fill.empty ? 'text-ink-gray-5' : 'text-ink-gray-8'"
 				>{{ fill.percent }}%</span
 			>
@@ -74,7 +74,7 @@
 			}}</span>
 			<span
 				v-if="doc.purpose"
-				class="mt-0.5 block text-p-sm text-ink-gray-6"
+				class="mt-0.5 line-clamp-2 text-p-sm text-ink-gray-6"
 				data-testid="document-purpose"
 				>{{ doc.purpose }}</span
 			>
@@ -85,7 +85,8 @@
 			class="whitespace-nowrap text-xs tabular-nums text-ink-gray-5"
 			:title="changed.full"
 			data-testid="document-changed"
-			>{{ changed.short }}</span
+			><span aria-hidden="true">{{ changed.short }}</span
+			><span class="sr-only">{{ changed.full }}</span></span
 		>
 	</router-link>
 </template>
