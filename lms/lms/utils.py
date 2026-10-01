@@ -1738,16 +1738,10 @@ def categorize_batches(batches: list) -> dict:
 
 
 def get_country_code():
-	ip = frappe.local.request_ip
-	res = requests.get(f"http://ip-api.com/json/{ip}")
-
-	try:
-		data = res.json()
-		if data.get("status") != "fail":
-			return frappe.db.get_value("Country", {"code": data.get("countryCode")}, "name")
-	except Exception:
-		pass
-	return
+	# High Time: страну по IP не определяем — IP пользователя не уходит во
+	# внешний сервис, страна берётся только из профиля
+	# (lms-high-time/learning-services#466).
+	return None
 
 
 @frappe.whitelist()

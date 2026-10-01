@@ -3,7 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import type { DocTable, DocumentData } from '@/utils/documentTable'
 
 // learning-services#342, step 3: the report offers its rows and copies as
-// text; «Мои документы» say the next step.
+// text.
 
 const resources: Record<
 	string,
@@ -24,7 +24,6 @@ vi.mock('frappe-ui', () => ({
 }))
 
 import ReportPanel from '@/components/Documents/ReportPanel.vue'
-import DocumentCard from '@/components/Documents/DocumentCard.vue'
 
 const __ = (message: string) => {
 	if (!/{\d+}/.test(message)) return message
@@ -136,156 +135,5 @@ describe('ReportPanel', () => {
 		expect(text).toContain('R1. A')
 		expect(text).toContain('Ранг: 20')
 		expect(text).toContain('Следующий доклад: 15.10.2026')
-	})
-})
-
-describe('DocumentCard', () => {
-	const card = (artifact = 'risk_register') =>
-		mount(DocumentCard, {
-			props: {
-				course: 'c1',
-				doc: {
-					artifact,
-					title: 'Реестр',
-					blocks_total: 14,
-					blocks_filled: 4,
-				},
-			},
-			global,
-		})
-
-	const during = (next: string) => {
-		const builds = [{ artifact: 'risk_register' }]
-		resources['lms_frappe_app.api.public.course_map'] = {
-			data: {
-				data: {
-					next_lesson: next,
-					chapters: [
-						{
-							lessons: [
-								{ id: 'l5', number: 5, title: 'Ответ и мера', blocks: builds },
-								{ id: 'l6', number: 6, title: 'Владельцы', blocks: [] },
-								{
-									id: 'l7',
-									number: 7,
-									title: 'Резюме',
-									blocks: [{ artifact: 'summary' }],
-								},
-							],
-						},
-					],
-				},
-			},
-			fetch: vi.fn(),
-		}
-	}
-
-	it('names the lesson in progress and continues there', () => {
-		during('l5')
-		const wrapper = card()
-		expect(wrapper.get('[data-testid="document-next"]').text()).toBe(
-			'Lesson 5 · Ответ и мера'
-		)
-		expect(wrapper.text()).toContain('Continue')
-	})
-
-	// The course's next lesson builds nothing of this document: the card named
-	// it anyway, «Урок 1» on four registers begun later (learning-services#462).
-	it('names the later lesson the document grows on', () => {
-		during('l6')
-		const wrapper = card('summary')
-		expect(wrapper.get('[data-testid="document-next"]').text()).toBe(
-			'Lesson 7 · Резюме'
-		)
-		expect(wrapper.text()).toContain('Continue')
-	})
-
-	it('says the document’s lessons are passed while the course goes on', () => {
-		during('l6')
-		const wrapper = card()
-		expect(wrapper.get('[data-testid="document-next"]').text()).toBe(
-			'Its lessons are behind you'
-		)
-		expect(wrapper.text()).toContain('Open')
-		expect(wrapper.text()).not.toContain('Continue')
-	})
-
-	it('claims no passed lessons for a document no lesson builds', () => {
-		during('l5')
-		const wrapper = card('free_notes')
-		expect(wrapper.get('[data-testid="document-next"]').text()).toBe('')
-	})
-
-	it('says nothing on a map without the student’s next lesson', () => {
-		resources['lms_frappe_app.api.public.course_map'] = {
-			data: { data: { chapters: [] } },
-			fetch: vi.fn(),
-		}
-		expect(card().get('[data-testid="document-next"]').text()).toBe('')
-	})
-
-	// After the course: the table's most urgent date, under the field's own
-	// title — no key is special, each course names its dates
-	// (learning-services#360).
-	const finished = (d: DocumentData) => {
-		resources['lms_frappe_app.api.public.course_map'] = {
-			data: { data: { next_lesson: null, chapters: [] } },
-			fetch: vi.fn(),
-		}
-		resources['lms_frappe_app.api.student.artifact'] = {
-			data: { data: d },
-			fetch: vi.fn(),
-		}
-		return card()
-	}
-	const dated = (fields: DocumentData['fields'], canvas?: unknown) => {
-		const d = doc(register())
-		d.blocks = [
-			{
-				key: 'risks',
-				fields: [
-					{ key: 'check_on', title: 'Сверка', type: 'date' },
-					{ key: 'call_on', title: 'Созвон', type: 'date' },
-				],
-			} as never,
-		]
-		d.fields = fields
-		if (canvas) (d as { canvas?: unknown }).canvas = canvas
-		return d
-	}
-
-	it('after the course, puts an overdue date first, named by its field', () => {
-		const wrapper = finished(
-			dated({ check_on: '2099-01-01', call_on: '2020-01-01' })
-		)
-		expect(
-			resources['lms_frappe_app.api.student.artifact'].fetch
-		).toHaveBeenCalled()
-		const next = wrapper.get('[data-testid="document-next"]')
-		expect(next.text()).toMatch(/^Созвон: overdue by \d+ d$/)
-		expect(next.get('span').classes()).toContain('text-ink-red-5')
-		// «Open» lets the document open where it should by itself.
-		expect(wrapper.text()).toContain('Open')
-		const links = wrapper.findAll('a[data-to]')
-		expect(
-			links.map((a) => JSON.parse(a.attributes('data-to') as string))
-		).toEqual(
-			links.map(() => ({
-				name: 'Document',
-				params: { courseName: 'c1', artifact: 'risk_register' },
-			}))
-		)
-	})
-
-	it("shows the nearest date of a sheet's table too", () => {
-		const wrapper = finished(
-			dated(
-				{ check_on: '2099-03-01', call_on: '2099-01-15' },
-				{ grid: ['risks'] }
-			)
-		)
-		expect(wrapper.get('[data-testid="document-next"]').text()).toBe(
-			'Созвон: 15.01.2099'
-		)
 	})
 })
