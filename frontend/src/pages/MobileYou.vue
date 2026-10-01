@@ -55,6 +55,18 @@
 				</router-link>
 			</div>
 
+			<!-- The sidebar's suggested action; a phone has no sidebar
+			(learning-services#463). -->
+			<SuggestedAction
+				v-if="isStudent && profileSummary && !profileSummary.complete"
+				class="mt-4"
+				:title="__('Tell your mentor about yourself')"
+				:text="__('Lessons will use examples from your work. About 5 minutes.')"
+				:actionLabel="__('Start')"
+				scenario="profile"
+				:url="profileSummary.interview_url"
+			/>
+
 			<!-- A wrapper, not an attribute on the list: it renders a fragment. -->
 			<div data-testid="you-spaces">
 				<SettingsRowList
@@ -118,6 +130,8 @@ import MobilePageLayout from '@/components/Layouts/MobilePageLayout.vue'
 import BottomSheet from '@/components/BottomSheet.vue'
 import SettingsRowList from '@/components/Settings/Mobile/SettingsRowList.vue'
 import { buildYouRows } from '@/components/Settings/youRows'
+import SuggestedAction from '@/components/SuggestedAction.vue'
+import { useProfileSummary } from '@/composables/useProfileSummary'
 import { useSpace, PERSONAL, type Space } from '@/stores/space'
 import { spaceLabel } from '@/utils/space'
 import {
@@ -142,6 +156,9 @@ const isSignedIn = computed(
 const user = computed<SettingsUser | undefined>(
 	() => (userResource.data as SettingsUser | null) ?? undefined
 )
+
+const isStudent = computed(() => Boolean(userResource.data?.is_student))
+const { summary: profileSummary } = useProfileSummary(() => isStudent.value)
 
 // Gated on the src having LOADED, not on it existing: a `user_image` pointing
 // at a deleted or unreadable file still renders an <img>, and `alt=""` tells
