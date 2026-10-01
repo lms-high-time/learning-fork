@@ -77,7 +77,7 @@
 					<h2 class="text-lg-semibold text-ink-gray-9">
 						{{ __('How to connect in Claude Desktop') }}
 					</h2>
-					<ol class="list-decimal space-y-1 pl-5 text-p-base text-ink-gray-7">
+					<ol class="list-decimal space-y-1 ps-5 text-p-base text-ink-gray-7">
 						<li>
 							{{ __('Settings → Connectors → Add custom connector.') }}
 						</li>
