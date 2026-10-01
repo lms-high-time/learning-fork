@@ -269,6 +269,7 @@ describe('views', () => {
 import {
 	blockState,
 	defaultView,
+	lessonAhead,
 	outline,
 	readyLine,
 	TABLE_VIEW,
@@ -363,6 +364,43 @@ describe('workspace', () => {
 		const groups = outline(d, [{ id: 'l2', number: 2, title: 'Цели' }])
 		expect(defaultView(d, groups, 'l2')).toBe('stages')
 		expect(defaultView(d, groups, null)).toBe(TABLE_VIEW)
+	})
+
+	it('names the lesson the document grows on next, not the course’s next', () => {
+		// The course's next lesson may build nothing of this document: the
+		// card said «Урок 1» for a register begun on lesson 4 (#462).
+		const lessons = [
+			{ id: 'l1', builds: false },
+			{ id: 'l2', builds: true },
+			{ id: 'l3', builds: false },
+			{ id: 'l4', builds: true },
+		]
+		const builds = (l: { builds: boolean }) => l.builds
+		expect(lessonAhead(lessons, 'l1', builds)?.id).toBe('l2')
+		expect(lessonAhead(lessons, 'l2', builds)?.id).toBe('l2')
+		expect(lessonAhead(lessons, 'l3', builds)?.id).toBe('l4')
+		// Its lessons are behind, or the course is: no lesson to name.
+		expect(
+			lessonAhead(lessons.slice(0, 3), 'l3', builds)
+		).toBeNull()
+		expect(lessonAhead(lessons, null, builds)).toBeNull()
+	})
+
+	it('opens on the lesson the document grows on next', () => {
+		const d = doc([
+			lesson('worries', 'l1', { filled: true }),
+			lesson('review', 'l4', { filled: false }),
+		])
+		const course = [
+			{ id: 'l1', number: 1, title: 'Риск' },
+			{ id: 'l2', number: 2, title: 'Цели' },
+			{ id: 'l4', number: 4, title: 'Ревью' },
+		]
+		const groups = outline(d, course)
+		// Lesson 2 builds nothing of it: the first block is lesson 1's, already
+		// behind — the document opens on lesson 4, where it is written next.
+		expect(defaultView(d, groups, 'l2', course)).toBe('review')
+		expect(defaultView(d, groups, 'l1', course)).toBe('worries')
 	})
 
 	it('names a row by the first required text column, whatever its key', () => {

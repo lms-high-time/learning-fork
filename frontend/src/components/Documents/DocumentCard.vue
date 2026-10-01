@@ -27,9 +27,9 @@
 			</span>
 		</div>
 
-		<!-- The next step: the lesson in progress during the course, after it
-		the table's most urgent date under its own title (learning-services#342,
-		#360). -->
+		<!-- The next step: the lesson the document grows on next during the
+		course, after it the table's most urgent date under its own title
+		(learning-services#342, #360, #462). -->
 		<div class="flex flex-wrap items-center justify-between gap-3 ps-9">
 			<p class="text-p-sm text-ink-gray-6" data-testid="document-next">
 				<template v-if="lesson">
@@ -50,6 +50,9 @@
 				<template v-else-if="finished">{{
 					__('The course is behind you')
 				}}</template>
+				<template v-else-if="mapData?.next_lesson">{{
+					__('Its lessons are behind you')
+				}}</template>
 			</p>
 			<router-link :to="open()">
 				<Button
@@ -68,6 +71,7 @@ import ProgressBar from '@/components/ProgressBar.vue'
 import {
 	formatCell,
 	isSharedTable,
+	lessonAhead,
 	tableDates,
 	urgentDate,
 	type DocumentData,
@@ -96,7 +100,12 @@ const map = createResource({
 	cache: ['course_map', props.course],
 	auto: true,
 })
-type Lesson = { id: string; number: number; title: string }
+type Lesson = {
+	id: string
+	number: number
+	title: string
+	blocks?: { artifact: string }[]
+}
 const mapData = computed(
 	() =>
 		(
@@ -108,14 +117,15 @@ const mapData = computed(
 			} | null
 		)?.data
 )
-const lesson = computed(() => {
-	const id = mapData.value?.next_lesson
-	return id
-		? mapData.value?.chapters
-				?.flatMap((c) => c.lessons)
-				.find((l) => l.id === id) ?? null
-		: null
-})
+// The lesson this document grows on next — the course's next lesson may build
+// nothing of it (learning-services#462). The document opens on the same lesson.
+const lesson = computed(() =>
+	lessonAhead(
+		mapData.value?.chapters?.flatMap((c) => c.lessons) ?? [],
+		mapData.value?.next_lesson,
+		(l) => (l.blocks ?? []).some((b) => b.artifact === props.doc.artifact)
+	)
+)
 // A student's map without a next lesson: every lesson is closed.
 const finished = computed(
 	() => Boolean(mapData.value) && mapData.value?.next_lesson === null

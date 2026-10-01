@@ -154,23 +154,51 @@ describe('DocumentCard', () => {
 			global,
 		})
 
-	it('names the lesson in progress and continues there', () => {
+	const during = (next: string) => {
+		const builds = [{ artifact: 'risk_register' }]
 		resources['lms_frappe_app.api.public.course_map'] = {
 			data: {
 				data: {
-					next_lesson: 'l5',
+					next_lesson: next,
 					chapters: [
-						{ lessons: [{ id: 'l5', number: 5, title: 'Ответ и мера' }] },
+						{
+							lessons: [
+								{ id: 'l5', number: 5, title: 'Ответ и мера', blocks: builds },
+								{ id: 'l6', number: 6, title: 'Владельцы', blocks: [] },
+								{
+									id: 'l7',
+									number: 7,
+									title: 'Резюме',
+									blocks: [{ artifact: 'summary' }],
+								},
+							],
+						},
 					],
 				},
 			},
 			fetch: vi.fn(),
 		}
+	}
+
+	it('names the lesson in progress and continues there', () => {
+		during('l5')
 		const wrapper = card()
 		expect(wrapper.get('[data-testid="document-next"]').text()).toBe(
 			'Lesson 5 · Ответ и мера'
 		)
 		expect(wrapper.text()).toContain('Continue')
+	})
+
+	// The course's next lesson builds nothing of this document: the card named
+	// it anyway, «Урок 1» on four registers begun later (learning-services#462).
+	it('names no lesson that builds nothing of the document', () => {
+		during('l6')
+		const wrapper = card()
+		expect(wrapper.get('[data-testid="document-next"]').text()).toBe(
+			'Its lessons are behind you'
+		)
+		expect(wrapper.text()).toContain('Open')
+		expect(wrapper.text()).not.toContain('Continue')
 	})
 
 	// After the course: the table's most urgent date, under the field's own

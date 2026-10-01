@@ -456,15 +456,36 @@ export const CANVAS_VIEW = 'canvas'
 export const COMPARE_VIEW = 'compare'
 
 /**
- * Where the document opens: during the course the current lesson's first
- * unfinished block, after it the whole canvas or the whole table.
+ * The lesson a document grows on next: the current one when it builds the
+ * document, otherwise the first after it that does. The course's next lesson
+ * may build nothing of this document — named as is, it pointed at a lesson the
+ * document has no part in (learning-services#462).
+ */
+export function lessonAhead<T extends { id: string }>(
+	lessons: T[],
+	current: string | null | undefined,
+	builds: (lesson: T) => boolean
+): T | null {
+	const from = lessons.findIndex((l) => l.id === current)
+	return from < 0 ? null : lessons.slice(from).find(builds) ?? null
+}
+
+/**
+ * Where the document opens: during the course the first unfinished block of
+ * the lesson it grows on next, after it the whole canvas or the whole table.
  */
 export function defaultView(
 	doc: DocumentData,
 	groups: OutlineGroup[],
-	currentLesson: string | null | undefined
+	currentLesson: string | null | undefined,
+	lessons: { id: string }[] = []
 ): string {
-	const current = groups.find((g) => g.lesson?.id === currentLesson)
+	const ahead = lessonAhead(lessons, currentLesson, (l) =>
+		groups.some((g) => g.lesson?.id === l.id)
+	)
+	const current = groups.find(
+		(g) => g.lesson?.id === (ahead?.id ?? currentLesson)
+	)
 	if (current) {
 		const open = current.blocks.find((b) => blockState(b, doc) !== 'done')
 		return (open ?? current.blocks[0]).key

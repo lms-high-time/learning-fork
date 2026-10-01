@@ -333,7 +333,7 @@ const active = computed(() => {
 	])
 	if (props.view && known.has(props.view)) return props.view
 	return doc.value
-		? defaultView(doc.value, groups.value, currentLesson.value)
+		? defaultView(doc.value, groups.value, currentLesson.value, lessons.value)
 		: ''
 })
 const block = computed<DocBlock | null>(
