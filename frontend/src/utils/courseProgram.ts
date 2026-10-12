@@ -10,7 +10,7 @@
 export type ProgramObjective = {
 	text: string
 	/** Absent for a guest and for a topic never reported on. */
-	status?: 'covered' | 'touched' | 'skipped'
+	status?: 'covered' | 'touched'
 }
 
 /** A block of the course's document built in a lesson (learning-services#340). */
@@ -45,8 +45,17 @@ export type ProgramLesson = {
 	blocks?: ProgramBlock[]
 }
 
+/** Where an enrolled student stands in a chapter (learning-services#547). */
+export type ChapterStatus = 'not_started' | 'in_progress' | 'passed'
+
 export type ProgramChapter = {
 	title: string
+	/** What the chapter is about, from the course's release; null without one. */
+	description?: string | null
+	/** Present only for an enrolled student, as `course_outline` counts them. */
+	status?: ChapterStatus
+	lessons_total?: number
+	lessons_passed?: number
 	lessons: ProgramLesson[]
 }
 
@@ -105,7 +114,7 @@ export function lessonStatus(
 	return 'ahead'
 }
 
-/** Covered topics out of all of them; touched and skipped do not count. */
+/** Covered topics out of all of them; touched ones do not count. */
 export function topicCount(objectives: ProgramObjective[]): {
 	covered: number
 	total: number
@@ -121,6 +130,23 @@ export function topicCount(objectives: ProgramObjective[]): {
 export function coverage(objectives: ProgramObjective[]): number {
 	const { covered, total } = topicCount(objectives)
 	return total ? covered / total : 0
+}
+
+/**
+ * An enrolled student's progress in a chapter: lessons passed out of all of
+ * them, and whether the chapter is passed. Null for a visitor — the server
+ * sends no counts to one.
+ */
+export function chapterProgress(
+	chapter: ProgramChapter
+): { passed: number; total: number; done: boolean } | null {
+	if (chapter.status === undefined || chapter.lessons_total === undefined)
+		return null
+	return {
+		passed: chapter.lessons_passed ?? 0,
+		total: chapter.lessons_total,
+		done: chapter.status === 'passed',
+	}
 }
 
 /**

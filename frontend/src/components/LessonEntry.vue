@@ -61,6 +61,15 @@
 				</div>
 			</div>
 
+			<!-- The lesson's topics, marked as on the program's slide (#547). -->
+			<LessonObjectives
+				v-if="entry.objectives?.length"
+				class="mt-8"
+				:objectives="entry.objectives"
+				:showStatus="true"
+				heading="h2"
+			/>
+
 			<LessonBlocks
 				v-if="entry.blocks?.length"
 				class="mt-6"
@@ -88,7 +97,8 @@ import { computed } from 'vue'
 import { Button } from 'frappe-ui'
 import { safeUrl } from '@/utils/safeUrl'
 import LessonBlocks from '@/components/Documents/LessonBlocks.vue'
-import type { ProgramBlock } from '@/utils/courseProgram'
+import LessonObjectives from '@/components/CourseProgram/LessonObjectives.vue'
+import type { ProgramBlock, ProgramObjective } from '@/utils/courseProgram'
 
 // What lms_frappe_app.api.public.lesson_entry answers. A lesson on this
 // platform is taught by an agent, so the page shows the way into that lesson
@@ -108,6 +118,11 @@ export interface LessonEntryData {
 	}
 	/** The document blocks this lesson builds (#340). */
 	blocks?: ProgramBlock[]
+	/**
+	 * The lesson's topics as on the program's slide (#547): a status only for
+	 * the student's own started topic; empty for a course without a release.
+	 */
+	objectives?: ProgramObjective[]
 	/** A program in set order that keeps this course shut (#405). */
 	program_lock?: {
 		program: string

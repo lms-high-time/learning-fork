@@ -21,6 +21,38 @@
 			>
 		</div>
 
+		<!-- The chapter is a group of dots on the map; what it is about and how
+		far the student is in it live on its lessons' slides (#326, #547). -->
+		<div
+			v-if="chapter && (chapter.description || progress)"
+			class="mt-1 space-y-0.5"
+			data-testid="slide-chapter"
+		>
+			<p
+				v-if="chapter.description"
+				class="line-clamp-2 text-p-sm text-ink-gray-6"
+				:title="chapter.description"
+				data-testid="slide-chapter-description"
+			>
+				{{ chapter.description }}
+			</p>
+			<p
+				v-if="progress"
+				class="text-p-xs tabular-nums"
+				:class="progress.done ? 'text-ink-green-6' : 'text-ink-gray-5'"
+				data-testid="slide-chapter-progress"
+			>
+				{{
+					progress.done
+						? __('Chapter passed')
+						: __('Chapter: {0} of {1} lessons passed').format(
+								String(progress.passed),
+								String(progress.total)
+						  )
+				}}
+			</p>
+		</div>
+
 		<h3 class="mt-2 text-xl-semibold text-ink-gray-9">
 			{{ lesson.title }}
 		</h3>
@@ -33,53 +65,12 @@
 			{{ lesson.hook }}
 		</p>
 
-		<section v-if="lesson.objectives.length" class="mt-5">
-			<h4 class="text-p-sm font-medium text-ink-gray-8">
-				{{ __('Topics') }}
-				<span
-					v-if="status !== 'none'"
-					data-testid="slide-count"
-					class="font-normal text-ink-gray-5"
-				>
-					·
-					{{
-						__('{0} of {1} covered').format(
-							String(count.covered),
-							String(count.total)
-						)
-					}}
-				</span>
-			</h4>
-			<ul class="mt-2 space-y-1.5">
-				<li
-					v-for="objective in visibleObjectives"
-					:key="objective.text"
-					class="flex items-start gap-2 text-p-sm text-ink-gray-8"
-					:data-status="objective.status || 'none'"
-				>
-					<span
-						class="mt-px w-4 shrink-0 text-center"
-						:class="markerClass(objective)"
-						aria-hidden="true"
-						>{{ marker(objective) }}</span
-					>
-					<span>
-						{{ objective.text }}
-						<span v-if="status !== 'none'" class="sr-only">
-							— {{ statusWord(objective) }}</span
-						>
-					</span>
-				</li>
-			</ul>
-			<button
-				v-if="hiddenCount"
-				type="button"
-				class="mt-2 text-p-sm text-ink-gray-6 underline underline-offset-2"
-				@click="showAll = true"
-			>
-				{{ __('{0} more').format(String(hiddenCount)) }}
-			</button>
-		</section>
+		<LessonObjectives
+			class="mt-5"
+			:objectives="lesson.objectives"
+			:showStatus="status !== 'none'"
+			:limit="FIRST_TOPICS"
+		/>
 
 		<LessonBlocks
 			v-if="lesson.blocks?.length"
@@ -105,14 +96,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import LessonBlocks from '@/components/Documents/LessonBlocks.vue'
+import LessonObjectives from '@/components/CourseProgram/LessonObjectives.vue'
 import { safeUrl } from '@/utils/safeUrl'
 import {
-	topicCount,
+	chapterProgress,
 	type LessonStatus,
+	type ProgramChapter,
 	type ProgramLesson,
-	type ProgramObjective,
 } from '@/utils/courseProgram'
 
 const props = defineProps<{
@@ -124,20 +116,15 @@ const props = defineProps<{
 	lessonUrl: string
 	/** For the links to the document's blocks this lesson builds (#340). */
 	courseName: string
+	/** The lesson's chapter: its description and the student's progress (#547). */
+	chapter?: ProgramChapter
 }>()
 
 // Six fit a slide without pushing the button off a laptop screen.
 const FIRST_TOPICS = 6
-const showAll = ref(false)
 
-const count = computed(() => topicCount(props.lesson.objectives))
-const visibleObjectives = computed(() =>
-	showAll.value
-		? props.lesson.objectives
-		: props.lesson.objectives.slice(0, FIRST_TOPICS)
-)
-const hiddenCount = computed(
-	() => props.lesson.objectives.length - visibleObjectives.value.length
+const progress = computed(() =>
+	props.chapter ? chapterProgress(props.chapter) : null
 )
 
 const statusLabel = computed(() => {
@@ -158,22 +145,4 @@ const statusClass = computed(() =>
 		? 'bg-surface-green-2 text-ink-green-8'
 		: 'bg-surface-gray-2 text-ink-gray-7'
 )
-
-function marker(objective: ProgramObjective): string {
-	if (objective.status === 'covered') return '●'
-	if (objective.status === 'touched') return '◐'
-	return '○'
-}
-
-function markerClass(objective: ProgramObjective): string {
-	if (objective.status === 'covered') return 'text-ink-green-6'
-	if (objective.status === 'touched') return 'text-ink-green-5'
-	return 'text-ink-gray-4'
-}
-
-function statusWord(objective: ProgramObjective): string {
-	if (objective.status === 'covered') return __('covered')
-	if (objective.status === 'touched') return __('touched in passing')
-	return __('not yet')
-}
 </script>

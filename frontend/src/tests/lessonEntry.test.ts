@@ -127,4 +127,37 @@ describe('LessonEntry', () => {
 		expect(wrapper.text()).toContain('In the browser, with the platform agent')
 		expect(wrapper.text()).not.toContain('trial lessons left')
 	})
+
+	// learning-services#547: the lesson's topics, marked as on the slide.
+	it("lists the lesson's topics with the student's coverage", () => {
+		const wrapper = mountEntry(
+			entry({
+				objectives: [
+					{ text: 'Назвать спонсора', status: 'covered' },
+					{ text: 'Отличить проект', status: 'touched' },
+					{ text: 'Оценить риск' },
+				],
+			})
+		)
+
+		const topics = wrapper.get('[data-testid="lesson-objectives"]')
+		expect(topics.get('h2').text()).toContain('1 of 3 covered')
+		expect(
+			topics.findAll('li').map((li) => li.attributes('data-status'))
+		).toEqual(['covered', 'touched', 'none'])
+		expect(topics.findAll('li')[0].text()).toContain('covered')
+		// All of them: the lesson page has the room the slide has not.
+		expect(topics.find('button').exists()).toBe(false)
+	})
+
+	it('shows no topics section for a lesson without them', () => {
+		expect(
+			mountEntry(entry({ objectives: [] }))
+				.find('[data-testid="lesson-objectives"]')
+				.exists()
+		).toBe(false)
+		expect(
+			mountEntry(entry()).find('[data-testid="lesson-objectives"]').exists()
+		).toBe(false)
+	})
 })

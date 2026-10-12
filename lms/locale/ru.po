@@ -10029,15 +10029,15 @@ msgstr "Идёт"
 msgid "Up next"
 msgstr "Следующий"
 
-#: frontend/src/components/CourseProgram/LessonSlide.vue
+#: frontend/src/components/CourseProgram/LessonObjectives.vue
 msgid "Topics"
 msgstr "Темы"
 
-#: frontend/src/components/CourseProgram/LessonSlide.vue
+#: frontend/src/components/CourseProgram/LessonObjectives.vue
 msgid "{0} of {1} covered"
 msgstr "{0} из {1} разобрано"
 
-#: frontend/src/components/CourseProgram/LessonSlide.vue
+#: frontend/src/components/CourseProgram/LessonObjectives.vue
 msgid "{0} more"
 msgstr "ещё {0}"
 
@@ -10045,15 +10045,15 @@ msgstr "ещё {0}"
 msgid "Open lesson"
 msgstr "Открыть урок"
 
-#: frontend/src/components/CourseProgram/LessonSlide.vue
+#: frontend/src/components/CourseProgram/LessonObjectives.vue
 msgid "covered"
 msgstr "разобрано"
 
-#: frontend/src/components/CourseProgram/LessonSlide.vue
+#: frontend/src/components/CourseProgram/LessonObjectives.vue
 msgid "touched in passing"
 msgstr "задето вскользь"
 
-#: frontend/src/components/CourseProgram/LessonSlide.vue
+#: frontend/src/components/CourseProgram/LessonObjectives.vue
 msgid "not yet"
 msgstr "не дошли"
 
@@ -11767,3 +11767,16 @@ msgstr "Удалить все строки этого документа?"
 #: frontend/src/components/Documents/LessonDocument.vue
 msgid "Clear every field of this document?"
 msgstr "Очистить все поля этого документа?"
+
+#: frontend/src/components/CourseProgram/LessonSlide.vue
+#: frontend/src/components/CourseProgram/ProgramMap.vue
+msgid "Chapter passed"
+msgstr "Глава пройдена"
+
+#: frontend/src/components/CourseProgram/LessonSlide.vue
+msgid "Chapter: {0} of {1} lessons passed"
+msgstr "В главе пройдено уроков: {0} из {1}"
+
+#: frontend/src/components/CourseProgram/ProgramMap.vue
+msgid "{0} of {1} lessons passed"
+msgstr "пройдено уроков: {0} из {1}"
