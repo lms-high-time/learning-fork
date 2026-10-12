@@ -18,6 +18,8 @@ export type ProgramBlock = {
 	artifact: string
 	key: string
 	title: string
+	/** What the block is for, written for the student (learning-services#515). */
+	description?: string | null
 	/** Present only for an enrolled student. */
 	filled?: boolean
 }

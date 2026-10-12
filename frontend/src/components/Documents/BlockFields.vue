@@ -1,106 +1,65 @@
 <template>
 	<div class="grid gap-3 sm:grid-cols-2" data-testid="block-fields">
-		<component
-			:is="field.type === 'formula' ? 'div' : 'label'"
-			v-for="field in fields"
-			:key="field.key"
+		<label
+			v-for="column in columns"
+			:key="column.key"
 			class="block space-y-1"
+			:data-testid="`field-${column.key}`"
 		>
 			<span class="flex items-center gap-1 text-p-sm text-ink-gray-7">
-				{{ field.title }}
+				{{ column.title }}
 				<span
-					v-if="field.required && field.type !== 'formula'"
+					v-if="required(column)"
 					class="text-ink-red-4"
-					:title="__('Required')"
+					:title="required(column)"
 					>*</span
 				>
 			</span>
-			<!-- The server computes a formula (learning-services#351): it is
-			read, never typed into. -->
-			<p
-				v-if="field.type === 'formula'"
-				class="flex min-h-[2.25rem] items-center text-p-base text-ink-gray-9"
-				:data-testid="`formula-${field.key}`"
-			>
-				<span
-					v-if="typeof value(field) === 'boolean'"
-					class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-p-sm font-medium"
-					:class="
-						value(field)
-							? 'bg-surface-green-2 text-ink-green-8'
-							: 'bg-surface-red-2 text-ink-red-7'
-					"
-				>
-					<span
-						:class="value(field) ? 'lucide-check' : 'lucide-x'"
-						class="size-3.5"
-						aria-hidden="true"
-					/>
-					{{ value(field) ? __('Yes') : __('No') }}
-				</span>
-				<span v-else>{{ formatValue(field, value(field)) || '—' }}</span>
-			</p>
-			<select
-				v-else-if="field.type === 'select'"
-				class="field-input"
-				:class="{ 'is-missing': missing(field) }"
-				:value="values[field.key] ?? ''"
-				@change="save(field, ($event.target as HTMLSelectElement).value)"
-			>
-				<option value="">—</option>
-				<option v-for="o in field.options" :key="o" :value="o">{{ o }}</option>
-			</select>
 			<textarea
-				v-else-if="field.type === 'longtext'"
-				rows="3"
-				class="field-input"
-				:class="{ 'is-missing': missing(field) }"
-				:value="(values[field.key] as string) ?? ''"
-				@blur="save(field, ($event.target as HTMLTextAreaElement).value)"
+				rows="2"
+				class="field-input resize-y"
+				:class="{
+					'is-missing': isMissing(column, values),
+					'is-clarify': isToClarify(values[column.key]),
+				}"
+				:value="values[column.key] ?? ''"
+				@blur="save(column, ($event.target as HTMLTextAreaElement).value)"
 			/>
-			<input
-				v-else
-				:type="field.type === 'date' ? 'date' : 'text'"
-				:inputmode="field.type === 'number' ? 'decimal' : undefined"
-				class="field-input"
-				:class="{ 'is-missing': missing(field) }"
-				:value="values[field.key] ?? ''"
-				@change="save(field, ($event.target as HTMLInputElement).value)"
-				@keydown.enter.prevent=";($event.target as HTMLInputElement).blur()"
-			/>
-		</component>
+		</label>
 	</div>
 </template>
 
 <script setup lang="ts">
 import {
-	formatValue,
-	isBlank,
+	conditionTitle,
+	isMissing,
+	isToClarify,
 	type CellValue,
-	type DocField,
+	type DocColumn,
 } from '@/utils/documentTable'
 
+// The fields of a block filled once (`rows: one`, learning-services#515): its
+// columns, each a text the student writes.
+
 const props = defineProps<{
-	fields: DocField[]
+	columns: DocColumn[]
 	values: Record<string, CellValue>
 }>()
 
-const emit = defineEmits<{ save: [key: string, value: CellValue] }>()
+/** The field's new text; empty clears it. */
+const emit = defineEmits<{ save: [key: string, value: string] }>()
 
-// The document's live copy; a formula the server has not put there yet
-// still carries its value on the field.
-const value = (field: DocField): CellValue =>
-	field.key in props.values ? props.values[field.key] : field.value
+/** Why the field is marked: always, or once the field it depends on is filled. */
+function required(column: DocColumn): string {
+	if (column.required === true) return __('Required')
+	const other = conditionTitle(column, props.columns)
+	return other ? __('Required when «{0}» is filled').format(other) : ''
+}
 
-const missing = (field: DocField) =>
-	field.type !== 'formula' &&
-	Boolean(field.required) &&
-	isBlank(props.values[field.key])
-
-function save(field: DocField, raw: string) {
+function save(column: DocColumn, raw: string) {
 	const value = raw.trim()
-	if (String(props.values[field.key] ?? '') === value) return
-	emit('save', field.key, value === '' ? null : value)
+	if (String(props.values[column.key] ?? '').trim() === value) return
+	emit('save', column.key, value)
 }
 </script>
 
@@ -125,5 +84,9 @@ function save(field: DocField, raw: string) {
 .field-input.is-missing {
 	border-color: var(--outline-red-3);
 	background-color: var(--surface-red-1);
+}
+
+.field-input.is-clarify {
+	background-color: var(--surface-amber-1, #fffbeb);
 }
 </style>

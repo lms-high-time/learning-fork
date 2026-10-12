@@ -19,6 +19,7 @@
 				}"
 				class="inline-flex items-center gap-1 font-medium text-ink-gray-8 underline decoration-outline-gray-3 underline-offset-2 hover:text-ink-gray-9"
 				:data-testid="`lesson-block-${block.key}`"
+				:title="block.description || undefined"
 			>
 				<span
 					v-if="block.filled"
@@ -27,7 +28,12 @@
 				/>
 				{{ block.title }}
 			</router-link>
-			<span v-else class="font-medium text-ink-gray-8">{{ block.title }}</span>
+			<span
+				v-else
+				class="font-medium text-ink-gray-8"
+				:title="block.description || undefined"
+				>{{ block.title }}</span
+			>
 			<span
 				v-if="i < blocks.length - 1"
 				class="text-ink-gray-4"

@@ -11754,3 +11754,16 @@ msgstr "Это безопасно?"
 #: frontend/src/pages/Agent/Agent.vue
 msgid "The assistant never sees your password: you sign in on this site, and the assistant gets access only to your studies here. You can disconnect it at any time in the assistant settings."
 msgstr "Ассистент не видит ваш пароль: вы входите на этом сайте, а ассистент получает доступ только к вашей учёбе здесь. Отключить его можно в любой момент в настройках ассистента."
+
+#: frontend/src/components/Documents/BlockFields.vue
+#: frontend/src/components/Documents/DocTableEditor.vue
+msgid "Required when «{0}» is filled"
+msgstr "Обязательно, если заполнено «{0}»"
+
+#: frontend/src/components/Documents/LessonDocument.vue
+msgid "Delete every row of this document?"
+msgstr "Удалить все строки этого документа?"
+
+#: frontend/src/components/Documents/LessonDocument.vue
+msgid "Clear every field of this document?"
+msgstr "Очистить все поля этого документа?"

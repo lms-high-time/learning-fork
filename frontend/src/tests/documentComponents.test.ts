@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
-import type { DocumentData, DocTable } from '@/utils/documentTable'
+import type { ManyBlock, OneBlock } from '@/utils/documentTable'
 
-// learning-services#331, #342: the cell, the table and a lesson's document as
-// the student meets them on «Мои документы».
+// learning-services#331, #342, #515: the cell, the table, the fields and a
+// lesson's document as the student meets them on «Мои документы».
+
+const screen = vi.hoisted(() => ({ isMobile: false }))
 
 vi.mock('frappe-ui', () => ({
 	Button: {
@@ -19,10 +21,11 @@ vi.mock('frappe-ui', () => ({
 	},
 }))
 vi.mock('@/utils/composables', () => ({
-	useScreenSize: () => ({ isMobile: false }),
+	useScreenSize: () => screen,
 }))
 
 import TableCell from '@/components/Documents/TableCell.vue'
+import BlockFields from '@/components/Documents/BlockFields.vue'
 import DocTableEditor from '@/components/Documents/DocTableEditor.vue'
 import LessonDocument from '@/components/Documents/LessonDocument.vue'
 
@@ -43,308 +46,307 @@ const global = {
 
 beforeEach(() => {
 	vi.stubGlobal('__', __)
+	screen.isMobile = false
 })
 
-const register: DocTable = {
-	name: 'register',
-	title: 'Реестр',
-	owner: 'risks',
-	prefix: 'R',
-	markdown: '',
-	views: [],
+const agreements: ManyBlock = {
+	key: 'agreements',
+	title: 'Договорённости',
+	description: 'Что команда решила и кто за это отвечает.',
+	lesson: 'l1',
+	rows: 'many',
 	columns: [
-		{
-			key: 'event',
-			title: 'Событие',
-			type: 'text',
-			block: 'risks',
-			required: true,
-		},
-		{
-			key: 'probability',
-			title: 'Вероятность',
-			type: 'scale',
-			block: 'assessment',
-			min: 1,
-			max: 5,
-			required: true,
-		},
-		{ key: 'rank', title: 'Ранг', type: 'formula', block: 'assessment' },
-		{ key: 'in_work', title: 'В работе', type: 'formula', block: 'assessment' },
+		{ key: 'topic', title: 'Тема', required: true },
+		{ key: 'driver', title: 'Драйвер', required: false },
+		{ key: 'area', title: 'Область', required: { if_column: 'driver' } },
 	],
-	rows: [
-		{
-			id: 'R1',
-			event: 'Подрядчик уйдёт',
-			probability: 4,
-			rank: 16,
-			in_work: true,
-		},
-		{ id: 'R2', event: 'уточнить у Анны', in_work: null },
+	items: [
+		{ id: 'A1', topic: 'Ретро раз в две недели', driver: 'Сроки' },
+		{ id: 'A2', topic: 'уточнить у Анны' },
 	],
+	filled: false,
+	empty_cells: [{ row: 'A1', column: 'area' }],
 }
 
-const blocks = [
-	{
-		key: 'risks',
-		title: 'Риски',
-		hint: '',
-		lesson: null,
-		span: 1,
-		kind: 'text',
-		accept: [],
-		content: '',
-		file: null,
-		url: null,
-		preview: null,
-		table: 'register',
-		columns: register.columns.slice(0, 1),
-		fields: [],
-		filled: true,
-		empty_cells: [],
-	},
-	{
-		key: 'assessment',
-		title: 'Оценка',
-		hint: 'Готов, когда…',
-		lesson: null,
-		span: 1,
-		kind: 'text',
-		accept: [],
-		content: '',
-		file: null,
-		url: null,
-		preview: null,
-		table: 'register',
-		columns: register.columns.slice(1),
-		fields: [
-			{
-				key: 'threshold',
-				title: 'Порог внимания',
-				type: 'number',
-				required: true,
-			},
-		],
-		filled: false,
-		empty_cells: [{ row: 'R2', column: 'probability' }],
-	},
-] as DocumentData['blocks']
+const decide: OneBlock = {
+	key: 'how_we_decide',
+	title: 'Как мы решаем',
+	description: null,
+	lesson: 'l2',
+	rows: 'one',
+	columns: [
+		{ key: 'method', title: 'Способ', required: true },
+		{ key: 'exception', title: 'Исключение', required: false },
+		{ key: 'who', title: 'Кто решает', required: { if_column: 'exception' } },
+	],
+	values: { exception: 'Бюджет' },
+	filled: false,
+	empty_cells: [{ field: 'method' }, { field: 'who' }],
+}
 
-const rankCell = (rank: number) =>
-	mount(TableCell, {
-		props: {
-			row: { ...register.rows[0], rank },
-			column: register.columns[2],
-			tables: {},
-		},
-		global,
-	})
+const [topic, , area] = agreements.columns
 
 describe('TableCell', () => {
-	it('shows a formula read-only and a blank required cell as one to fill', () => {
-		const rank = mount(TableCell, {
-			props: { row: register.rows[0], column: register.columns[2], tables: {} },
+	it('shows a blank required cell as one to fill', () => {
+		const cell = mount(TableCell, {
+			props: { row: agreements.items[0], column: area },
 			global,
 		})
-		expect(rank.text()).toBe('16')
-		expect(rank.find('button').exists()).toBe(false)
-
-		const blank = mount(TableCell, {
-			props: { row: register.rows[1], column: register.columns[1], tables: {} },
-			global,
-		})
-		expect(blank.classes()).toContain('is-missing')
+		expect(cell.classes()).toContain('is-missing')
+		expect(cell.text()).toContain('Fill in')
 	})
 
-	it('saves a scale as a number, and nothing when unchanged', async () => {
+	it('edits text, saves it trimmed and nothing when unchanged', async () => {
 		const cell = mount(TableCell, {
-			props: { row: register.rows[0], column: register.columns[1], tables: {} },
+			props: { row: agreements.items[0], column: topic },
 			global,
 		})
 		await cell.get('button').trigger('click')
-		const select = cell.get('select')
-		await select.setValue('4')
+		const textarea = cell.get('textarea')
+		expect((textarea.element as HTMLTextAreaElement).value).toBe(
+			'Ретро раз в две недели'
+		)
+		await textarea.trigger('blur')
 		expect(cell.emitted('save')).toBeUndefined()
 		await cell.get('button').trigger('click')
-		await cell.get('select').setValue('5')
-		expect(cell.emitted('save')?.[0]).toEqual([5])
+		await cell.get('textarea').setValue('  Ретро раз в неделю ')
+		await cell.get('textarea').trigger('blur')
+		expect(cell.emitted('save')?.[0]).toEqual(['Ретро раз в неделю'])
 	})
 
-	// learning-services#386: «900 000» on the canvas, «900000» in the table.
-	it('reads a number in groups of digits and edits it bare', async () => {
+	it('clears a cell with an empty text', async () => {
 		const cell = mount(TableCell, {
-			props: {
-				row: { id: 'R1', budget: 900000 },
-				column: {
-					key: 'budget',
-					title: 'Бюджет',
-					type: 'number',
-					block: 'assessment',
-				},
-				tables: {},
-			},
+			props: { row: agreements.items[0], column: topic },
 			global,
 		})
-		expect(cell.get('button').text()).toBe('900\u00a0000')
 		await cell.get('button').trigger('click')
-		expect((cell.get('input').element as HTMLInputElement).value).toBe('900000')
-
-		const total = mount(TableCell, {
-			props: {
-				row: { id: 'R1', total: 1234567.891 },
-				column: {
-					key: 'total',
-					title: 'Итого',
-					type: 'formula',
-					block: 'assessment',
-				},
-				tables: {},
-			},
-			global,
-		})
-		expect(total.text()).toBe('1\u00a0234\u00a0567,89')
-		// Four digits stay whole, as the canvas writes them.
-		expect(rankCell(1000).text()).toBe('1000')
+		await cell.get('textarea').setValue('   ')
+		await cell.get('textarea').trigger('blur')
+		expect(cell.emitted('save')?.[0]).toEqual([''])
 	})
 
 	it('marks «уточнить у …»', () => {
 		const cell = mount(TableCell, {
-			props: { row: register.rows[1], column: register.columns[0], tables: {} },
+			props: { row: agreements.items[1], column: topic },
 			global,
 		})
 		expect(cell.classes()).toContain('is-clarify')
 	})
 })
 
-describe('DocTableEditor', () => {
-	const editor = () =>
-		mount(DocTableEditor, {
-			props: {
-				table: register,
-				tables: { register },
-				blocks,
-				canEditRows: true,
-			},
+describe('BlockFields', () => {
+	const fields = () =>
+		mount(BlockFields, {
+			props: { columns: decide.columns, values: decide.values },
 			global,
 		})
 
-	it('heads columns by the block that adds them', () => {
-		const heads = editor()
-			.findAll('thead tr:first-child th')
-			.map((th) => th.text())
-		expect(heads).toEqual(['ID', 'Риски', 'Оценка', 'Row actions'])
+	it('marks a field required always or once its condition is filled', () => {
+		const wrapper = fields()
+		const star = (key: string) =>
+			wrapper.find(`[data-testid="field-${key}"] span[title]`)
+		expect(star('method').attributes('title')).toBe('Required')
+		expect(star('exception').exists()).toBe(false)
+		expect(star('who').attributes('title')).toBe(
+			'Required when «Исключение» is filled'
+		)
+		const missing = (key: string) =>
+			wrapper
+				.get(`[data-testid="field-${key}"] textarea`)
+				.classes()
+				.includes('is-missing')
+		expect(missing('method')).toBe(true)
+		expect(missing('exception')).toBe(false)
+		expect(missing('who')).toBe(true)
 	})
 
-	it('narrows to rows in work and to rows with empty cells', async () => {
+	it('saves a field as trimmed text, and nothing when unchanged', async () => {
+		const wrapper = fields()
+		const exception = wrapper.get('[data-testid="field-exception"] textarea')
+		await exception.trigger('blur')
+		expect(wrapper.emitted('save')).toBeUndefined()
+		const method = wrapper.get('[data-testid="field-method"] textarea')
+		await method.setValue(' Согласие ')
+		await method.trigger('blur')
+		expect(wrapper.emitted('save')?.[0]).toEqual(['method', 'Согласие'])
+	})
+})
+
+describe('DocTableEditor', () => {
+	const editor = (block: ManyBlock = agreements) =>
+		mount(DocTableEditor, { props: { block, openable: true }, global })
+
+	it('heads a column per column of the section, marking the required ones', () => {
+		const heads = editor()
+			.findAll('thead th')
+			.map((th) => th.text())
+		expect(heads).toEqual(['ID', 'Тема*', 'Драйвер', 'Область*', 'Row actions'])
+		expect(
+			editor().get('thead th:nth-child(4) span[title]').attributes('title')
+		).toBe('Required when «Драйвер» is filled')
+	})
+
+	it('narrows to rows with empty cells', async () => {
 		const wrapper = editor()
-		const [inWork, empty] = wrapper.findAll('button.chip')
-		await inWork.trigger('click')
+		await wrapper.get('[data-testid="show-unfilled"]').trigger('click')
 		expect(
 			wrapper.findAll('tbody tr[data-row]').map((r) => r.attributes('data-row'))
-		).toEqual(['R1'])
-		await inWork.trigger('click')
-		await empty.trigger('click')
+		).toEqual(['A1'])
+	})
+
+	it('offers a search only on a longer table', () => {
+		expect(editor().find('input[type="search"]').exists()).toBe(false)
+		const items = Array.from({ length: 8 }, (_, i) => ({
+			id: `A${i + 1}`,
+			topic: `Тема ${i + 1}`,
+		}))
 		expect(
-			wrapper.findAll('tbody tr[data-row]').map((r) => r.attributes('data-row'))
-		).toEqual(['R2'])
+			editor({ ...agreements, items })
+				.find('input[type="search"]')
+				.exists()
+		).toBe(true)
 	})
 
 	it('asks before deleting a row', async () => {
 		const wrapper = editor()
 		const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
-		await wrapper.get('button[aria-label="Delete R1"]').trigger('click')
+		await wrapper.get('button[aria-label="Delete A1"]').trigger('click')
 		expect(confirm).toHaveBeenCalled()
-		expect(wrapper.emitted('deleteRow')?.[0]).toEqual(['R1'])
+		expect(wrapper.emitted('deleteRow')?.[0]).toEqual(['A1'])
+	})
+
+	it('emits the cell with its row and column', async () => {
+		const wrapper = editor()
+		const cell = wrapper.get('[data-testid="cell-A2-driver"]')
+		await cell.get('button').trigger('click')
+		await cell.get('textarea').setValue('Качество')
+		await cell.get('textarea').trigger('blur')
+		expect(wrapper.emitted('setCell')?.[0]).toEqual([
+			agreements.items[1],
+			'driver',
+			'Качество',
+		])
+	})
+
+	it('shows a card per row on a phone', () => {
+		screen.isMobile = true
+		const wrapper = editor()
+		expect(wrapper.find('table').exists()).toBe(false)
+		expect(wrapper.findAll('details[data-row]')).toHaveLength(2)
+		expect(wrapper.get('details[data-row="A1"] summary').text()).toContain(
+			'Ретро раз в две недели'
+		)
 	})
 })
 
 describe('LessonDocument', () => {
-	const document = {
-		course: 'c1',
-		artifact: 'risk_register',
-		title: 'Реестр',
-		layout: 'sections',
-		blocks,
-		tables: { register },
-		fields: {},
-	} as DocumentData
 	const api = {
 		setField: vi.fn(),
 		setCell: vi.fn(),
 		addRow: vi.fn(),
 		deleteRow: vi.fn(),
-		write: vi.fn(),
-		upload: vi.fn(),
+		clear: vi.fn(),
 	}
-	const page = (block: typeof blocks[number], extra = {}) =>
+	const page = (block: ManyBlock | OneBlock, extra = {}) =>
 		mount(LessonDocument, {
-			props: { block, document, api: api as never, ...extra },
+			props: { block, api: api as never, ...extra },
 			global,
 		})
 
-	it('shows a lesson its own view of the register: name, computed columns, its columns', () => {
-		const heads = (w: ReturnType<typeof page>) =>
-			w
-				.findAll('thead tr:nth-child(2) th')
-				.map((th) => th.text().replace('*', '').trim())
-		// «Риски» starts the rows: it adds and deletes them.
-		const risks = page(blocks[0])
-		expect(heads(risks)).toEqual(['Событие'])
-		expect(risks.find('button[aria-label="Delete R1"]').exists()).toBe(true)
-		// «Оценка» fills its columns in place and adds no rows.
-		const assessment = page(blocks[1])
-		expect(heads(assessment)).toEqual([
-			'Событие',
-			'Ранг',
-			'В работе',
-			'Вероятность',
-		])
-		expect(assessment.find('button[aria-label="Delete R1"]').exists()).toBe(
-			false
+	beforeEach(() => {
+		Object.values(api).forEach((fn) => fn.mockReset())
+	})
+
+	it('shows the student what the block is for', () => {
+		expect(
+			page(agreements).get('[data-testid="block-description"]').text()
+		).toBe('Что команда решила и кто за это отвечает.')
+		expect(
+			page(decide).find('[data-testid="block-description"]').exists()
+		).toBe(false)
+	})
+
+	it('shows rows for a `many` block and writes through the document api', async () => {
+		const wrapper = page(agreements)
+		expect(wrapper.find('[data-testid="doc-table-agreements"]').exists()).toBe(
+			true
+		)
+		expect(wrapper.find('[data-testid="block-fields"]').exists()).toBe(false)
+		await wrapper.get('button[aria-label="Add a row"]').trigger('click')
+		expect(api.addRow).toHaveBeenCalledWith('agreements')
+		const cell = wrapper.get('[data-testid="cell-A1-area"]')
+		await cell.get('button').trigger('click')
+		await cell.get('textarea').setValue('Продукт')
+		await cell.get('textarea').trigger('blur')
+		expect(api.setCell).toHaveBeenCalledWith(
+			'agreements',
+			agreements.items[0],
+			'area',
+			'Продукт'
 		)
 	})
 
-	it('has no search in a lesson view and hides a filter with nothing to show', () => {
-		const wrapper = page(blocks[1])
-		expect(wrapper.find('input[type="search"]').exists()).toBe(false)
-		expect(wrapper.get('[data-testid="show-unfilled"]').text()).toContain('1')
+	it('opens a row in full from its ID', async () => {
+		const wrapper = page(agreements)
+		await wrapper.get('button[aria-label="Open A1"]').trigger('click')
+		const card = wrapper.get('[data-testid="row-card"]')
+		expect(card.text()).toContain('Ретро раз в две недели')
+		expect(card.findAll('[data-testid^="cell-A1-"]')).toHaveLength(3)
 	})
 
-	it('saves a field through the document api', async () => {
-		const input = page(blocks[1]).get('[data-testid="block-fields"] input')
-		await input.setValue('12')
-		await input.trigger('change')
+	it('shows fields for a `one` block and saves them', async () => {
+		const wrapper = page(decide)
+		expect(wrapper.find('table').exists()).toBe(false)
+		const method = wrapper.get('[data-testid="field-method"] textarea')
+		await method.setValue('Согласие')
+		await method.trigger('blur')
 		await flushPromises()
-		expect(api.setField).toHaveBeenCalledWith('assessment', 'threshold', '12')
-	})
-
-	it('says where it stands in one word, and «done» in a sentence', () => {
-		const wrapper = page({
-			...blocks[1],
-			hint: 'Длинно для агента. Готов, когда у каждого риска три оценки.',
-		})
-		expect(wrapper.get('[data-testid="block-status"]').text()).toBe('Started')
-		expect(wrapper.get('[data-testid="ready-line"]').text()).toBe(
-			'Готов, когда у каждого риска три оценки.'
+		expect(api.setField).toHaveBeenCalledWith(
+			'how_we_decide',
+			'method',
+			'Согласие'
 		)
 	})
 
-	it('keeps the note in the menu, not as a button of every document', () => {
-		const wrapper = page(blocks[1])
-		expect(wrapper.find('button[aria-label="Add a note"]').exists()).toBe(false)
-		expect(wrapper.get('[data-testid="menu"]').text()).toContain('Add a note')
+	it('says where it stands in one word', () => {
+		expect(page(agreements).get('[data-testid="block-status"]').text()).toBe(
+			'Started'
+		)
+		expect(
+			page({ ...decide, values: {}, filled: false })
+				.get('[data-testid="block-status"]')
+				.text()
+		).toBe('Empty')
+		expect(
+			page({ ...decide, filled: true })
+				.get('[data-testid="block-status"]')
+				.text()
+		).toBe('Done')
+	})
+
+	it('clears a block from its menu, after asking', async () => {
+		const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
+		await page(agreements).get('[data-testid="menu"] button').trigger('click')
+		expect(confirm).toHaveBeenCalledWith('Delete every row of this document?')
+		expect(api.clear).toHaveBeenCalledWith('agreements')
+		// Nothing written yet: nothing to clear.
+		expect(
+			page({ ...decide, values: {} })
+				.find('[data-testid="menu"]')
+				.exists()
+		).toBe(false)
 	})
 
 	it('leads to the documents before and after it', () => {
-		const wrapper = page(blocks[1], {
-			prev: { title: 'Риски', to: '/p' },
-			next: { title: 'Ответы', to: '/n' },
+		const wrapper = page(decide, {
+			prev: { title: 'Договорённости', to: '/p' },
+			next: { title: 'Области', to: '/n' },
 		})
 		expect(wrapper.get('[data-testid="prev-document"]').text()).toContain(
-			'Риски'
+			'Договорённости'
 		)
 		expect(wrapper.get('[data-testid="next-document"]').text()).toContain(
-			'Ответы'
+			'Области'
 		)
 	})
 })

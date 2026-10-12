@@ -4,25 +4,6 @@
 		:aria-label="__('Document contents')"
 		data-testid="document-outline"
 	>
-		<div v-if="specials.length" class="space-y-0.5">
-			<router-link
-				v-for="item in specials"
-				:key="item.view"
-				:to="to(item.view)"
-				class="outline-link"
-				:class="{ 'is-active': active === item.view }"
-				:aria-current="active === item.view ? 'page' : undefined"
-				:data-testid="`outline-${item.view}`"
-			>
-				<span
-					:class="item.icon"
-					class="size-4 shrink-0 text-ink-gray-6"
-					aria-hidden="true"
-				/>
-				<span class="min-w-0 flex-1">{{ item.title }}</span>
-			</router-link>
-		</div>
-
 		<section v-for="(group, i) in groups" :key="group.lesson?.id ?? 'rest'">
 			<button
 				type="button"
@@ -88,13 +69,12 @@ import {
 	type OutlineGroup,
 } from '@/utils/documentTable'
 
-// The document's contents: the whole table and the report on top, then each
-// lesson's documents under it (learning-services#342).
+// The document's contents: each lesson's documents under it
+// (learning-services#342).
 
 const props = defineProps<{
 	document: DocumentData
 	groups: OutlineGroup[]
-	specials: { view: string; title: string; icon: string }[]
 	active: string
 	currentLesson?: string | null
 }>()
@@ -126,14 +106,13 @@ function toggle(group: OutlineGroup, i: number) {
 	toggled.value = { ...toggled.value, [groupKey(group, i)]: !isOpen(group, i) }
 }
 
-const state = (block: DocBlock): BlockState => blockState(block, props.document)
+const state = (block: DocBlock): BlockState => blockState(block)
 const groupDone = (group: OutlineGroup) =>
 	group.blocks.every((b) => state(b) === 'done')
 
 const WORDS: Record<BlockState, () => string> = {
 	done: () => __('done'),
 	progress: () => __('started'),
-	preset: () => __('template'),
 	empty: () => __('empty'),
 }
 const stateWord = (block: DocBlock) => WORDS[state(block)]()
@@ -141,7 +120,6 @@ const stateClass = (block: DocBlock) =>
 	({
 		done: 'text-ink-green-6',
 		progress: 'text-ink-amber-7',
-		preset: 'text-ink-blue-6',
 		empty: 'text-ink-gray-4',
 	}[state(block)])
 </script>

@@ -1,6 +1,6 @@
 <template>
-	<div class="space-y-3" :data-testid="`doc-table-${table.name}`">
-		<!-- Toolbar: find, narrow down, pick which lessons' columns to see. -->
+	<div class="space-y-3" :data-testid="`doc-table-${block.key}`">
+		<!-- Toolbar: find, narrow down to what still lacks a cell. -->
 		<div class="flex flex-wrap items-center gap-2">
 			<div v-if="searchable" class="relative w-full sm:w-56">
 				<span
@@ -15,21 +15,6 @@
 				/>
 			</div>
 			<!-- A filter with nothing to show is noise: a zero hides the chip. -->
-			<button
-				v-for="flag in flags"
-				v-show="flagCount(flag.key) || flagFilter === flag.key"
-				:key="flag.key"
-				type="button"
-				class="chip"
-				:class="{ 'is-on': flagFilter === flag.key }"
-				:aria-pressed="flagFilter === flag.key"
-				@click="flagFilter = flagFilter === flag.key ? null : flag.key"
-			>
-				{{ flag.title }}
-				<span class="tabular-nums text-ink-gray-5">{{
-					flagCount(flag.key)
-				}}</span>
-			</button>
 			<button
 				v-show="missingRows || onlyMissing"
 				type="button"
@@ -46,30 +31,10 @@
 				{{
 					__('{0} of {1} rows').format(
 						String(rows.length),
-						String(table.rows.length)
+						String(block.items.length)
 					)
 				}}
 			</div>
-		</div>
-
-		<div
-			v-if="!only && !columnKeys && groups.length > 1"
-			v-show="!columnsFolded"
-			:id="columnsId"
-			class="flex flex-wrap items-center gap-1.5"
-		>
-			<span class="text-p-xs text-ink-gray-5">{{ __('Columns') }}:</span>
-			<button
-				v-for="group in groups"
-				:key="group.block"
-				type="button"
-				class="chip chip-sm"
-				:class="{ 'is-on': !hidden.has(group.block) }"
-				:aria-pressed="!hidden.has(group.block)"
-				@click="toggleGroup(group.block)"
-			>
-				{{ group.title }}
-			</button>
 		</div>
 
 		<!-- Desktop: the table itself, scrolling sideways, ID and title pinned. -->
@@ -80,34 +45,14 @@
 			<table class="doc-table">
 				<thead>
 					<tr>
-						<th class="sticky-id group-head" rowspan="2">ID</th>
+						<th class="sticky-id col-head">ID</th>
 						<th
-							v-for="group in shownGroups"
-							:key="group.block"
-							class="group-head"
-							:colspan="group.columns.length"
-						>
-							<a
-								v-if="group.block && !only"
-								:href="safeUrl(`#block-${group.block}`)"
-								class="hover:underline"
-								@click.prevent="$emit('focusBlock', group.block)"
-								>{{ group.title }}</a
-							>
-							<span v-else>{{ group.title }}</span>
-						</th>
-						<th v-if="canEditRows" class="group-head" rowspan="2">
-							<span class="sr-only">{{ __('Row actions') }}</span>
-						</th>
-					</tr>
-					<tr>
-						<th
-							v-for="column in shownColumns"
+							v-for="column in block.columns"
 							:key="column.key"
 							:class="[
 								'col-head',
+								'w-wide',
 								column.key === pinned ? 'sticky-title' : '',
-								widthClass(column),
 							]"
 							:aria-sort="
 								sortKey === column.key
@@ -120,18 +65,14 @@
 							<button
 								type="button"
 								class="flex w-full items-center gap-1 text-start"
-								:title="column.hint || column.title"
+								:title="column.title"
 								@click="sortBy(column.key)"
 							>
 								<span>{{ column.title }}</span>
 								<span
-									v-if="column.required"
+									v-if="requiredTitle(column)"
 									class="text-ink-red-4"
-									:title="
-										column.required === true
-											? __('Required')
-											: __('Required when «{0}»').format(requiredTitle(column))
-									"
+									:title="requiredTitle(column)"
 									>*</span
 								>
 								<span
@@ -145,15 +86,13 @@
 								/>
 							</button>
 						</th>
+						<th class="col-head">
+							<span class="sr-only">{{ __('Row actions') }}</span>
+						</th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr
-						v-for="row in rows"
-						:key="row.id"
-						:class="{ 'is-flagged': flags[0] && row[flags[0].key] === true }"
-						:data-row="row.id"
-					>
+					<tr v-for="row in rows" :key="row.id" :data-row="row.id">
 						<th scope="row" class="sticky-id id-cell">
 							<button
 								v-if="openable"
@@ -167,24 +106,17 @@
 							<template v-else>{{ row.id }}</template>
 						</th>
 						<td
-							v-for="column in shownColumns"
+							v-for="column in block.columns"
 							:key="column.key"
-							:class="[
-								column.key === pinned ? 'sticky-title' : '',
-								widthClass(column),
-							]"
+							:class="['w-wide', column.key === pinned ? 'sticky-title' : '']"
 						>
 							<TableCell
 								:row="row"
 								:column="column"
-								:tables="tables"
-								@save="
-									(value) =>
-										$emit('setCell', column.block, row, column.key, value)
-								"
+								@save="(value) => $emit('setCell', row, column.key, value)"
 							/>
 						</td>
-						<td v-if="canEditRows" class="w-10 text-center">
+						<td class="w-10 text-center">
 							<Button
 								variant="ghost"
 								size="sm"
@@ -199,11 +131,11 @@
 					</tr>
 					<tr v-if="!rows.length">
 						<td
-							:colspan="shownColumns.length + (canEditRows ? 2 : 1)"
+							:colspan="block.columns.length + 2"
 							class="px-3 py-6 text-center text-p-sm text-ink-gray-5"
 						>
 							{{
-								table.rows.length
+								block.items.length
 									? __('No rows match the filter')
 									: __('No rows yet')
 							}}
@@ -213,33 +145,20 @@
 			</table>
 		</div>
 
-		<!-- Phone: a card per row, its columns under the lesson that adds them. -->
+		<!-- Phone: a card per row. -->
 		<div v-else class="space-y-2">
 			<details
 				v-for="row in rows"
 				:key="row.id"
 				class="rounded-md border border-outline-gray-2 bg-surface-base"
-				:class="{
-					'border-s-4 border-s-outline-amber-4':
-						flags[0] && row[flags[0].key] === true,
-				}"
 				:data-row="row.id"
 			>
 				<summary class="flex cursor-pointer items-start gap-2 p-3">
 					<span class="shrink-0 text-p-sm font-medium text-ink-gray-5">{{
 						row.id
 					}}</span>
-					<span class="min-w-0 flex-1">
-						<span class="block text-p-sm text-ink-gray-9">
-							{{ (title && row[title.key]) || __('Untitled') }}
-						</span>
-						<!-- A lesson's view shows its values without opening the row. -->
-						<span
-							v-if="only && rowSummary(row)"
-							class="mt-1 block text-p-sm text-ink-gray-6"
-							data-testid="row-summary"
-							>{{ rowSummary(row) }}</span
-						>
+					<span class="min-w-0 flex-1 text-p-sm text-ink-gray-9">
+						{{ (title && row[title.key]) || __('Untitled') }}
 					</span>
 					<span
 						v-if="rowMissing(row)"
@@ -247,35 +166,26 @@
 						:aria-label="__('Not filled')"
 					/>
 				</summary>
-				<div class="space-y-4 border-t border-outline-gray-1 p-3">
-					<section v-for="group in shownGroups" :key="group.block">
-						<h4 class="mb-1 text-p-xs font-medium uppercase text-ink-gray-5">
-							{{ group.title }}
-						</h4>
-						<div
-							v-for="column in group.columns"
-							:key="column.key"
-							class="grid grid-cols-[7rem_1fr] items-start gap-2 py-0.5"
-						>
-							<span class="pt-2 text-p-xs text-ink-gray-6">{{
-								column.title
-							}}</span>
-							<TableCell
-								:row="row"
-								:column="column"
-								:tables="tables"
-								@save="
-									(value) =>
-										$emit('setCell', column.block, row, column.key, value)
-								"
-							/>
-						</div>
-					</section>
+				<div class="space-y-1 border-t border-outline-gray-1 p-3">
+					<div
+						v-for="column in block.columns"
+						:key="column.key"
+						class="grid grid-cols-[7rem_1fr] items-start gap-2 py-0.5"
+					>
+						<span class="pt-2 text-p-xs text-ink-gray-6">{{
+							column.title
+						}}</span>
+						<TableCell
+							:row="row"
+							:column="column"
+							@save="(value) => $emit('setCell', row, column.key, value)"
+						/>
+					</div>
 					<Button
-						v-if="canEditRows"
 						variant="subtle"
 						theme="red"
 						size="sm"
+						class="mt-3"
 						:label="__('Delete {0}').format(row.id)"
 						@click="confirmDelete(row)"
 					/>
@@ -283,17 +193,14 @@
 			</details>
 			<p v-if="!rows.length" class="py-4 text-center text-p-sm text-ink-gray-5">
 				{{
-					table.rows.length ? __('No rows match the filter') : __('No rows yet')
+					block.items.length
+						? __('No rows match the filter')
+						: __('No rows yet')
 				}}
 			</p>
 		</div>
 
-		<Button
-			v-if="canEditRows"
-			variant="subtle"
-			:label="__('Add a row')"
-			@click="$emit('addRow')"
-		>
+		<Button variant="subtle" :label="__('Add a row')" @click="$emit('addRow')">
 			<template #prefix>
 				<span class="lucide-plus size-4" />
 			</template>
@@ -302,207 +209,76 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { Button } from 'frappe-ui'
 import TableCell from '@/components/Documents/TableCell.vue'
-import { safeUrl } from '@/utils/safeUrl'
 import { useScreenSize } from '@/utils/composables'
 import {
-	cellOptions,
-	columnGroups,
+	conditionTitle,
 	filterRows,
-	flagColumns,
-	formatValue,
-	isBlank,
 	isMissing,
 	sortRows,
 	titleColumn,
-	viewColumns,
-	type CellValue,
-	type DocBlock,
 	type DocColumn,
 	type DocRow,
-	type DocTable,
+	type ManyBlock,
 	type SortDirection,
 } from '@/utils/documentTable'
 
+// A block filled row by row (`rows: many`, learning-services#515): its rows,
+// one column per column of the section, every cell text.
+
 const props = defineProps<{
-	table: DocTable
-	tables: Record<string, DocTable>
-	blocks: DocBlock[]
-	/** Rows are added and removed by the block that starts them. */
-	canEditRows: boolean
-	/**
-	 * Only this block's columns, beside the row's name: a later lesson's block
-	 * fills its own columns in place instead of in the whole table.
-	 */
-	only?: string
-	/** Search belongs to the whole table, not to a lesson's view. */
-	searchable?: boolean
-	/** A view of the whole table: only these columns, in the table's order. */
-	columnKeys?: string[] | null
-	/** A filter by value from outside: owner, status, stage. */
-	filterBy?: { column: string; value: string } | null
-	/** Sorted by this column, highest first, until a header is clicked. */
-	defaultSort?: string | null
+	block: ManyBlock
 	/** The row's ID opens its card. */
 	openable?: boolean
-	/** The summary's «in work» turns the flag filter on from outside. */
-	flagOn?: boolean
-	/**
-	 * The column groups are folded away: the whole table on a phone keeps
-	 * them behind one button until asked (learning-services#386).
-	 */
-	columnsFolded?: boolean
-	/** The column groups' id, for the button that unfolds them. */
-	columnsId?: string
 }>()
 
 const emit = defineEmits<{
-	setCell: [block: string, row: DocRow, column: string, value: CellValue]
+	setCell: [row: DocRow, column: string, value: string]
 	addRow: []
 	deleteRow: [id: string]
-	focusBlock: [block: string]
 	openRow: [id: string]
-	shown: [rows: DocRow[], columns: DocColumn[]]
 }>()
 
 const { isMobile } = useScreenSize()
 
+// A handful of rows is read at a glance; a search earns its place on a longer
+// table.
+const SEARCH_FROM = 8
+const searchable = computed(() => props.block.items.length >= SEARCH_FROM)
+
 const search = ref('')
-const flagFilter = ref<string | null>(null)
 const onlyMissing = ref(false)
 const sortKey = ref<string | null>(null)
 const sortDirection = ref<SortDirection>('asc')
 
-// Which lessons' columns are hidden, per table, kept across visits: a wide
-// table is read a few groups at a time.
-const storageKey = computed(() => `lms-doc-hidden-${props.table.name}`)
-const hidden = ref<Set<string>>(new Set())
-try {
-	const saved = JSON.parse(localStorage.getItem(storageKey.value) || '[]')
-	if (Array.isArray(saved)) hidden.value = new Set(saved)
-} catch {
-	// Storage may be blocked; every group shows.
-}
-watch(
-	hidden,
-	(value) => {
-		try {
-			localStorage.setItem(storageKey.value, JSON.stringify([...value]))
-		} catch {
-			// Not kept: the choice lasts this visit.
-		}
-	},
-	{ deep: true }
-)
-
-const groups = computed(() => columnGroups(props.table, props.blocks))
-const title = computed(() => titleColumn(props.table))
-const flags = computed(() => flagColumns(props.table))
-
-const shownGroups = computed(() => {
-	if (props.only) {
-		// A lesson's view: the row's name and the numbers it is read by, then
-		// the lesson's own columns (learning-services#342).
-		const columns = viewColumns(props.table, props.only)
-		const own = columns.filter((c) => c.block === props.only)
-		const lead = columns.filter((c) => c.block !== props.only)
-		const blockTitle =
-			props.blocks.find((b) => b.key === props.only)?.title ?? props.only
-		return [
-			...(lead.length
-				? [{ block: '', title: props.table.title || '', columns: lead }]
-				: []),
-			...(own.length
-				? [{ block: props.only, title: blockTitle, columns: own }]
-				: []),
-		]
-	}
-	if (props.columnKeys) {
-		const keys = new Set(props.columnKeys)
-		return groups.value
-			.map((g) => ({ ...g, columns: g.columns.filter((c) => keys.has(c.key)) }))
-			.filter((g) => g.columns.length)
-	}
-	return groups.value.filter((g) => !hidden.value.has(g.block))
-})
-const shownColumns = computed(() => shownGroups.value.flatMap((g) => g.columns))
+const title = computed(() => titleColumn(props.block.columns))
 
 // The row's name stays in view beside its ID while the table scrolls — only
-// when it is the first column shown: pinned further in, it would slide over
-// the columns before it.
+// when it is the first column: pinned further in, it would slide over the
+// columns before it.
 const pinned = computed(() =>
-	shownColumns.value[0]?.key === title.value?.key ? title.value?.key : null
-)
-
-// What the counts and filters look at: in a block's own view, its columns
-// only — «empty cells» there means the block's, not the whole table's.
-const scope = computed(() =>
-	props.only ? { ...props.table, columns: shownColumns.value } : props.table
+	props.block.columns[0]?.key === title.value?.key ? title.value?.key : null
 )
 
 const rows = computed(() =>
 	sortRows(
-		filterRows(scope.value, {
+		filterRows(props.block.items, props.block.columns, {
 			search: search.value,
-			flag: flagFilter.value,
 			missing: onlyMissing.value,
-			select: props.filterBy ?? null,
 		}),
-		sortKey.value ?? props.defaultSort ?? null,
-		sortKey.value ? sortDirection.value : 'desc'
+		sortKey.value,
+		sortDirection.value
 	)
 )
 
-// «4 — Вероятно · 5 — Критическое · 20»: a row's lesson values in a line.
-function rowSummary(row: DocRow): string {
-	return shownColumns.value
-		.filter((c) => c.key !== title.value?.key && !isBlank(row[c.key]))
-		.map((c) => {
-			const option = cellOptions(c, props.tables).find(
-				(o) => String(o.value) === String(row[c.key])
-			)
-			if (c.type === 'formula' && typeof row[c.key] === 'boolean')
-				return row[c.key] ? c.title : ''
-			return option && c.type !== 'select'
-				? option.label
-				: formatValue(c, row[c.key])
-		})
-		.filter(Boolean)
-		.join(' · ')
-}
-
-watch(
-	() => props.flagOn,
-	(on) => {
-		if (on === undefined) return
-		flagFilter.value = on ? flags.value[0]?.key ?? null : null
-	}
-)
-
-// What is on screen — for a CSV of exactly this view.
-watch([rows, shownColumns], ([r, c]) => emit('shown', r, c), {
-	immediate: true,
-})
-
 const rowMissing = (row: DocRow): number =>
-	scope.value.columns.filter((c) => isMissing(c, row)).length
+	props.block.columns.filter((c) => isMissing(c, row)).length
 
 const missingRows = computed(
-	() => props.table.rows.filter((r) => rowMissing(r) > 0).length
+	() => props.block.items.filter((r) => rowMissing(r) > 0).length
 )
-
-const flagCount = (key: string): number =>
-	props.table.rows.filter((r) => r[key] === true).length
-
-function toggleGroup(block: string) {
-	const next = new Set(hidden.value)
-	if (next.has(block)) next.delete(block)
-	else next.add(block)
-	// At least one group stays: an empty table reads as a broken one.
-	if (next.size < groups.value.length) hidden.value = next
-}
 
 function sortBy(key: string) {
 	if (sortKey.value !== key) {
@@ -512,16 +288,11 @@ function sortBy(key: string) {
 	else sortKey.value = null
 }
 
+/** Why a column is marked: always, or once the column it depends on is filled. */
 function requiredTitle(column: DocColumn): string {
-	const other = props.table.columns.find((c) => c.key === column.required)
-	return other?.title ?? String(column.required)
-}
-
-function widthClass(column: DocColumn): string {
-	if (['scale', 'number', 'formula', 'check'].includes(column.type))
-		return 'w-narrow'
-	if (['date', 'select', 'ref'].includes(column.type)) return 'w-mid'
-	return 'w-wide'
+	if (column.required === true) return __('Required')
+	const other = conditionTitle(column, props.block.columns)
+	return other ? __('Required when «{0}» is filled').format(other) : ''
 }
 
 function confirmDelete(row: DocRow) {
@@ -545,11 +316,6 @@ function confirmDelete(row: DocRow) {
 	font-size: 0.8125rem;
 	color: var(--ink-gray-7);
 	background-color: var(--surface-base, #fff);
-}
-
-.chip-sm {
-	height: 1.625rem;
-	font-size: 0.75rem;
 }
 
 .chip.is-on {
@@ -579,16 +345,6 @@ function confirmDelete(row: DocRow) {
 	border-inline-end: 1px solid var(--outline-gray-1);
 	vertical-align: top;
 	background-color: var(--surface-base, #fff);
-}
-
-.group-head {
-	padding: 0.375rem 0.625rem;
-	font-size: 0.75rem;
-	font-weight: 600;
-	text-align: start;
-	color: var(--ink-gray-7);
-	background-color: var(--surface-gray-1) !important;
-	white-space: nowrap;
 }
 
 .col-head {
@@ -621,20 +377,8 @@ function confirmDelete(row: DocRow) {
 	box-shadow: 1px 0 0 var(--outline-gray-2);
 }
 
-.w-narrow {
-	min-width: 5.5rem;
-}
-
-.w-mid {
-	min-width: 9rem;
-}
-
 .w-wide {
 	min-width: 14rem;
 	max-width: 22rem;
-}
-
-tr.is-flagged .id-cell {
-	box-shadow: inset 3px 0 0 var(--outline-amber-4);
 }
 </style>

@@ -26,107 +26,46 @@
 				</Button>
 			</header>
 
-			<div class="min-w-0 flex-1 space-y-5 overflow-y-auto p-4">
-				<section v-for="group in groups" :key="group.block">
-					<h3 class="mb-1 text-p-xs font-medium uppercase text-ink-gray-5">
-						{{ group.title }}
-					</h3>
-					<div
-						v-for="column in group.columns"
-						:key="column.key"
-						class="grid grid-cols-[8rem_1fr] items-start gap-2 py-0.5"
-					>
-						<span class="pt-2 text-p-xs text-ink-gray-6">{{
-							column.title
-						}}</span>
-						<TableCell
-							:row="row"
-							:column="column"
-							:tables="document.tables"
-							@save="
-								(value) =>
-									api.setCell(column.block, table.name, row, column.key, value)
-							"
-						/>
-					</div>
-				</section>
-			</div>
-
-			<footer
-				v-if="referring.length"
-				class="space-y-2 border-t border-outline-gray-1 p-4"
-			>
-				<Button
-					v-for="item in referring"
-					:key="item.table.name"
-					variant="subtle"
-					class="w-full"
-					:label="
-						__('Add to «{0}»').format(item.table.title || item.table.name)
-					"
-					:data-testid="`refer-${item.table.name}`"
-					@click="refer(item.table.owner, item.column.key)"
+			<div class="min-w-0 flex-1 space-y-1 overflow-y-auto p-4">
+				<div
+					v-for="column in block.columns"
+					:key="column.key"
+					class="grid grid-cols-[8rem_1fr] items-start gap-2 py-0.5"
 				>
-					<template #prefix>
-						<span class="lucide-corner-down-right size-4" />
-					</template>
-				</Button>
-			</footer>
+					<span class="pt-2 text-p-xs text-ink-gray-6">{{ column.title }}</span>
+					<TableCell
+						:row="row"
+						:column="column"
+						@save="(value) => api.setCell(block.key, row, column.key, value)"
+					/>
+				</div>
+			</div>
 		</aside>
 	</div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { Button } from 'frappe-ui'
 import TableCell from '@/components/Documents/TableCell.vue'
 import type { DocumentApi } from '@/composables/useDocument'
-import {
-	columnGroups,
-	referringTables,
-	titleColumn,
-	type DocRow,
-	type DocTable,
-	type DocumentData,
-} from '@/utils/documentTable'
+import { titleColumn, type DocRow, type ManyBlock } from '@/utils/documentTable'
 
-// A row of the whole table in full: every field under the lesson that adds
-// it, and a way to carry it into a table that points at it — in the risks
-// course, a triggered risk into «Проблемы» (learning-services#342).
+// A row in full, every column one under another: a wide block reads better
+// here than scrolled sideways (learning-services#342).
 
 const props = defineProps<{
 	row: DocRow
-	table: DocTable
-	document: DocumentData
+	block: ManyBlock
 	api: DocumentApi
 }>()
-const emit = defineEmits<{ close: [] }>()
+defineEmits<{ close: [] }>()
 
-const router = useRouter()
 const panel = ref<HTMLElement | null>(null)
 onMounted(() => panel.value?.focus())
 
 const name = computed(() => {
-	const title = titleColumn(props.table)
-	return (title && (props.row[title.key] as string)) || ''
+	const title = titleColumn(props.block.columns)
+	return (title && props.row[title.key]) || ''
 })
-const groups = computed(() => columnGroups(props.table, props.document.blocks))
-const referring = computed(() =>
-	referringTables(props.table, props.document.tables)
-)
-
-async function refer(block: string, column: string) {
-	const created = await props.api.addRow(block, { [column]: props.row.id })
-	if (!created) return
-	emit('close')
-	router.push({
-		name: 'Document',
-		params: {
-			courseName: props.document.course,
-			artifact: props.document.artifact,
-			view: block,
-		},
-	})
-}
 </script>
