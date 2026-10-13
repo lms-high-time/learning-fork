@@ -5,7 +5,7 @@ import App from './App.vue'
 import { createPinia } from 'pinia'
 import dayjs from '@/utils/dayjs'
 import { createDialog } from '@/utils/dialogs'
-import translationPlugin from './translation'
+import translationPlugin, { translationsReady } from './translation'
 import { usersStore } from './stores/user'
 import { initSocket } from './socket'
 import { FrappeUI, setConfig, frappeRequest, pageMetaPlugin } from 'frappe-ui'
@@ -24,7 +24,9 @@ app.use(pageMetaPlugin)
 registerDirectives(app)
 app.provide('$dayjs', dayjs)
 app.provide('$socket', initSocket())
-app.mount('#app')
+// After the translations, so the first paint is already Russian — strings a
+// component builds once in setup would not update on a late answer (#564).
+translationsReady().then(() => app.mount('#app'))
 
 const { userResource, allUsers } = usersStore()
 app.provide('$user', userResource)
