@@ -24,7 +24,8 @@ app.use(pageMetaPlugin)
 registerDirectives(app)
 app.provide('$dayjs', dayjs)
 app.provide('$socket', initSocket())
-// After the translations: a template rendered earlier keeps English (#564).
+// After the translations, so the first paint is already Russian — strings a
+// component builds once in setup would not update on a late answer (#564).
 translationsReady().then(() => app.mount('#app'))
 
 const { userResource, allUsers } = usersStore()
