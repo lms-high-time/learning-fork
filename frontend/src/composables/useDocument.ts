@@ -8,9 +8,15 @@ import {
 	type Ref,
 } from 'vue'
 import { call, createResource, toast } from 'frappe-ui'
-import type { CellValue, DocumentData, DocRow } from '@/utils/documentTable'
+import {
+	isMany,
+	type DocBlock,
+	type DocumentData,
+	type DocRow,
+	type EmptyCell,
+} from '@/utils/documentTable'
 import { useSpace } from '@/stores/space'
-import { postForm, type ContractAnswer } from '@/utils/postForm'
+import type { ContractAnswer } from '@/utils/postForm'
 
 /**
  * A course document: read with `artifact`, written with `update_artifact` —
@@ -18,16 +24,16 @@ import { postForm, type ContractAnswer } from '@/utils/postForm'
  * its own (learning-services#331).
  *
  * A write answers with the fill counts, not the document, so the document is
- * read again after it: the formulas (rank, «in work») and what each block
- * still lacks are the server's to compute. A cell changes on screen at once
- * and goes back if the server refuses.
+ * read again after it: what each block still lacks is the server's to
+ * compute. A cell changes on screen at once and goes back if the server
+ * refuses.
  */
 
 interface WriteAnswer {
 	blocks_total: number
 	blocks_filled: number
 	created: string[]
-	empty_cells: { row?: string; column?: string; field?: string }[]
+	empty_cells: EmptyCell[]
 }
 
 interface LiveEvent {
@@ -35,13 +41,16 @@ interface LiveEvent {
 	artifact: string
 }
 
+/**
+ * What `update_artifact` takes for a block (learning-services#515): `rows`
+ * and `delete_rows` for a `many` block, `fields` for a `one`, or `clear`.
+ * A row without `id` is a new one; its ID comes from the server.
+ */
 export interface BlockWrite {
-	content?: string
 	clear?: boolean
-	url?: string
-	rows?: Record<string, CellValue>[]
+	rows?: Record<string, string>[]
 	delete_rows?: string[]
-	fields?: Record<string, CellValue>
+	fields?: Record<string, string>
 }
 
 export function useDocument(course: Ref<string>, artifact: Ref<string>) {
@@ -73,7 +82,7 @@ export function useDocument(course: Ref<string>, artifact: Ref<string>) {
 		() =>
 			resource.data as ContractAnswer<DocumentData & { space?: string }> | null
 	)
-	// The space the read answered for. Writes, uploads and the download name it
+	// The space the read answered for. Writes and the download name it
 	// back, so the page never reads one space's document and writes another's.
 	const space = computed(() =>
 		answer.value?.ok ? answer.value.data?.space : undefined
@@ -119,28 +128,32 @@ export function useDocument(course: Ref<string>, artifact: Ref<string>) {
 		}
 	}
 
-	/** One cell: shown at once, written, read back with the formulas. */
-	function setCell(
-		block: string,
-		table: string,
-		row: DocRow,
-		column: string,
-		value: CellValue
-	) {
-		const rows = document.value?.tables[table]?.rows
-		const local = rows?.find((r) => r.id === row.id)
+	const blockOf = (key: string): DocBlock | undefined =>
+		document.value?.blocks.find((b) => b.key === key)
+
+	/**
+	 * One cell of a `many` block: shown at once, written, read back. An empty
+	 * value clears the cell.
+	 */
+	function setCell(block: string, row: DocRow, column: string, value: string) {
+		const target = blockOf(block)
+		const local =
+			target && isMany(target)
+				? target.items.find((r) => r.id === row.id)
+				: undefined
 		if (local) local[column] = value
-		return write(block, {
-			rows: [{ id: row.id, [column]: value === '' ? null : value }],
-		})
+		return write(block, { rows: [{ id: row.id, [column]: value }] })
 	}
 
-	function setField(block: string, key: string, value: CellValue) {
-		if (document.value) document.value.fields[key] = value
-		return write(block, { fields: { [key]: value === '' ? null : value } })
+	/** One field of a `one` block; an empty value clears it. */
+	function setField(block: string, key: string, value: string) {
+		const target = blockOf(block)
+		if (target && !isMany(target))
+			target.values = { ...target.values, [key]: value }
+		return write(block, { fields: { [key]: value } })
 	}
 
-	async function addRow(block: string, values: Record<string, CellValue> = {}) {
+	async function addRow(block: string, values: Record<string, string> = {}) {
 		const answer = await write(block, { rows: [values] })
 		return answer?.created?.[0] ?? null
 	}
@@ -149,30 +162,9 @@ export function useDocument(course: Ref<string>, artifact: Ref<string>) {
 		return write(block, { delete_rows: [id] })
 	}
 
-	/** A block-file upload goes as a form: the bytes as the browser sends them. */
-	async function upload(key: string, file: File): Promise<boolean> {
-		const form = new FormData()
-		form.append('course', course.value)
-		form.append('artifact', artifact.value)
-		form.append('key', key)
-		if (space.value) form.append('space', space.value)
-		form.append('file', file)
-		saving.value++
-		try {
-			const result = await postForm(
-				'lms_frappe_app.api.student.upload_artifact_file',
-				form
-			)
-			if (!result.ok) {
-				toast.error(result.message || __('Could not upload the file'))
-				return false
-			}
-			await resource.reload()
-			return true
-		} finally {
-			saving.value--
-			lastOwnWrite = Date.now()
-		}
+	/** Every row of a `many` block, every field of a `one`. */
+	function clear(block: string) {
+		return write(block, { clear: true })
 	}
 
 	const downloadUrl = (format: 'md' | 'xlsx') =>
@@ -224,7 +216,7 @@ export function useDocument(course: Ref<string>, artifact: Ref<string>) {
 		setField,
 		addRow,
 		deleteRow,
-		upload,
+		clear,
 		downloadUrl,
 	}
 }

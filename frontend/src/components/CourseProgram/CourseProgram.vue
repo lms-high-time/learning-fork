@@ -42,6 +42,7 @@
 						:total="lessons.length"
 						:lessonUrl="lessonUrl(lesson)"
 						:courseName="courseName"
+						:chapter="program.chapters[lesson.chapterIndex]"
 					/>
 				</div>
 			</div>

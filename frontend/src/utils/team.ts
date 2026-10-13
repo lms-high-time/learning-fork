@@ -36,10 +36,10 @@ export type TeamEntry = {
 	full_name: string | null
 	left: boolean
 	filled: boolean
-	content: string
-	file: { name: string; url: string } | null
-	url: string | null
-	table_markdown: string | null
+	// The block as markdown: a table for a block filled row by row, «Title:
+	// value» lines for one filled once (learning-services#515); empty when
+	// nothing is written.
+	markdown: string | null
 }
 
 export type TeamDocuments = {
@@ -97,11 +97,7 @@ export const firstDocument = (
 // An entry with nothing in it is still shown — who has not filled a block is
 // part of the comparison — but drawn as a gap, not as an empty card.
 export const isEmpty = (entry: TeamEntry): boolean =>
-	!entry.filled &&
-	!entry.content.trim() &&
-	!entry.file &&
-	!entry.url &&
-	!entry.table_markdown
+	!entry.filled && !(entry.markdown ?? '').trim()
 
 export const ROLE_VALUES = ['Member', 'Manager', 'Org Admin'] as const
 
@@ -224,19 +220,13 @@ export type BlockView = {
 	title: string
 	// What to draw: every filled entry, or one when they are all the same.
 	filled: TeamEntry[]
-	// Everyone whose entry is that same one — a preset nobody changed.
+	// Everyone whose entry is that same one.
 	sameFor: TeamEntry[]
 	// Gaps go in a line of names, not in empty cards.
 	missing: TeamEntry[]
 }
 
-const sameText = (entry: TeamEntry): string =>
-	JSON.stringify([
-		entry.content.trim(),
-		entry.table_markdown ?? '',
-		entry.file?.url ?? '',
-		entry.url ?? '',
-	])
+const sameText = (entry: TeamEntry): string => (entry.markdown ?? '').trim()
 
 // One block as the page draws it (learning-services#378): a block of thirteen
 // people repeated the same preset table thirteen times, and the gaps took as

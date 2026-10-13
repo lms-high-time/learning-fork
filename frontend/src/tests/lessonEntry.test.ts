@@ -26,9 +26,9 @@ const entry = (overrides: Partial<LessonEntryData> = {}): LessonEntryData => ({
 	...overrides,
 })
 
-const mountEntry = (data: LessonEntryData) =>
+const mountEntry = (data: LessonEntryData, enrolled = true) =>
 	mount(LessonEntry, {
-		props: { entry: data, title: data.title },
+		props: { entry: data, title: data.title, enrolled },
 		global: {
 			mocks: { __ },
 			stubs: {
@@ -126,5 +126,48 @@ describe('LessonEntry', () => {
 
 		expect(wrapper.text()).toContain('In the browser, with the platform agent')
 		expect(wrapper.text()).not.toContain('trial lessons left')
+	})
+
+	// learning-services#547: the lesson's topics, marked as on the slide.
+	it("lists the lesson's topics with the student's coverage", () => {
+		const wrapper = mountEntry(
+			entry({
+				objectives: [
+					{ text: 'Назвать спонсора', status: 'covered' },
+					{ text: 'Отличить проект', status: 'touched' },
+					{ text: 'Оценить риск' },
+				],
+			})
+		)
+
+		const topics = wrapper.get('[data-testid="lesson-objectives"]')
+		expect(topics.get('h2').text()).toContain('1 of 3 covered')
+		expect(
+			topics.findAll('li').map((li) => li.attributes('data-status'))
+		).toEqual(['covered', 'touched', 'none'])
+		expect(topics.findAll('li')[0].text()).toContain('covered')
+		// All of them: the lesson page has the room the slide has not.
+		expect(topics.find('button').exists()).toBe(false)
+	})
+
+	it('shows Student View the topics without a coverage count', () => {
+		const wrapper = mountEntry(
+			entry({ objectives: [{ text: 'Назвать спонсора' }] }),
+			false
+		)
+		const topics = wrapper.get('[data-testid="lesson-objectives"]')
+		expect(topics.text()).toContain('Назвать спонсора')
+		expect(topics.find('[data-testid="objectives-count"]').exists()).toBe(false)
+	})
+
+	it('shows no topics section for a lesson without them', () => {
+		expect(
+			mountEntry(entry({ objectives: [] }))
+				.find('[data-testid="lesson-objectives"]')
+				.exists()
+		).toBe(false)
+		expect(
+			mountEntry(entry()).find('[data-testid="lesson-objectives"]').exists()
+		).toBe(false)
 	})
 })

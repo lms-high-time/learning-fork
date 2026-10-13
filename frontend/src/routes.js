@@ -204,10 +204,11 @@ export const routes = [
 		redirect: { name: 'Agent' },
 	},
 	{
-		// `view` — a lesson's document by its key, or `table`, `report`, `canvas`,
-		// `compare`; without it, or with one the document lacks (an old
-		// `register` link, learning-services#360), the document opens where the
-		// student is (#342).
+		// `view` — a block of the document by its key, and nothing else
+		// (learning-services#515); without it, or with one the document lacks
+		// (an old `table`, `report` or `canvas` link, #360), the document opens
+		// where the student is (#342). The old report's own address redirects
+		// below; it has four segments, so it takes no block's key.
 		path: '/documents/:courseName/:artifact/:view?',
 		name: 'Document',
 		component: () => import('@/pages/Documents/Document.vue'),
@@ -221,7 +222,6 @@ export const routes = [
 			params: {
 				courseName: to.params.courseName,
 				artifact: to.params.artifact,
-				view: 'report',
 			},
 		}),
 	},

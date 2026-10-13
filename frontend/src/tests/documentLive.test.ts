@@ -75,7 +75,7 @@ describe('a live document', () => {
 		const socket = socketStub()
 		const { api } = host(socket)
 		call.mockResolvedValue({ ok: true, data: { created: [] } })
-		await api().write('risks', { content: 'x' })
+		await api().write('risks', { fields: { owner: 'x' } })
 		reload.mockReset()
 		socket.emit('artifact_updated', { course: 'c1', artifact: 'risk_register' })
 		await flushPromises()
@@ -88,5 +88,48 @@ describe('a live document', () => {
 		expect(socket.count('artifact_updated')).toBe(1)
 		wrapper.unmount()
 		expect(socket.count('artifact_updated')).toBe(0)
+	})
+})
+
+// learning-services#515: a block is written with `rows` and `delete_rows`
+// (many), `fields` (one) or `clear` — text only, an empty one clears.
+describe('writing a block', () => {
+	const params = () => call.mock.calls[0][1]
+
+	beforeEach(() => {
+		call.mockResolvedValue({ ok: true, data: { created: ['A3'] } })
+	})
+
+	it('writes a cell as a row by its ID', async () => {
+		const { api } = host(socketStub())
+		await api().setCell('agreements', { id: 'A1' }, 'topic', '')
+		expect(call.mock.calls[0][0]).toBe(
+			'lms_frappe_app.api.student.update_artifact'
+		)
+		expect(params()).toEqual({
+			course: 'c1',
+			artifact: 'risk_register',
+			key: 'agreements',
+			space: undefined,
+			rows: [{ id: 'A1', topic: '' }],
+		})
+	})
+
+	it('adds a row without an ID and answers the one the server gave', async () => {
+		const { api } = host(socketStub())
+		expect(await api().addRow('agreements')).toBe('A3')
+		expect(params().rows).toEqual([{}])
+	})
+
+	it('writes a field, deletes a row, clears a block', async () => {
+		const { api } = host(socketStub())
+		await api().setField('how_we_decide', 'method', 'Согласие')
+		expect(params().fields).toEqual({ method: 'Согласие' })
+		call.mockClear()
+		await api().deleteRow('agreements', 'A2')
+		expect(params().delete_rows).toEqual(['A2'])
+		call.mockClear()
+		await api().clear('agreements')
+		expect(params().clear).toBe(true)
 	})
 })

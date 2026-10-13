@@ -10029,15 +10029,15 @@ msgstr "Идёт"
 msgid "Up next"
 msgstr "Следующий"
 
-#: frontend/src/components/CourseProgram/LessonSlide.vue
+#: frontend/src/components/CourseProgram/LessonObjectives.vue
 msgid "Topics"
 msgstr "Темы"
 
-#: frontend/src/components/CourseProgram/LessonSlide.vue
+#: frontend/src/components/CourseProgram/LessonObjectives.vue
 msgid "{0} of {1} covered"
 msgstr "{0} из {1} разобрано"
 
-#: frontend/src/components/CourseProgram/LessonSlide.vue
+#: frontend/src/components/CourseProgram/LessonObjectives.vue
 msgid "{0} more"
 msgstr "ещё {0}"
 
@@ -10045,15 +10045,15 @@ msgstr "ещё {0}"
 msgid "Open lesson"
 msgstr "Открыть урок"
 
-#: frontend/src/components/CourseProgram/LessonSlide.vue
+#: frontend/src/components/CourseProgram/LessonObjectives.vue
 msgid "covered"
 msgstr "разобрано"
 
-#: frontend/src/components/CourseProgram/LessonSlide.vue
+#: frontend/src/components/CourseProgram/LessonObjectives.vue
 msgid "touched in passing"
 msgstr "задето вскользь"
 
-#: frontend/src/components/CourseProgram/LessonSlide.vue
+#: frontend/src/components/CourseProgram/LessonObjectives.vue
 msgid "not yet"
 msgstr "не дошли"
 
@@ -10106,10 +10106,6 @@ msgid "{0} sections"
 msgstr "{0} раздела"
 
 #: frontend/src/pages/Documents/Document.vue
-msgid "Add a note"
-msgstr "Добавить заметку"
-
-#: frontend/src/pages/Documents/Document.vue
 msgid "Add a row"
 msgstr "Добавить строку"
 
@@ -10118,24 +10114,8 @@ msgid "All documents"
 msgstr "Все документы"
 
 #: frontend/src/pages/Documents/Document.vue
-msgid "Built in lesson {0}"
-msgstr "Собирается на уроке {0}"
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "Clear this block?"
-msgstr "Очистить блок?"
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "Columns"
-msgstr "Колонки"
-
-#: frontend/src/pages/Documents/Document.vue
 msgid "Could not save"
 msgstr "Не удалось сохранить"
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "Could not upload the file"
-msgstr "Не удалось загрузить файл"
 
 #: frontend/src/pages/Documents/Document.vue
 msgid "Delete {0}"
@@ -10158,16 +10138,8 @@ msgid "Download"
 msgstr "Скачать"
 
 #: frontend/src/pages/Documents/Document.vue
-msgid "Edit text"
-msgstr "Изменить текст"
-
-#: frontend/src/pages/Documents/Document.vue
 msgid "Empty"
 msgstr "Пусто"
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "Empty cells"
-msgstr "Пустые клетки"
 
 #: frontend/src/pages/Documents/Document.vue
 msgid "Excel workbook (.xlsx)"
@@ -10190,24 +10162,12 @@ msgid "Markdown (.md)"
 msgstr "Markdown (.md)"
 
 #: frontend/src/pages/Documents/Document.vue
-msgid "Markdown works here"
-msgstr "Можно markdown"
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "Matrix: {0} × {1}"
-msgstr "Матрица: {0} × {1}"
-
-#: frontend/src/pages/Documents/Document.vue
 msgid "My documents"
 msgstr "Мои документы"
 
 #: frontend/src/pages/Documents/Document.vue
 msgid "No"
 msgstr "Нет"
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "No file yet."
-msgstr "Файла пока нет."
 
 #: frontend/src/pages/Documents/Document.vue
 msgid "No rows match the filter"
@@ -10218,18 +10178,6 @@ msgid "No rows yet"
 msgstr "Строк пока нет"
 
 #: frontend/src/pages/Documents/Document.vue
-msgid "Not scored yet: {0}"
-msgstr "Ещё не оценены: {0}"
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "Print or save as PDF"
-msgstr "Печать или PDF"
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "Replace the file"
-msgstr "Заменить файл"
-
-#: frontend/src/pages/Documents/Document.vue
 msgid "Report"
 msgstr "Отчёт"
 
@@ -10238,16 +10186,8 @@ msgid "Required"
 msgstr "Обязательно"
 
 #: frontend/src/pages/Documents/Document.vue
-msgid "Required when «{0}»"
-msgstr "Обязательно, если «{0}»"
-
-#: frontend/src/pages/Documents/Document.vue
 msgid "Row actions"
 msgstr "Действия со строкой"
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "Save link"
-msgstr "Сохранить ссылку"
 
 #: frontend/src/pages/Documents/Document.vue
 msgid "Saving…"
@@ -10258,36 +10198,12 @@ msgid "Search the table"
 msgstr "Поиск по таблице"
 
 #: frontend/src/pages/Documents/Document.vue
-msgid "This document has no report."
-msgstr "У этого документа нет отчёта."
-
-#: frontend/src/pages/Documents/Document.vue
 msgid "This document is not available: the course is not yours or the document is gone."
 msgstr "Документ недоступен: курс не ваш или документа больше нет."
 
 #: frontend/src/pages/Documents/Document.vue
-msgid "This was written as text before the table existed. Move it into the table with your agent, or by hand."
-msgstr "Это записано текстом, когда таблицы ещё не было. Перенесите записи в таблицу — с агентом или вручную."
-
-#: frontend/src/pages/Documents/Document.vue
 msgid "Untitled"
 msgstr "Без названия"
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "Upload a file"
-msgstr "Загрузить файл"
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "What the agent sees"
-msgstr "Что видит агент"
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "When the block is done"
-msgstr "Когда блок готов"
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "Write"
-msgstr "Написать"
 
 #: frontend/src/pages/Documents/Document.vue
 msgid "Yes"
@@ -10308,10 +10224,6 @@ msgstr "нет"
 #: frontend/src/pages/Documents/Document.vue
 msgid "{0} of {1} rows"
 msgstr "{0} из {1} строк"
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "{0} to fill"
-msgstr "заполнить: {0}"
 
 #: frontend/src/components/CourseDocumentCard.vue
 msgid "Into the document:"
@@ -10350,26 +10262,6 @@ msgid "Lesson {0} · {1}"
 msgstr "Урок {0} · {1}"
 
 #: frontend/src/pages/Documents/Document.vue
-msgid "More about this document"
-msgstr "Подробнее о документе"
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "When the document is done"
-msgstr "Когда документ готов"
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "This is a template from the lesson. Adjust it to your project."
-msgstr "Это заготовка из урока. Подгоните её под свой проект."
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "Edit the note"
-msgstr "Изменить заметку"
-
-#: frontend/src/pages/Documents/Document.vue
-msgid "Clear this document?"
-msgstr "Очистить документ?"
-
-#: frontend/src/pages/Documents/Document.vue
 msgid "Other documents"
 msgstr "Другие документы"
 
@@ -10401,81 +10293,17 @@ msgstr "Сохранено в {0}"
 msgid "Changed {0} · version {1}"
 msgstr "Изменён {0} · версия {1}"
 
-#: frontend/src/components/Documents/StateBadge.vue
-msgid "Preset"
-msgstr "Заготовка"
-
-#: frontend/src/components/Documents/TablePanel.vue
-msgid "The whole table"
-msgstr "Таблица целиком"
-
-#: frontend/src/components/Documents/TablePanel.vue
-msgid "{0} rows"
-msgstr "Строк: {0}"
-
-#: frontend/src/components/Documents/TablePanel.vue
-msgid "overdue by {0} d"
-msgstr "просрочено на {0} дн."
-
-#: frontend/src/components/Documents/TablePanel.vue
-msgid "today"
-msgstr "сегодня"
-
-#: frontend/src/components/Documents/TablePanel.vue
-msgid "in {0} d"
-msgstr "через {0} дн."
-
-#: frontend/src/components/Documents/TablePanel.vue
-msgid "Show as"
-msgstr "Показать как"
-
 #: frontend/src/components/Documents/TablePanel.vue
 msgid "Table"
 msgstr "Таблица"
-
-#: frontend/src/components/Documents/TablePanel.vue
-msgid "Matrix"
-msgstr "Матрица"
-
-#: frontend/src/components/Documents/TablePanel.vue
-msgid "Filter by"
-msgstr "Фильтр"
-
-#: frontend/src/components/Documents/TablePanel.vue
-msgid "Filter by…"
-msgstr "Фильтр…"
 
 #: frontend/src/components/Documents/TablePanel.vue
 msgid "Any"
 msgstr "Любое"
 
 #: frontend/src/components/Documents/TablePanel.vue
-msgid "Download this view (CSV)"
-msgstr "Скачать этот вид (CSV)"
-
-#: frontend/src/components/Documents/TablePanel.vue
 msgid "Open {0}"
 msgstr "Открыть {0}"
-
-#: frontend/src/components/Documents/TablePanel.vue
-msgid "Add to «{0}»"
-msgstr "Добавить в «{0}»"
-
-#: frontend/src/components/Documents/ReportPanel.vue
-msgid "Copy as text"
-msgstr "Скопировать текстом"
-
-#: frontend/src/components/Documents/ReportPanel.vue
-msgid "Nothing is ticked for the report yet."
-msgstr "Для отчёта пока ничего не отмечено."
-
-#: frontend/src/components/Documents/ReportPanel.vue
-msgid "Top by «{0}»:"
-msgstr "Первые по «{0}»:"
-
-#: frontend/src/components/Documents/ReportPanel.vue
-msgid "Tick these"
-msgstr "Отметить эти"
 
 #: frontend/src/components/Documents/ReportPanel.vue
 msgid "Copied"
@@ -10484,10 +10312,6 @@ msgstr "Скопировано"
 #: frontend/src/components/Documents/ReportPanel.vue
 msgid "Could not copy"
 msgstr "Не удалось скопировать"
-
-#: frontend/src/components/Documents/ReportPanel.vue
-msgid "Continue"
-msgstr "Продолжить"
 
 #: frontend/src/components/Sidebar/SpaceSwitcher.vue
 #: frontend/src/pages/MobileYou.vue
@@ -10522,36 +10346,6 @@ msgstr "Не удалось записаться"
 #: frontend/src/pages/Documents/Document.vue
 msgid "Updated at {0}"
 msgstr "Обновлено в {0}"
-
-#: frontend/src/components/Documents/CanvasPanel.vue
-#: frontend/src/pages/Documents/Document.vue
-msgid "The whole canvas"
-msgstr "Холст целиком"
-
-#: frontend/src/components/Documents/ComparePanel.vue
-#: frontend/src/pages/Documents/Document.vue
-msgid "Before → after"
-msgstr "Было → стало"
-
-#: frontend/src/components/Documents/ComparePanel.vue
-msgid "The first sketch next to what it has become"
-msgstr "Первый набросок рядом с тем, что стало"
-
-#: frontend/src/components/Documents/ComparePanel.vue
-msgid "Before"
-msgstr "Было"
-
-#: frontend/src/components/Documents/ComparePanel.vue
-msgid "After"
-msgstr "Стало"
-
-#: frontend/src/components/Documents/CanvasSummary.vue
-msgid "{0}: no"
-msgstr "{0}: нет"
-
-#: frontend/src/components/Documents/TablePanel.vue
-msgid "Columns and download"
-msgstr "Колонки и выгрузка"
 
 #: frontend/src/pages/Team/Team.vue
 #: frontend/src/components/Sidebar/SpaceSwitcher.vue
@@ -11754,3 +11548,29 @@ msgstr "Это безопасно?"
 #: frontend/src/pages/Agent/Agent.vue
 msgid "The assistant never sees your password: you sign in on this site, and the assistant gets access only to your studies here. You can disconnect it at any time in the assistant settings."
 msgstr "Ассистент не видит ваш пароль: вы входите на этом сайте, а ассистент получает доступ только к вашей учёбе здесь. Отключить его можно в любой момент в настройках ассистента."
+
+#: frontend/src/components/Documents/BlockFields.vue
+#: frontend/src/components/Documents/DocTableEditor.vue
+msgid "Required when «{0}» is filled"
+msgstr "Обязательно, если заполнено «{0}»"
+
+#: frontend/src/components/Documents/LessonDocument.vue
+msgid "Delete every row of this document?"
+msgstr "Удалить все строки этого документа?"
+
+#: frontend/src/components/Documents/LessonDocument.vue
+msgid "Clear every field of this document?"
+msgstr "Очистить все поля этого документа?"
+
+#: frontend/src/components/CourseProgram/LessonSlide.vue
+#: frontend/src/components/CourseProgram/ProgramMap.vue
+msgid "Chapter passed"
+msgstr "Глава пройдена"
+
+#: frontend/src/components/CourseProgram/LessonSlide.vue
+msgid "Chapter: {0} of {1} lessons passed"
+msgstr "В главе пройдено уроков: {0} из {1}"
+
+#: frontend/src/components/CourseProgram/ProgramMap.vue
+msgid "{0} of {1} lessons passed"
+msgstr "пройдено уроков: {0} из {1}"

@@ -95,15 +95,13 @@ const team = (canSeeReport: boolean) => ({
 	},
 })
 
-const entry = (user: string, content: string) => ({
+// A member's block comes as markdown (learning-services#515).
+const entry = (user: string, markdown: string) => ({
 	user,
 	full_name: user,
 	left: false,
-	filled: Boolean(content),
-	content,
-	file: null,
-	url: null,
-	table_markdown: null,
+	filled: Boolean(markdown),
+	markdown,
 })
 
 const open = async () => {
@@ -181,13 +179,13 @@ describe('team wording', () => {
 		).toEqual(['v', 'b', 'g'])
 	})
 
-	it('draws a preset nobody changed once, and gaps as names', () => {
-		const preset = { ...entry('b@x', '| P1 | Редко |'), left: true }
+	it('draws an answer everyone gave once, and gaps as names', () => {
+		const same = { ...entry('b@x', '| P1 | Редко |'), left: true }
 		const view = blockView(
 			{
 				key: 'scale',
 				title: 'Шкала',
-				entries: [preset, entry('a@x', '| P1 | Редко |'), entry('c@x', '')],
+				entries: [same, entry('a@x', '| P1 | Редко |'), entry('c@x', '')],
 			},
 			null
 		)
@@ -212,6 +210,7 @@ describe('team wording', () => {
 	it('tells a gap from an entry', () => {
 		expect(isEmpty(entry('a', ''))).toBe(true)
 		expect(isEmpty(entry('a', 'текст'))).toBe(false)
+		expect(isEmpty({ ...entry('a', ''), markdown: null })).toBe(true)
 	})
 })
 

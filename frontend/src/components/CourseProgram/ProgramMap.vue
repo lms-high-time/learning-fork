@@ -1,13 +1,15 @@
 <template>
 	<nav class="program-map" :aria-label="__('Lessons of the course')">
 		<!-- A chapter is a group of dots, not a heading: its title is on the slide
-		(learning-services#326), and a hover names the group. No gap between the
-		groups: the dots are the lessons in a row (learning-services#402). -->
+		(learning-services#326), and a hover names the group and, to a student,
+		how far they are in it (#547). No gap between the groups: the dots are
+		the lessons in a row (learning-services#402). -->
 		<div
 			v-for="chapter in chapters"
 			:key="chapter.index"
 			class="flex items-center"
-			:title="chapter.title"
+			:title="chapter.hover"
+			:data-status="chapter.status"
 			data-testid="map-chapter"
 		>
 			<button
@@ -60,6 +62,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import {
+	chapterProgress,
 	coverage,
 	lessonStatus,
 	topicCount,
@@ -95,6 +98,8 @@ const chapters = computed(() => {
 	return props.chapters.map((chapter, chapterIndex) => ({
 		index: chapterIndex,
 		title: chapter.title,
+		hover: chapterHover(chapter),
+		status: chapter.status,
 		lessons: chapter.lessons.map((lesson): MapLesson => {
 			const { covered, total } = topicCount(lesson.objectives)
 			return {
@@ -117,6 +122,18 @@ const STATUS_LABELS: Record<LessonStatus, string> = {
 	next: 'up next',
 	ahead: 'ahead',
 	none: '',
+}
+
+function chapterHover(chapter: ProgramChapter): string {
+	const progress = chapterProgress(chapter)
+	if (!progress) return chapter.title
+	const passed = progress.done
+		? __('Chapter passed')
+		: __('{0} of {1} lessons passed').format(
+				String(progress.passed),
+				String(progress.total)
+		  )
+	return `${chapter.title} — ${passed}`
 }
 
 // A screen reader gets what the eye does: which lesson, its status and how many

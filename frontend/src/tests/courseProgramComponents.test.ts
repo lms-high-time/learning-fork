@@ -46,6 +46,10 @@ const enrolled: ProgramData = {
 	chapters: [
 		{
 			title: 'Рамка',
+			description: 'Что считать риском',
+			status: 'passed',
+			lessons_total: 1,
+			lessons_passed: 1,
 			lessons: [
 				{
 					id: 'l-1',
@@ -59,6 +63,10 @@ const enrolled: ProgramData = {
 		},
 		{
 			title: 'Выявление',
+			description: null,
+			status: 'in_progress',
+			lessons_total: 2,
+			lessons_passed: 0,
 			lessons: [
 				{
 					id: 'l-2',
@@ -88,13 +96,15 @@ const enrolled: ProgramData = {
 const guest: ProgramData = {
 	...enrolled,
 	next_lesson: undefined,
-	chapters: enrolled.chapters.map((chapter) => ({
-		...chapter,
-		lessons: chapter.lessons.map(({ completed, ...lesson }) => ({
-			...lesson,
-			objectives: lesson.objectives.map(({ text }) => ({ text })),
-		})),
-	})),
+	chapters: enrolled.chapters.map(
+		({ status, lessons_total, lessons_passed, ...chapter }) => ({
+			...chapter,
+			lessons: chapter.lessons.map(({ completed, ...lesson }) => ({
+				...lesson,
+				objectives: lesson.objectives.map(({ text }) => ({ text })),
+			})),
+		})
+	),
 }
 
 const global = { mocks: { __ } }
@@ -135,9 +145,14 @@ describe('ProgramMap', () => {
 			global,
 		})
 		const groups = wrapper.findAll('[data-testid="map-chapter"]')
+		// A hover tells a student how far they are in the chapter (#547).
 		expect(groups.map((g) => g.attributes('title'))).toEqual([
-			'Рамка',
-			'Выявление',
+			'Рамка — Chapter passed',
+			'Выявление — 0 of 2 lessons passed',
+		])
+		expect(groups.map((g) => g.attributes('data-status'))).toEqual([
+			'passed',
+			'in_progress',
 		])
 		expect(groups.map((g) => g.findAll('button').length)).toEqual([1, 2])
 		expect(wrapper.text()).not.toContain('Рамка')
@@ -160,6 +175,11 @@ describe('ProgramMap', () => {
 		const dot = wrapper.findAll('button')[1]
 		expect(dot.attributes('data-status')).toBe('none')
 		expect(dot.attributes('aria-label')).toBe('Lesson 2. Цели и источники')
+		expect(
+			wrapper
+				.findAll('[data-testid="map-chapter"]')
+				.map((g) => g.attributes('title'))
+		).toEqual(['Рамка', 'Выявление'])
 	})
 })
 
@@ -179,7 +199,7 @@ describe('LessonSlide', () => {
 
 	it('counts covered topics and marks each one', () => {
 		const wrapper = slide({})
-		expect(wrapper.get('[data-testid="slide-count"]').text()).toContain(
+		expect(wrapper.get('[data-testid="objectives-count"]').text()).toContain(
 			'1 of 3 covered'
 		)
 		expect(
@@ -209,9 +229,45 @@ describe('LessonSlide', () => {
 		expect(wrapper.findAll('li')).toHaveLength(8)
 	})
 
+	// learning-services#547: the chapter's description and progress on its
+	// lessons' slides.
+	it('tells what the chapter is about and how far the student is in it', () => {
+		const wrapper = slide({ chapter: enrolled.chapters[0] })
+		expect(
+			wrapper.get('[data-testid="slide-chapter-description"]').text()
+		).toBe('Что считать риском')
+		expect(wrapper.get('[data-testid="slide-chapter-progress"]').text()).toBe(
+			'Chapter passed'
+		)
+		const next = slide({ chapter: enrolled.chapters[1] })
+		expect(
+			next.find('[data-testid="slide-chapter-description"]').exists()
+		).toBe(false)
+		expect(next.get('[data-testid="slide-chapter-progress"]').text()).toBe(
+			'Chapter: 0 of 2 lessons passed'
+		)
+	})
+
+	it('gives a visitor the chapter description but no progress', () => {
+		const wrapper = slide({ status: 'none', chapter: guest.chapters[0] })
+		expect(
+			wrapper.get('[data-testid="slide-chapter-description"]').text()
+		).toBe('Что считать риском')
+		expect(
+			wrapper.find('[data-testid="slide-chapter-progress"]').exists()
+		).toBe(false)
+		expect(
+			slide({ status: 'none', chapter: guest.chapters[1] })
+				.find('[data-testid="slide-chapter"]')
+				.exists()
+		).toBe(false)
+	})
+
 	it('gives a visitor no count, and the same way to the lesson', () => {
 		const wrapper = slide({ status: 'none' })
-		expect(wrapper.find('[data-testid="slide-count"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="objectives-count"]').exists()).toBe(
+			false
+		)
 		expect(wrapper.find('[data-testid="slide-status"]').exists()).toBe(false)
 		expect(wrapper.get('[data-testid="slide-action"]').attributes('href')).toBe(
 			'/lms/courses/course-1/learn/2-1'
@@ -244,6 +300,22 @@ describe('CourseProgram', () => {
 		).toBe('/lms/courses/course-1/learn/2-2')
 		// Where to study is the course card's question now: no request per slide.
 		expect(fetchMock).not.toHaveBeenCalled()
+	})
+
+	it('hands each slide its own chapter', async () => {
+		const wrapper = mount(CourseProgram, {
+			props: { program: enrolled, courseName: 'course-1' },
+			global,
+		})
+		await flushPromises()
+		const progress = wrapper
+			.findAll('[data-testid="slide-chapter-progress"]')
+			.map((p) => p.text())
+		expect(progress).toEqual([
+			'Chapter passed',
+			'Chapter: 0 of 2 lessons passed',
+			'Chapter: 0 of 2 lessons passed',
+		])
 	})
 
 	it('moves to the lesson picked on the map', async () => {

@@ -81,7 +81,6 @@
 			<DocumentOutline
 				:document="doc"
 				:groups="groups"
-				:specials="specials"
 				:active="''"
 				:currentLesson="currentLesson"
 			/>
@@ -96,51 +95,20 @@
 				<DocumentOutline
 					:document="doc"
 					:groups="groups"
-					:specials="specials"
 					:active="active"
 					:currentLesson="currentLesson"
 				/>
 			</aside>
 
 			<main class="min-w-0 flex-1">
-				<CanvasPanel
-					v-if="active === CANVAS_VIEW && canvas"
-					:document="doc"
-					:canvas="canvas"
-					:courseTitle="courseTitle"
-				/>
-
-				<ComparePanel
-					v-else-if="active === COMPARE_VIEW && canvas"
-					:document="doc"
-					:canvas="canvas"
-					:courseTitle="courseTitle"
-				/>
-
-				<TablePanel
-					v-else-if="active === TABLE_VIEW && wholeTable"
-					:table="wholeTable"
-					:document="doc"
-					:api="api"
-				/>
-
-				<ReportPanel
-					v-else-if="active === REPORT_VIEW"
-					:document="doc"
-					:courseTitle="courseTitle"
-					:api="api"
-				/>
-
 				<LessonDocument
-					v-else-if="block"
+					v-if="block"
 					:key="block.key"
 					:block="block"
-					:document="doc"
 					:api="api"
 					:lesson="lessonOf(block)"
 					:prev="neighbour(-1)"
 					:next="neighbour(1)"
-					@pickRow="pickRow"
 				/>
 			</main>
 		</div>
@@ -157,26 +125,16 @@ import {
 	usePageMeta,
 } from 'frappe-ui'
 import PageHeader from '@/components/Layouts/PageHeader.vue'
-import CanvasPanel from '@/components/Documents/CanvasPanel.vue'
-import ComparePanel from '@/components/Documents/ComparePanel.vue'
 import DocumentOutline from '@/components/Documents/DocumentOutline.vue'
 import LessonDocument from '@/components/Documents/LessonDocument.vue'
-import ReportPanel from '@/components/Documents/ReportPanel.vue'
-import TablePanel from '@/components/Documents/TablePanel.vue'
 import { useDocument } from '@/composables/useDocument'
 import { useSpace, type Space } from '@/stores/space'
 import { documentReaders, withSpace } from '@/utils/space'
 import { sessionStore } from '@/stores/session'
 import { useScreenSize } from '@/utils/composables'
 import {
-	CANVAS_VIEW,
-	COMPARE_VIEW,
 	defaultView,
-	isSharedTable,
 	outline,
-	reportOf,
-	REPORT_VIEW,
-	TABLE_VIEW,
 	type DocBlock,
 	type OutlineLesson,
 } from '@/utils/documentTable'
@@ -265,72 +223,11 @@ const groups = computed(() =>
 )
 const ordered = computed(() => groups.value.flatMap((g) => g.blocks))
 
-// The whole table and the report are named as the course names them — the
-// table's title, the report view's title — and only then by a neutral word:
-// dozens of courses define their documents as data (learning-services#360).
-// A sheet has its whole table too: problems and solutions side by side.
-const wholeTable = computed(
-	() => Object.values(doc.value?.tables ?? {}).find(isSharedTable) ?? null
-)
-const tableTitle = computed(
-	() => wholeTable.value?.title || __('The whole table')
-)
-const report = computed(() => (doc.value ? reportOf(doc.value) : null))
-const hasReport = computed(() => Boolean(report.value))
-const reportTitle = computed(() => report.value?.view.title || __('Report'))
-// The whole canvas and «было → стало» lead the contents when the course
-// lays the document out as one sheet (learning-services#351).
-const canvas = computed(() => doc.value?.canvas ?? null)
-const hasCompare = computed(() => Boolean(canvas.value?.sketch))
-const specials = computed(() => [
-	...(canvas.value
-		? [
-				{
-					view: CANVAS_VIEW,
-					title: __('The whole canvas'),
-					icon: 'lucide-layout-grid',
-				},
-		  ]
-		: []),
-	...(hasCompare.value
-		? [
-				{
-					view: COMPARE_VIEW,
-					title: __('Before → after'),
-					icon: 'lucide-git-compare',
-				},
-		  ]
-		: []),
-	...(wholeTable.value
-		? [
-				{
-					view: TABLE_VIEW,
-					title: tableTitle.value,
-					icon: 'lucide-table',
-				},
-		  ]
-		: []),
-	...(hasReport.value
-		? [
-				{
-					view: REPORT_VIEW,
-					title: reportTitle.value,
-					icon: 'lucide-printer',
-				},
-		  ]
-		: []),
-])
-
 // What is open: the address, or where the document opens by itself — the
-// current lesson during the course, the canvas or the whole table after it.
+// current lesson during the course, the first block after it. Every view is a
+// block's key: nothing else shares the address (learning-services#515).
 const active = computed(() => {
-	const known = new Set([
-		...(canvas.value ? [CANVAS_VIEW] : []),
-		...(hasCompare.value ? [COMPARE_VIEW] : []),
-		...(wholeTable.value ? [TABLE_VIEW] : []),
-		...(hasReport.value ? [REPORT_VIEW] : []),
-		...(doc.value?.blocks.map((b) => b.key) ?? []),
-	])
+	const known = new Set(doc.value?.blocks.map((b) => b.key) ?? [])
 	if (props.view && known.has(props.view)) return props.view
 	return doc.value
 		? defaultView(doc.value, groups.value, currentLesson.value, lessons.value)
@@ -380,13 +277,6 @@ watch(
 	{ immediate: true }
 )
 
-function pickRow(id: string) {
-	const row = window.document.querySelector(`[data-row="${CSS.escape(id)}"]`)
-	row?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-	row?.classList.add('row-picked')
-	setTimeout(() => row?.classList.remove('row-picked'), 1600)
-}
-
 // «Сохранено в 14:32» once a write lands; the time and the version number live
 // in the menu, for support rather than for the student.
 // «Сохранено» after the student's own write, «Обновлено» after the agent's.
@@ -435,13 +325,7 @@ const downloads = computed(() => [
 	},
 ])
 
-const viewTitle = computed(() => {
-	if (active.value === CANVAS_VIEW) return __('The whole canvas')
-	if (active.value === COMPARE_VIEW) return __('Before → after')
-	if (active.value === TABLE_VIEW) return tableTitle.value
-	if (active.value === REPORT_VIEW) return reportTitle.value
-	return block.value?.title ?? ''
-})
+const viewTitle = computed(() => block.value?.title ?? '')
 
 const breadcrumbs = computed(() => [
 	{ label: __('My documents'), route: { name: 'Documents' } },
@@ -461,11 +345,3 @@ usePageMeta(() => ({
 	title: viewTitle.value || doc.value?.title || __('My documents'),
 }))
 </script>
-
-<style>
-tr.row-picked > *,
-details.row-picked {
-	background-color: var(--surface-amber-1) !important;
-	transition: background-color 300ms ease;
-}
-</style>

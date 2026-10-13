@@ -108,6 +108,7 @@
 					<LessonEntry
 						:entry="lessonEntry.data.data"
 						:title="lesson.data.title"
+						:enrolled="Boolean(lesson.data.membership)"
 					/>
 					<!-- The homework the session leads to (learning-services#439). -->
 					<!-- Student View reaches here without an enrolment: no homework then. -->

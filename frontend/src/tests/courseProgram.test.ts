@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+	chapterProgress,
 	coverage,
 	flattenLessons,
 	lessonStatus,
@@ -48,7 +49,7 @@ describe('topicCount and coverage', () => {
 	const objectives = [
 		{ text: 'a', status: 'covered' as const },
 		{ text: 'b', status: 'touched' as const },
-		{ text: 'c', status: 'skipped' as const },
+		{ text: 'c' },
 		{ text: 'd' },
 	]
 
@@ -86,5 +87,35 @@ describe('flattenLessons', () => {
 			['l-2', 'Выявление', 1],
 			['l-3', 'Выявление', 1],
 		])
+	})
+})
+
+// learning-services#547: a chapter's progress, as `course_outline` counts it.
+describe('chapterProgress', () => {
+	it('counts the lessons passed and knows a passed chapter', () => {
+		expect(
+			chapterProgress({
+				title: 'Рамка',
+				status: 'in_progress',
+				lessons_total: 3,
+				lessons_passed: 1,
+				lessons: [],
+			})
+		).toEqual({ passed: 1, total: 3, done: false })
+		expect(
+			chapterProgress({
+				title: 'Рамка',
+				status: 'passed',
+				lessons_total: 2,
+				lessons_passed: 2,
+				lessons: [],
+			})
+		).toEqual({ passed: 2, total: 2, done: true })
+	})
+
+	it('gives a visitor none', () => {
+		expect(
+			chapterProgress({ title: 'Рамка', description: 'О главе', lessons: [] })
+		).toBeNull()
 	})
 })

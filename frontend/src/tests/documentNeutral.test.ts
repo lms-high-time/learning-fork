@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 // learning-services#360: the document engine is generic — a course defines its
-// document as data (blocks, fields, tables, views, a sheet), and dozens of
-// courses are coming. So the documents code names no course's block, field or
-// column, and speaks no course's words: labels come from the schema (a
-// table's title, a view's title) or are neutral. This guard reads the code
-// itself; comments may still use a course as an example, so they are cut
-// before matching.
+// document as data (sections and their columns), and dozens of courses are
+// coming. So the documents code names no course's block or column, and speaks
+// no course's words: labels come from the schema (a section's title) or are
+// neutral. This guard reads the code itself; comments may still use a course
+// as an example, so they are cut before matching.
 
 const sources = import.meta.glob(
 	[
@@ -49,7 +48,7 @@ describe('the documents code knows no course', () => {
 	it('reads the documents code', () => {
 		expect(files.length).toBeGreaterThan(10)
 		expect(Object.keys(sources)).toContain(
-			'../components/Documents/TablePanel.vue'
+			'../components/Documents/DocTableEditor.vue'
 		)
 	})
 
