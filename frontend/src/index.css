@@ -87,6 +87,28 @@ html {
 		U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
 		U+FEFF, U+FFFD;
 }
+/* Italic for <em>: without a file the browser slants the roman. One weight
+   covers it — emphasis in body copy is regular weight. */
+@font-face {
+	font-family: 'IBM Plex Sans';
+	font-style: italic;
+	font-weight: 300 900;
+	font-display: swap;
+	src: url('./assets/fonts/ibm-plex-sans-cyrillic-400-italic.woff2')
+		format('woff2');
+	unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+	font-family: 'IBM Plex Sans';
+	font-style: italic;
+	font-weight: 300 900;
+	font-display: swap;
+	src: url('./assets/fonts/ibm-plex-sans-latin-400-italic.woff2')
+		format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+		U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+		U+FEFF, U+FFFD;
+}
 /* One heading weight. Page titles are semibold in frappe-ui; Literata has a
    500 file, and the range keeps the browser from faking a bolder one. */
 @font-face {
@@ -114,17 +136,22 @@ html {
 }
 
 /* Serif for page and section titles only — the large frappe-ui heading
-   sizes. Small headings are labels (the uppercase "В курсе вы соберёте" is an
-   <h2>), and a serif in small caps reads as a mistake. */
-:where(h1, h2, h3):where(.text-2xl-semibold, .text-3xl-semibold, .text-4xl-semibold) {
+   sizes, on heading tags. Small headings are labels (the uppercase "В курсе
+   вы соберёте" is an <h2>), and a serif in small caps reads as a mistake;
+   numbers set at these sizes in divs (charts, ratings, prices) stay sans.
+   Dialog titles are h3.text-2xl-semibold, so modals get the serif too —
+   deliberately, they are titles. */
+:where(h1, h2, h3):where(.text-2xl-semibold, .text-3xl-semibold, .text-4xl-semibold, .text-2xl-bold, .text-3xl-bold, .text-4xl-bold) {
 	font-family: 'Literata', Georgia, serif;
 	letter-spacing: -0.01em;
 }
 
 /* Grays: warm paper for the sidebar and quiet fills, the site's ink for text
-   and solid buttons. Blue is frappe-ui's selection and link hue; it becomes
-   the site's teal so links, focus and selected states match the public pages.
-   radius-4 is the button and input radius: 6px, as on the site.
+   and solid buttons. Blue is frappe-ui's selection, link and info hue; it
+   becomes the site's teal, every step 1–10 of the surface, ink and outline
+   scales, so a component on any step shows teal rather than frappe's blue.
+   radius-4 is frappe-ui's default radius (plain `rounded`, buttons, inputs):
+   6px, as on the site.
 
    The light set is scoped away from dark: :root and [data-theme='dark'] tie
    on specificity, so an unscoped :root here, coming later than frappe-ui's
@@ -136,14 +163,15 @@ html {
 :root:not([data-theme='dark']) {
 	--surface-gray-1: #f6f6f3;
 	--surface-sidebar: #f6f6f3;
-	--surface-alpha-sidebar: #f6f6f3;
 	--surface-gray-2: #eeefeb;
 	--surface-gray-3: #e6e7e2;
-	--surface-gray-4: #dcdfe3;
+	--surface-gray-4: #dcddd8;
 	--surface-gray-9: #2c3038;
 	--surface-gray-10: #1b1e24;
 
-	--ink-gray-5: #7a8089;
+	/* gray-5 is the most used secondary ink; #6b717a keeps it above 4.5:1 on
+	   white and the sidebar, where the site's lighter grey fell below. */
+	--ink-gray-5: #6b717a;
 	--ink-gray-6: #5f656e;
 	--ink-gray-7: #3d424a;
 	--ink-gray-8: #262a31;
@@ -153,24 +181,45 @@ html {
 	--outline-gray-2: #dcdfe3;
 	--outline-gray-3: #cfd3d8;
 	--outline-gray-4: #a9afb6;
+	--outline-elevation-1: #e8eaec;
+	--outline-elevation-2: #dcdfe3;
 
 	--surface-blue-1: #eef6f7;
 	--surface-blue-2: #e2f0f1;
 	--surface-blue-3: #c9e4e7;
+	--surface-blue-4: #a9d4d9;
+	--surface-blue-5: #6fb3bc;
 	--surface-blue-6: #0e6f7b;
 	--surface-blue-7: #0b5d67;
-	--outline-blue-1: #e2f0f1;
+	--surface-blue-8: #094e57;
+	--surface-blue-9: #073f46;
+	--surface-blue-10: #053238;
+	--ink-blue-1: #ffffff;
+	--ink-blue-2: #e2f0f1;
+	--ink-blue-3: #c9e4e7;
+	--ink-blue-4: #a9d4d9;
+	--ink-blue-5: #21717b;
 	--ink-blue-6: #0e6f7b;
 	--ink-blue-7: #0e6f7b;
 	--ink-blue-8: #0b5d67;
 	--ink-blue-9: #094e57;
+	--ink-blue-10: #073f46;
 	--ink-blue-link: #0e6f7b;
+	--outline-blue-1: #e2f0f1;
+	--outline-blue-2: #c9e4e7;
+	--outline-blue-3: #a9d4d9;
+	--outline-blue-4: #6fb3bc;
+	--outline-blue-5: #2f7f89;
+	--outline-blue-6: #0e6f7b;
+	--outline-blue-7: #0b5d67;
+	--outline-blue-8: #094e57;
+	--outline-blue-9: #073f46;
+	--outline-blue-10: #053238;
 }
 
 [data-theme='dark'] {
 	--surface-base: #14171b;
 	--surface-gray-1: #1a1d22;
-	--surface-alpha-sidebar: #1a1d22;
 	--surface-gray-2: #22262c;
 	--surface-gray-3: #2a2f36;
 	--surface-gray-4: #323840;
@@ -178,6 +227,7 @@ html {
 	--surface-gray-10: #e7e9ec;
 	--surface-elevation-1: #1c2026;
 	--surface-elevation-2: #20252c;
+	--surface-elevation-3: #2a2f36;
 	--ink-base: #14171b;
 
 	--ink-gray-5: #858c95;
@@ -190,14 +240,40 @@ html {
 	--outline-gray-2: #2f353d;
 	--outline-gray-3: #3a414a;
 	--outline-gray-4: #4a525c;
+	--outline-elevation-1: #262b32;
+	--outline-elevation-2: #2f353d;
 
+	--surface-blue-1: #10272b;
 	--surface-blue-2: #163a3f;
+	--surface-blue-3: #1d4b51;
+	--surface-blue-4: #245d64;
+	--surface-blue-5: #2f7f89;
 	--surface-blue-6: #3aa3af;
-	--outline-blue-1: #163a3f;
+	--surface-blue-7: #4cb3be;
+	--surface-blue-8: #5cc0cb;
+	--surface-blue-9: #8ad2da;
+	--surface-blue-10: #b3e2e7;
+	--ink-blue-1: #10272b;
+	--ink-blue-2: #163a3f;
+	--ink-blue-3: #1d4b51;
+	--ink-blue-4: #2f7f89;
+	--ink-blue-5: #4cb3be;
 	--ink-blue-6: #5cc0cb;
 	--ink-blue-7: #5cc0cb;
 	--ink-blue-8: #8ad2da;
+	--ink-blue-9: #b3e2e7;
+	--ink-blue-10: #d6f0f2;
 	--ink-blue-link: #5cc0cb;
+	--outline-blue-1: #163a3f;
+	--outline-blue-2: #1d4b51;
+	--outline-blue-3: #245d64;
+	--outline-blue-4: #2f7f89;
+	--outline-blue-5: #3aa3af;
+	--outline-blue-6: #4cb3be;
+	--outline-blue-7: #5cc0cb;
+	--outline-blue-8: #8ad2da;
+	--outline-blue-9: #b3e2e7;
+	--outline-blue-10: #d6f0f2;
 }
 
 /* Icons are 1.5 stroke everywhere. frappe-ui already normalises the two lucide
