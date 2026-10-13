@@ -180,12 +180,12 @@ describe('team wording', () => {
 	})
 
 	it('draws an answer everyone gave once, and gaps as names', () => {
-		const preset = { ...entry('b@x', '| P1 | Редко |'), left: true }
+		const same = { ...entry('b@x', '| P1 | Редко |'), left: true }
 		const view = blockView(
 			{
 				key: 'scale',
 				title: 'Шкала',
-				entries: [preset, entry('a@x', '| P1 | Редко |'), entry('c@x', '')],
+				entries: [same, entry('a@x', '| P1 | Редко |'), entry('c@x', '')],
 			},
 			null
 		)

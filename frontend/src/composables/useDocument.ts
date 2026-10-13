@@ -13,6 +13,7 @@ import {
 	type DocBlock,
 	type DocumentData,
 	type DocRow,
+	type EmptyCell,
 } from '@/utils/documentTable'
 import { useSpace } from '@/stores/space'
 import type { ContractAnswer } from '@/utils/postForm'
@@ -32,7 +33,7 @@ interface WriteAnswer {
 	blocks_total: number
 	blocks_filled: number
 	created: string[]
-	empty_cells: { row?: string; column?: string; field?: string }[]
+	empty_cells: EmptyCell[]
 }
 
 interface LiveEvent {

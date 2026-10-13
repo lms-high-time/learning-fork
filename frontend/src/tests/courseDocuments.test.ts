@@ -86,6 +86,39 @@ describe('LessonBlocks', () => {
 		expect(wrapper.text()).toContain('Оценка')
 		expect(wrapper.text()).toContain('Into the document:')
 	})
+
+	// learning-services#515: what a block is for reaches a screen reader in
+	// the line, and every reader on the lesson page.
+	it('says what each block is for', () => {
+		const described = [
+			{ ...blocks[0], description: 'Оценка каждого события' },
+			blocks[1],
+		]
+		const inline = mount(LessonBlocks, {
+			props: { blocks: described, courseName: 'c1', linked: true },
+			global,
+		})
+		const link = inline.get('[data-testid="lesson-block-assessment"]')
+		expect(link.attributes('title')).toBe('Оценка каждого события')
+		expect(link.get('.sr-only').text()).toBe('— Оценка каждого события')
+
+		const page = mount(LessonBlocks, {
+			props: {
+				blocks: described,
+				courseName: 'c1',
+				linked: true,
+				detailed: true,
+			},
+			global,
+		})
+		expect(page.findAll('li')).toHaveLength(2)
+		expect(
+			page
+				.findAll('[data-testid="lesson-block-description"]')
+				.map((p) => p.text())
+		).toEqual(['Оценка каждого события'])
+		expect(page.find('.sr-only').exists()).toBe(false)
+	})
 })
 
 describe('CourseDocumentCard', () => {

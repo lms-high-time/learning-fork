@@ -4,9 +4,8 @@ import { describe, expect, it } from 'vitest'
 // document as data (sections and their columns), and dozens of courses are
 // coming. So the documents code names no course's block or column, and speaks
 // no course's words: labels come from the schema (a section's title) or are
-// neutral. This guard reads the code
-// itself; comments may still use a course as an example, so they are cut
-// before matching.
+// neutral. This guard reads the code itself; comments may still use a course
+// as an example, so they are cut before matching.
 
 const sources = import.meta.glob(
 	[

@@ -1,5 +1,9 @@
 <template>
-	<div class="fixed inset-0 z-30" @keydown.esc="$emit('close')">
+	<div
+		class="fixed inset-0 z-30"
+		@keydown.esc="$emit('close')"
+		@keydown.tab="trapTab($event, panel)"
+	>
 		<div
 			class="absolute inset-0 bg-black/20"
 			aria-hidden="true"
@@ -45,9 +49,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { Button } from 'frappe-ui'
 import TableCell from '@/components/Documents/TableCell.vue'
+import { trapTab } from '@/composables/useFocusTrap'
 import type { DocumentApi } from '@/composables/useDocument'
 import { titleColumn, type DocRow, type ManyBlock } from '@/utils/documentTable'
 
@@ -61,8 +66,15 @@ const props = defineProps<{
 }>()
 defineEmits<{ close: [] }>()
 
+// The card claims aria-modal: Tab stays inside it, and closing it hands focus
+// back to the row's ID that opened it.
 const panel = ref<HTMLElement | null>(null)
-onMounted(() => panel.value?.focus())
+let opener: HTMLElement | null = null
+onMounted(() => {
+	opener = document.activeElement as HTMLElement | null
+	panel.value?.focus()
+})
+onBeforeUnmount(() => opener?.focus?.())
 
 const name = computed(() => {
 	const title = titleColumn(props.block.columns)

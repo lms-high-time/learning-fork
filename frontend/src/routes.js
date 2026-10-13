@@ -207,12 +207,23 @@ export const routes = [
 		// `view` — a block of the document by its key, and nothing else
 		// (learning-services#515); without it, or with one the document lacks
 		// (an old `table`, `report` or `canvas` link, #360), the document opens
-		// where the student is (#342).
+		// where the student is (#342). The old report's own address redirects
+		// below; it has four segments, so it takes no block's key.
 		path: '/documents/:courseName/:artifact/:view?',
 		name: 'Document',
 		component: () => import('@/pages/Documents/Document.vue'),
 		props: true,
 		meta: { sidebarLink: 'artifacts-sidebar' },
+	},
+	{
+		path: '/documents/:courseName/:artifact/report/:table',
+		redirect: (to) => ({
+			name: 'Document',
+			params: {
+				courseName: to.params.courseName,
+				artifact: to.params.artifact,
+			},
+		}),
 	},
 	{
 		path: '/statistics',

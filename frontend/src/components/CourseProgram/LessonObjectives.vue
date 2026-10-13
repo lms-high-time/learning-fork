@@ -4,7 +4,7 @@
 			{{ __('Topics') }}
 			<span
 				v-if="showStatus"
-				data-testid="slide-count"
+				data-testid="objectives-count"
 				class="font-normal text-ink-gray-5"
 			>
 				·

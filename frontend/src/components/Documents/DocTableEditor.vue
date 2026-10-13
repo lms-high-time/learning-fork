@@ -73,6 +73,7 @@
 									v-if="requiredTitle(column)"
 									class="text-ink-red-4"
 									:title="requiredTitle(column)"
+									aria-hidden="true"
 									>*</span
 								>
 								<span
@@ -95,7 +96,6 @@
 					<tr v-for="row in rows" :key="row.id" :data-row="row.id">
 						<th scope="row" class="sticky-id id-cell">
 							<button
-								v-if="openable"
 								type="button"
 								class="font-medium text-ink-gray-7 underline decoration-outline-gray-3 underline-offset-2 hover:text-ink-gray-9"
 								:aria-label="__('Open {0}').format(row.id)"
@@ -103,7 +103,6 @@
 							>
 								{{ row.id }}
 							</button>
-							<template v-else>{{ row.id }}</template>
 						</th>
 						<td
 							v-for="column in block.columns"
@@ -228,10 +227,9 @@ import {
 // A block filled row by row (`rows: many`, learning-services#515): its rows,
 // one column per column of the section, every cell text.
 
+// The row's ID opens its card: a wide block reads better there.
 const props = defineProps<{
 	block: ManyBlock
-	/** The row's ID opens its card. */
-	openable?: boolean
 }>()
 
 const emit = defineEmits<{

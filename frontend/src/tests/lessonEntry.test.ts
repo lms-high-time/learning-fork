@@ -26,9 +26,9 @@ const entry = (overrides: Partial<LessonEntryData> = {}): LessonEntryData => ({
 	...overrides,
 })
 
-const mountEntry = (data: LessonEntryData) =>
+const mountEntry = (data: LessonEntryData, enrolled = true) =>
 	mount(LessonEntry, {
-		props: { entry: data, title: data.title },
+		props: { entry: data, title: data.title, enrolled },
 		global: {
 			mocks: { __ },
 			stubs: {
@@ -148,6 +148,16 @@ describe('LessonEntry', () => {
 		expect(topics.findAll('li')[0].text()).toContain('covered')
 		// All of them: the lesson page has the room the slide has not.
 		expect(topics.find('button').exists()).toBe(false)
+	})
+
+	it('shows Student View the topics without a coverage count', () => {
+		const wrapper = mountEntry(
+			entry({ objectives: [{ text: 'Назвать спонсора' }] }),
+			false
+		)
+		const topics = wrapper.get('[data-testid="lesson-objectives"]')
+		expect(topics.text()).toContain('Назвать спонсора')
+		expect(topics.find('[data-testid="objectives-count"]').exists()).toBe(false)
 	})
 
 	it('shows no topics section for a lesson without them', () => {

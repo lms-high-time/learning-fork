@@ -125,6 +125,42 @@ describe('TableCell', () => {
 		expect(cell.emitted('save')?.[0]).toEqual([''])
 	})
 
+	it('keeps what is typed when the row is read back meanwhile', async () => {
+		const cell = mount(TableCell, {
+			props: { row: agreements.items[0], column: topic },
+			global,
+		})
+		await cell.get('button').trigger('click')
+		await cell.get('textarea').setValue('Ретро раз')
+		await cell.setProps({ row: { ...agreements.items[0], driver: 'Время' } })
+		expect((cell.get('textarea').element as HTMLTextAreaElement).value).toBe(
+			'Ретро раз'
+		)
+		const textarea = cell.get('textarea')
+		expect(textarea.attributes('maxlength')).toBe('4000')
+		expect(textarea.attributes('aria-required')).toBe('true')
+	})
+
+	it('cancels on Esc without letting it reach the row card', async () => {
+		const outer = vi.fn()
+		const Host = {
+			components: { TableCell },
+			props: ['row', 'column'],
+			setup: () => ({ outer }),
+			template:
+				'<div @keydown.esc="outer"><TableCell :row="row" :column="column" /></div>',
+		}
+		const host = mount(Host, {
+			props: { row: agreements.items[0], column: topic },
+			global,
+		})
+		await host.get('button').trigger('click')
+		await host.get('textarea').setValue('черновик')
+		await host.get('textarea').trigger('keydown', { key: 'Escape' })
+		expect(outer).not.toHaveBeenCalled()
+		expect(host.find('textarea').exists()).toBe(false)
+	})
+
 	it('marks «уточнить у …»', () => {
 		const cell = mount(TableCell, {
 			props: { row: agreements.items[1], column: topic },
@@ -163,18 +199,56 @@ describe('BlockFields', () => {
 	it('saves a field as trimmed text, and nothing when unchanged', async () => {
 		const wrapper = fields()
 		const exception = wrapper.get('[data-testid="field-exception"] textarea')
+		await exception.trigger('focus')
 		await exception.trigger('blur')
 		expect(wrapper.emitted('save')).toBeUndefined()
 		const method = wrapper.get('[data-testid="field-method"] textarea')
+		await method.trigger('focus')
 		await method.setValue(' Согласие ')
 		await method.trigger('blur')
 		expect(wrapper.emitted('save')?.[0]).toEqual(['method', 'Согласие'])
 	})
 })
 
+describe('BlockFields as typed into', () => {
+	it('keeps what is typed when the document is read back meanwhile', async () => {
+		const wrapper = mount(BlockFields, {
+			props: { columns: decide.columns, values: decide.values },
+			global,
+		})
+		const method = wrapper.get('[data-testid="field-method"] textarea')
+		await method.trigger('focus')
+		await method.setValue('Согл')
+		// Another field's write lands and the document comes back.
+		await wrapper.setProps({ values: { exception: 'Бюджет', who: 'Анна' } })
+		expect((method.element as HTMLTextAreaElement).value).toBe('Согл')
+		const who = wrapper.get('[data-testid="field-who"] textarea')
+		expect((who.element as HTMLTextAreaElement).value).toBe('Анна')
+	})
+
+	it('caps a field at the length the server takes, and says what is missing', () => {
+		const wrapper = mount(BlockFields, {
+			props: { columns: decide.columns, values: decide.values },
+			global,
+		})
+		const method = wrapper.get('[data-testid="field-method"] textarea')
+		expect(method.attributes('maxlength')).toBe('4000')
+		expect(method.attributes('aria-required')).toBe('true')
+		expect(method.attributes('aria-invalid')).toBe('true')
+		const exception = wrapper.get('[data-testid="field-exception"] textarea')
+		expect(exception.attributes('aria-required')).toBeUndefined()
+		expect(exception.attributes('aria-invalid')).toBeUndefined()
+		expect(
+			wrapper
+				.get('[data-testid="field-method"] span[title]')
+				.attributes('aria-hidden')
+		).toBe('true')
+	})
+})
+
 describe('DocTableEditor', () => {
 	const editor = (block: ManyBlock = agreements) =>
-		mount(DocTableEditor, { props: { block, openable: true }, global })
+		mount(DocTableEditor, { props: { block }, global })
 
 	it('heads a column per column of the section, marking the required ones', () => {
 		const heads = editor()
@@ -247,10 +321,11 @@ describe('LessonDocument', () => {
 		deleteRow: vi.fn(),
 		clear: vi.fn(),
 	}
-	const page = (block: ManyBlock | OneBlock, extra = {}) =>
+	const page = (block: ManyBlock | OneBlock, extra = {}, attach = false) =>
 		mount(LessonDocument, {
 			props: { block, api: api as never, ...extra },
 			global,
+			...(attach ? { attachTo: document.body } : {}),
 		})
 
 	beforeEach(() => {
@@ -286,18 +361,40 @@ describe('LessonDocument', () => {
 		)
 	})
 
-	it('opens a row in full from its ID', async () => {
-		const wrapper = page(agreements)
-		await wrapper.get('button[aria-label="Open A1"]').trigger('click')
+	it('opens a row in full from its ID and hands focus back on closing', async () => {
+		const wrapper = page(agreements, {}, true)
+		const id = wrapper.get('button[aria-label="Open A1"]')
+		;(id.element as HTMLElement).focus()
+		await id.trigger('click')
 		const card = wrapper.get('[data-testid="row-card"]')
 		expect(card.text()).toContain('Ретро раз в две недели')
 		expect(card.findAll('[data-testid^="cell-A1-"]')).toHaveLength(3)
+		expect(document.activeElement).toBe(card.element)
+		await card.trigger('keydown', { key: 'Escape' })
+		expect(wrapper.find('[data-testid="row-card"]').exists()).toBe(false)
+		expect(document.activeElement).toBe(
+			wrapper.get('button[aria-label="Open A1"]').element
+		)
+		wrapper.unmount()
+	})
+
+	it('keeps Tab inside the row card', async () => {
+		const wrapper = page(agreements, {}, true)
+		await wrapper.get('button[aria-label="Open A1"]').trigger('click')
+		const card = wrapper.get('[data-testid="row-card"]')
+		const stops = card.findAll('button')
+		const last = stops[stops.length - 1].element as HTMLElement
+		last.focus()
+		await card.trigger('keydown', { key: 'Tab' })
+		expect(document.activeElement).toBe(stops[0].element)
+		wrapper.unmount()
 	})
 
 	it('shows fields for a `one` block and saves them', async () => {
 		const wrapper = page(decide)
 		expect(wrapper.find('table').exists()).toBe(false)
 		const method = wrapper.get('[data-testid="field-method"] textarea')
+		await method.trigger('focus')
 		await method.setValue('Согласие')
 		await method.trigger('blur')
 		await flushPromises()

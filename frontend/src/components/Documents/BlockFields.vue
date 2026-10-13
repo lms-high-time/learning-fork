@@ -12,6 +12,7 @@
 					v-if="required(column)"
 					class="text-ink-red-4"
 					:title="required(column)"
+					aria-hidden="true"
 					>*</span
 				>
 			</span>
@@ -22,17 +23,25 @@
 					'is-missing': isMissing(column, values),
 					'is-clarify': isToClarify(values[column.key]),
 				}"
-				:value="values[column.key] ?? ''"
-				@blur="save(column, ($event.target as HTMLTextAreaElement).value)"
+				:maxlength="MAX_TEXT"
+				:value="shown(column)"
+				:aria-required="isRequired(column, values) || undefined"
+				:aria-invalid="isMissing(column, values) || undefined"
+				@focus="focus(column)"
+				@input="draft = ($event.target as HTMLTextAreaElement).value"
+				@blur="save(column)"
 			/>
 		</label>
 	</div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import {
+	MAX_TEXT,
 	conditionTitle,
 	isMissing,
+	isRequired,
 	isToClarify,
 	type CellValue,
 	type DocColumn,
@@ -49,6 +58,22 @@ const props = defineProps<{
 /** The field's new text; empty clears it. */
 const emit = defineEmits<{ save: [key: string, value: string] }>()
 
+// The field being typed into keeps its own copy: the document read back after
+// another field's write must not wipe what is half typed.
+const focused = ref<string | null>(null)
+const draft = ref('')
+
+const stored = (column: DocColumn): string =>
+	String(props.values[column.key] ?? '')
+
+const shown = (column: DocColumn): string =>
+	focused.value === column.key ? draft.value : stored(column)
+
+function focus(column: DocColumn) {
+	focused.value = column.key
+	draft.value = stored(column)
+}
+
 /** Why the field is marked: always, or once the field it depends on is filled. */
 function required(column: DocColumn): string {
 	if (column.required === true) return __('Required')
@@ -56,9 +81,11 @@ function required(column: DocColumn): string {
 	return other ? __('Required when «{0}» is filled').format(other) : ''
 }
 
-function save(column: DocColumn, raw: string) {
-	const value = raw.trim()
-	if (String(props.values[column.key] ?? '').trim() === value) return
+function save(column: DocColumn) {
+	if (focused.value !== column.key) return
+	const value = draft.value.trim()
+	focused.value = null
+	if (stored(column).trim() === value) return
 	emit('save', column.key, value)
 }
 </script>

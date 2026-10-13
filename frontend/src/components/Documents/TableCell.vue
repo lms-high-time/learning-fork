@@ -12,14 +12,17 @@
 			v-if="editing"
 			ref="input"
 			rows="3"
+			v-model="draft"
 			class="doc-input resize-y"
-			:value="value ?? ''"
+			:maxlength="MAX_TEXT"
 			:aria-label="`${row.id} — ${column.title}`"
+			:aria-required="required || undefined"
+			:aria-invalid="missing || undefined"
 			@keydown.enter.exact.prevent="
 				;($event.target as HTMLTextAreaElement).blur()
 			"
-			@keydown.esc.prevent="cancel"
-			@blur="saveText(($event.target as HTMLTextAreaElement).value)"
+			@keydown.esc.stop.prevent="cancel"
+			@blur="saveText"
 		/>
 
 		<button
@@ -42,8 +45,10 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue'
 import {
+	MAX_TEXT,
 	isBlank,
 	isMissing,
+	isRequired,
 	isToClarify,
 	type DocColumn,
 	type DocRow,
@@ -60,15 +65,20 @@ const props = defineProps<{
 const emit = defineEmits<{ save: [value: string] }>()
 
 const editing = ref(false)
+// What is being typed: its own copy, so the document read back after another
+// cell's write does not wipe it.
+const draft = ref('')
 const input = ref<HTMLTextAreaElement | null>(null)
 let cancelled = false
 
 const value = computed(() => props.row[props.column.key])
 const missing = computed(() => isMissing(props.column, props.row))
+const required = computed(() => isRequired(props.column, props.row))
 const clarify = computed(() => isToClarify(value.value))
 const shown = computed(() => (isBlank(value.value) ? '' : String(value.value)))
 
 async function startEditing() {
+	draft.value = shown.value
 	editing.value = true
 	cancelled = false
 	await nextTick()
@@ -80,13 +90,13 @@ function cancel() {
 	editing.value = false
 }
 
-function saveText(text: string) {
+function saveText() {
 	editing.value = false
 	if (cancelled) {
 		cancelled = false
 		return
 	}
-	const next = text.trim()
+	const next = draft.value.trim()
 	if (next === shown.value.trim()) return
 	emit('save', next)
 }

@@ -38,7 +38,6 @@
 		<DocTableEditor
 			v-if="many"
 			:block="many"
-			:openable="true"
 			@setCell="
 				(row, column, value) => api.setCell(block.key, row, column, value)
 			"

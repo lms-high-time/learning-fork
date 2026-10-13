@@ -66,7 +66,7 @@
 				v-if="entry.objectives?.length"
 				class="mt-8"
 				:objectives="entry.objectives"
-				:showStatus="true"
+				:showStatus="enrolled"
 				heading="h2"
 			/>
 
@@ -77,6 +77,7 @@
 				:courseName="entry.course"
 				:linked="entry.blocks.some((b) => b.filled !== undefined)"
 				:label="__('In this session you build:')"
+				detailed
 			/>
 
 			<div v-if="inWebChat" class="mt-6 text-p-sm text-ink-gray-6">
@@ -131,10 +132,18 @@ export interface LessonEntryData {
 	} | null
 }
 
-const props = defineProps<{
-	entry: LessonEntryData
-	title: string
-}>()
+const props = withDefaults(
+	defineProps<{
+		entry: LessonEntryData
+		title: string
+		/**
+		 * The viewer studies the course: their coverage shows, as on the
+		 * program's slide. Student View shows an editor the page without it.
+		 */
+		enrolled?: boolean
+	}>(),
+	{ enrolled: false }
+)
 
 const inWebChat = computed(() => props.entry.study.channel === 'web')
 

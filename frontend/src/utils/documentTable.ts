@@ -6,6 +6,9 @@
  * arranges what `artifact` returned.
  */
 
+/** The longest text a cell or a field takes; the server refuses more. */
+export const MAX_TEXT = 4000
+
 /** A cell or a field as the server keeps it: text; blank is not sent at all. */
 export type CellValue = string | null | undefined
 

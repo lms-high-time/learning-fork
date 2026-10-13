@@ -199,7 +199,7 @@ describe('LessonSlide', () => {
 
 	it('counts covered topics and marks each one', () => {
 		const wrapper = slide({})
-		expect(wrapper.get('[data-testid="slide-count"]').text()).toContain(
+		expect(wrapper.get('[data-testid="objectives-count"]').text()).toContain(
 			'1 of 3 covered'
 		)
 		expect(
@@ -265,7 +265,9 @@ describe('LessonSlide', () => {
 
 	it('gives a visitor no count, and the same way to the lesson', () => {
 		const wrapper = slide({ status: 'none' })
-		expect(wrapper.find('[data-testid="slide-count"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="objectives-count"]').exists()).toBe(
+			false
+		)
 		expect(wrapper.find('[data-testid="slide-status"]').exists()).toBe(false)
 		expect(wrapper.get('[data-testid="slide-action"]').attributes('href')).toBe(
 			'/lms/courses/course-1/learn/2-1'
