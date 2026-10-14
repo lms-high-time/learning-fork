@@ -2366,29 +2366,32 @@ def get_pwa_manifest():
 		"orientation": "portrait",
 		"theme_color": "#FFFFFF",
 		"background_color": "#FFFFFF",
-		# Split by purpose rather than the previous combined "maskable any": a
-		# maskable icon is drawn with its edges cropped to the platform's shape,
-		# so reusing one image for both gives a clipped icon wherever the "any"
-		# slot is used. The 512 has been on disk unused.
+		# One image per purpose: a maskable icon is full-bleed and gets cropped
+		# to the platform's shape, while "any" is shown as is (Chrome shortcuts
+		# and taskbars on Windows and Linux) and needs its own rounded square
+		# with transparent margins. The files are copies of the Cenda brand
+		# (learning-services brand/README.md); a new logo ships under new file
+		# names, since /assets is cached for long and installed apps would keep
+		# the old icon under an unchanged URL.
 		#
 		# Website Settings' banner_image is deliberately NOT a source here. It is
 		# a wide banner, and it was being declared as 192x192, so any site that
 		# set one got a squashed app icon.
 		"icons": [
 			{
-				"src": "/assets/lms/frontend/manifest/manifest-icon-192.maskable.png",
+				"src": "/assets/lms/frontend/manifest/cenda-any-192.png",
 				"sizes": "192x192",
 				"type": "image/png",
 				"purpose": "any",
 			},
 			{
-				"src": "/assets/lms/frontend/manifest/manifest-icon-512.maskable.png",
+				"src": "/assets/lms/frontend/manifest/cenda-any-512.png",
 				"sizes": "512x512",
 				"type": "image/png",
 				"purpose": "any",
 			},
 			{
-				"src": "/assets/lms/frontend/manifest/manifest-icon-512.maskable.png",
+				"src": "/assets/lms/frontend/manifest/cenda-maskable-512.png",
 				"sizes": "512x512",
 				"type": "image/png",
 				"purpose": "maskable",
