@@ -2339,7 +2339,7 @@ def get_progress_distribution(progressList: list):
 	return distribution
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist(allow_guest=True)  # nosemgrep: frappe-semgrep-rules.rules.security.guest-whitelisted-method
 def get_pwa_manifest():
 	"""Web app manifest for installing the LMS as a PWA."""
 	title = frappe.db.get_single_value("Website Settings", "app_name") or "Frappe Learning"
