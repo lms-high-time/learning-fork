@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 import frappe
 
@@ -46,6 +47,24 @@ class TestPWAManifest(BaseTestUtils):
 		self.assertIn("any", purposes)
 		self.assertIn("maskable", purposes)
 		self.assertNotIn("maskable any", purposes)
+
+	def test_any_and_maskable_are_different_images(self):
+		"""A full-bleed maskable image in the 'any' slot is shown uncropped, as a
+		hard tile next to rounded icons with margins."""
+		icons = _manifest()["icons"]
+		any_sources = {icon["src"] for icon in icons if icon["purpose"] == "any"}
+		maskable_sources = {icon["src"] for icon in icons if icon["purpose"] == "maskable"}
+
+		self.assertTrue(any_sources)
+		self.assertTrue(maskable_sources)
+		self.assertFalse(any_sources & maskable_sources)
+
+	def test_icons_exist_in_the_frontend_bundle(self):
+		"""The icons are copied files; a renamed or dropped one would 404 silently."""
+		public = Path(frappe.get_app_path("lms", "..", "frontend", "public", "manifest"))
+		for icon in _manifest()["icons"]:
+			name = icon["src"].rsplit("/", 1)[-1]
+			self.assertTrue((public / name).is_file(), name)
 
 	def test_banner_image_is_not_used_as_an_icon(self):
 		"""It is a wide banner, and was being declared as a 192x192 square."""
