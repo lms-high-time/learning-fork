@@ -371,7 +371,7 @@ describe('choosing a space', () => {
 	it('offers only starting an organization without one', async () => {
 		const { wrapper } = await openYou()
 		const group = wrapper.find('[data-testid="you-spaces"]')
-		expect(group.text()).toContain('Create an organization')
+		expect(group.text()).toContain('Create a team')
 		expect(group.findAll('[data-testid="row-selected"]')).toHaveLength(0)
 	})
 

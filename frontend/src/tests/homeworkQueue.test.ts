@@ -149,14 +149,14 @@ describe('HomeworkQueue', () => {
 		serve()
 		const wrapper = await open()
 		expect(
-			select(wrapper, 'Organization')
+			select(wrapper, 'Team')
 				.findAll('option')
 				.map((o) => o.text())
-		).toEqual(['All organizations', 'Кофейни', 'Личное'])
+		).toEqual(['All teams', 'Кофейни', 'Личное'])
 
 		await select(wrapper, 'Course').setValue('c-2')
 		await flushPromises()
-		await select(wrapper, 'Organization').setValue('personal')
+		await select(wrapper, 'Team').setValue('personal')
 		await flushPromises()
 		await select(wrapper, 'Status').setValue('Accepted')
 		await flushPromises()

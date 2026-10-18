@@ -17,11 +17,7 @@
 			class="mx-auto max-w-3xl p-5 text-p-base text-ink-gray-6"
 			data-testid="team-personal"
 		>
-			{{
-				__(
-					'A team belongs to an organization. Choose it in the space switcher.'
-				)
-			}}
+			{{ __('Choose a team in the space switcher.') }}
 		</p>
 
 		<p
@@ -29,7 +25,7 @@
 			class="mx-auto max-w-3xl p-5 text-p-base text-ink-gray-6"
 			data-testid="team-closed"
 		>
-			{{ __('This organization shows its documents to managers only.') }}
+			{{ __('This team shows its documents to its leads only.') }}
 		</p>
 
 		<div v-else-if="team" class="mx-auto max-w-5xl space-y-5 p-4 sm:p-5">

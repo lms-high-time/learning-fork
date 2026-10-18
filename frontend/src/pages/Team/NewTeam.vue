@@ -1,8 +1,8 @@
 <template>
-	<PageHeader :breadcrumbs="[{ label: __('Create an organization') }]" />
+	<PageHeader :breadcrumbs="[{ label: __('Create a team') }]" />
 	<div class="mx-auto max-w-xl space-y-4 p-5">
 		<h1 class="text-xl-semibold text-ink-gray-9">
-			{{ __('Create an organization') }}
+			{{ __('Create a team') }}
 		</h1>
 		<ul class="list-disc space-y-1 ps-5 text-p-base text-ink-gray-7">
 			<li>
@@ -18,10 +18,8 @@
 			<li data-testid="new-team-limit">
 				{{
 					terms?.member_limit
-						? __('Until we verify it, it holds up to {0} members.').format(
-								terms.member_limit
-						  )
-						: __('Until we verify it, it holds a limited number of members.')
+						? __('A team holds up to {0} members.').format(terms.member_limit)
+						: __('A team holds a limited number of members.')
 				}}
 			</li>
 		</ul>
@@ -32,17 +30,13 @@
 			class="rounded bg-surface-amber-1 p-3 text-p-sm text-ink-amber-3"
 			data-testid="new-team-none-left"
 		>
-			{{
-				__(
-					'You have as many unverified organizations as one person may start. Write to us to verify one of them.'
-				)
-			}}
+			{{ __('You have as many teams as one person may start.') }}
 		</p>
 		<form class="space-y-3" data-testid="new-team" @submit.prevent="create">
 			<FormControl
 				v-model="title"
 				type="text"
-				:label="__('Organization name')"
+				:label="__('Team name')"
 				:placeholder="__('For example, the sales team')"
 			/>
 			<Button
@@ -113,5 +107,5 @@ async function create() {
 	}
 }
 
-usePageMeta(() => ({ title: __('Create an organization') }))
+usePageMeta(() => ({ title: __('Create a team') }))
 </script>

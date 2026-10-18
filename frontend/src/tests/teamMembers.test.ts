@@ -121,7 +121,7 @@ describe('who can mark whom as left', () => {
 	})
 
 	it('tells who will read the documents before joining', () => {
-		expect(readersBeforeJoining('managers', 'Кофейни')).toContain('managers')
+		expect(readersBeforeJoining('managers', 'Кофейни')).toContain('leads')
 		expect(readersBeforeJoining('members', 'Кофейни')).toContain('everyone')
 	})
 })
@@ -159,7 +159,7 @@ describe('the members list', () => {
 		await flushPromises()
 
 		expect(wrapper.find('[data-testid="remove-admin@x"]').text()).toBe(
-			'Leave the organization'
+			'Leave the team'
 		)
 		expect(wrapper.find('[data-testid="team-limit"]').text()).toContain(
 			'Members: 2 of'
@@ -208,7 +208,7 @@ describe('joining by link', () => {
 		const wrapper = await open()
 
 		expect(wrapper.find('[data-testid="join-terms"]').text()).toContain(
-			'The company will see which of its courses you have already passed.'
+			'While you are in the team, its admin and leads see your progress and documents in its courses. If you leave, they no longer do.'
 		)
 		await wrapper.find('[data-testid="join-accept"]').trigger('click')
 		expect(calls[0]).toEqual({

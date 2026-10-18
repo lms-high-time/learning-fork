@@ -269,7 +269,7 @@ const spaceGroups = computed(() => [
 		rows: [
 			{
 				key: 'new-team',
-				label: 'Create an organization',
+				label: 'Create a team',
 				icon: 'lucide-building-2',
 				to: { name: 'NewTeam' },
 			},

@@ -29,7 +29,7 @@
 				class="text-p-base text-ink-gray-7"
 				data-testid="join-member"
 			>
-				{{ __('You are already in this organization.') }}
+				{{ __('You are already in this team.') }}
 				<router-link :to="{ name: 'Team' }" class="underline">{{
 					__('Open the team')
 				}}</router-link>
@@ -43,7 +43,7 @@
 				>
 					{{
 						__(
-							'This organization was started by a user of the platform; we have not verified it. Join only if you know who invited you.'
+							'This team was started by a user of the platform. Join only if you know who invited you.'
 						)
 					}}
 				</p>
@@ -54,7 +54,7 @@
 					<li>
 						{{
 							__(
-								'Your courses and documents for yourself stay yours: the company does not see them.'
+								'Your courses and documents for yourself stay yours: the team does not see them.'
 							)
 						}}
 					</li>
@@ -66,7 +66,7 @@
 					<li>
 						{{
 							__(
-								'The company will see which of its courses you have already passed.'
+								'While you are in the team, its admin and leads see your progress and documents in its courses. If you leave, they no longer do.'
 							)
 						}}
 					</li>

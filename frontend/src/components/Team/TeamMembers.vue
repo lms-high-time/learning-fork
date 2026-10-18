@@ -38,11 +38,7 @@
 			class="text-p-sm text-ink-gray-5"
 			data-testid="team-limit"
 		>
-			{{
-				__(
-					'Members: {0} of {1} while we have not verified the organization.'
-				).format(activeCount, team.member_limit)
-			}}
+			{{ __('Members: {0} of {1}.').format(activeCount, team.member_limit) }}
 		</p>
 
 		<ul class="divide-y" data-testid="team-members">
@@ -75,15 +71,13 @@
 						variant="ghost"
 						:aria-label="
 							isMe(member)
-								? __('Leave the organization')
+								? __('Leave the team')
 								: __('Mark {0} as left').format(memberName(member))
 						"
 						:data-testid="`remove-${member.user}`"
 						@click="remove(member)"
 					>
-						{{
-							isMe(member) ? __('Leave the organization') : __('Mark as left')
-						}}
+						{{ isMe(member) ? __('Leave the team') : __('Mark as left') }}
 					</Button>
 				</span>
 			</li>
@@ -213,14 +207,14 @@ function remove(member: TeamMember) {
 	const self = isMe(member)
 	confirmAction({
 		title: self
-			? __('Leave the organization?')
+			? __('Leave the team?')
 			: __('Mark {0} as left?').format(memberName(member)),
 		message: self
 			? __(
-					'You will lose access to its documents and team. Your documents stay with the organization.'
+					'You will lose access to the team and its documents. The team will no longer see your work, and we will email you a copy of your documents.'
 			  )
 			: __(
-					'They will lose access to the organization. Their documents stay with it, marked as a former member.'
+					'They will lose access to the team. The team will no longer see their work; they get a copy of their documents by email.'
 			  ),
 		label: self ? __('Leave') : __('Mark as left'),
 		onConfirm: async () => {
