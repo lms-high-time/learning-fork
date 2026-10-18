@@ -9,7 +9,7 @@ import translationPlugin, { translationsReady } from './translation'
 import { usersStore } from './stores/user'
 import { initSocket } from './socket'
 import { FrappeUI, setConfig, frappeRequest, pageMetaPlugin } from 'frappe-ui'
-import { telemetryPlugin } from 'frappe-ui/frappe'
+import { installTelemetry } from './telemetry'
 import { registerDirectives } from './directives'
 
 let pinia = createPinia()
@@ -34,7 +34,7 @@ app.provide('$allUsers', allUsers)
 
 watch(userResource, () => {
 	if (userResource.data) {
-		app.use(telemetryPlugin, { app_name: 'lms' })
+		installTelemetry(app)
 	}
 })
 
