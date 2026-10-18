@@ -46,6 +46,15 @@ describe('installTelemetry', () => {
 		expect(a.use).not.toHaveBeenCalled()
 	})
 
+	it('does not install the plugin when the boot config is empty', async () => {
+		call.mockResolvedValue(undefined)
+		const { installTelemetry } = await load()
+		const a = app()
+
+		expect(await installTelemetry(a)).toBe(false)
+		expect(a.use).not.toHaveBeenCalled()
+	})
+
 	it('installs the plugin when telemetry is enabled', async () => {
 		call.mockResolvedValue({ enabled: true })
 		const { installTelemetry } = await load()
