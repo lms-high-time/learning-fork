@@ -67,7 +67,7 @@ vi.mock('@/components/Layouts/PageHeader.vue', () => ({
 
 import TeamMembers from '@/components/Team/TeamMembers.vue'
 import Join from '@/pages/Team/Join.vue'
-import { canRemove, readersBeforeJoining, type TeamData } from '@/utils/team'
+import { canLeave, canRemove, readersBeforeJoining, type TeamData } from '@/utils/team'
 
 const mocks = {
 	__: (t: string) =>
@@ -118,6 +118,14 @@ describe('who can mark whom as left', () => {
 		expect(canRemove(manager, team(true, false))).toBe(false)
 		expect(canRemove(manager, team(true, true))).toBe(true)
 		expect(canRemove(member, team(false, false))).toBe(false)
+	})
+
+	it('anyone may leave on their own row, not once gone (#585)', () => {
+		const member = team(false, false).members[0]
+
+		expect(canLeave(member, member.user)).toBe(true)
+		expect(canLeave(member, 'someone@else')).toBe(false)
+		expect(canLeave({ ...member, left: true }, member.user)).toBe(false)
 	})
 
 	it('tells who will read the documents before joining', () => {

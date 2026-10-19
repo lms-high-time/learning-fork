@@ -107,6 +107,11 @@ export const canRemove = (member: TeamMember, team: TeamData): boolean =>
 	team.can_manage &&
 	(member.role === 'Member' || team.can_change_roles)
 
+// Leaving is anyone's own (learning-services#585): one's own row offers it
+// without managing rights. The last administrator is refused by the server.
+export const canLeave = (member: TeamMember, me: string): boolean =>
+	!member.left && member.user === me
+
 // What the invitation page tells before joining: who will read the documents.
 export const readersBeforeJoining = (
 	visibleTo: 'managers' | 'members' | 'only_me',

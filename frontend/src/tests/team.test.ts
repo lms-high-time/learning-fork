@@ -9,6 +9,8 @@ const answers: Record<string, unknown> = {}
 const reloads: { url: string; params: unknown }[] = []
 
 vi.mock('frappe-ui', () => ({
+	// Own row offers «Leave» to every member (learning-services#585).
+	Button: { template: '<button><slot /></button>' },
 	createResource: ({ url }: { url: string }) => {
 		const resource = reactive({
 			data: null as unknown,

@@ -76,6 +76,11 @@
 					"
 					@action="space.choose"
 				/>
+				<!-- Its own list: a row action of the spaces above is a team's name,
+				     and any name may be taken (#585). -->
+				<div v-if="space.isOrganization" data-testid="you-leave-team">
+					<SettingsRowList :groups="leaveGroups" @action="leave" />
+				</div>
 			</div>
 			<SettingsRowList :groups="groups" @action="activate" />
 		</template>
@@ -132,6 +137,7 @@ import { buildYouRows } from '@/components/Settings/youRows'
 import SuggestedAction from '@/components/SuggestedAction.vue'
 import { useProfileSummary } from '@/composables/useProfileSummary'
 import { useSpace, PERSONAL, type Space } from '@/stores/space'
+import { leaveTeam } from '@/utils/leaveTeam'
 import { spaceLabel } from '@/utils/space'
 import {
 	buildAppearanceRows,
@@ -140,7 +146,9 @@ import {
 } from '@/components/Settings/mobileSettings'
 
 const router = useRouter()
-const { logout, brand } = sessionStore()
+// The store unwraps its refs: `session.user` is the address itself.
+const session = sessionStore()
+const { logout, brand } = session
 const { isLoggedIn } = storeToRefs(sessionStore())
 const { userResource } = usersStore()
 
@@ -292,6 +300,24 @@ const spaceGroups = computed(() => [
 		  ]
 		: []),
 ])
+
+// Leaving the team of the open space, open to every member (#585).
+const leaveGroups = [
+	{
+		key: 'LeaveTeam',
+		rows: [
+			{
+				key: 'leave-team',
+				label: 'Leave the team',
+				icon: 'lucide-user-minus',
+				action: 'leave-team',
+			},
+		],
+	},
+]
+const leave = (): void => {
+	leaveTeam(space.current, session.user)
+}
 
 const showColourMode = ref(false)
 
