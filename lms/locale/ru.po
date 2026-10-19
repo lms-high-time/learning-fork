@@ -9918,8 +9918,8 @@ msgid "Author view"
 msgstr "Кабинет автора"
 
 #: frontend/src/pages/Forms/CourseEnrollmentForm.vue
-msgid "For a client company's employee, allocate the course instead: that adds the deadline and puts them in the manager's report."
-msgstr "Сотрудника компании-клиента назначайте через назначение курса: так у него будет дедлайн и он попадёт в отчёт руководителя."
+msgid "For a team member, allocate the course to the team instead: that adds the deadline and puts them in the lead's report."
+msgstr "Участнику команды курс назначайте через команду: так появится срок, а участник попадёт в отчёт ведущего."
 
 #: frontend/src/pages/Forms/CourseEnrollmentForm.vue
 msgid "Allocate the course"
@@ -10327,8 +10327,8 @@ msgid "Visible only to you"
 msgstr "Видите только вы"
 
 #: frontend/src/utils/space.ts
-msgid "Visible to the managers of {0}"
-msgstr "Видят руководители: {0}"
+msgid "Visible to the leads of {0}"
+msgstr "Видят ведущие: {0}"
 
 #: frontend/src/utils/space.ts
 msgid "Visible to everyone in {0}"
@@ -10354,28 +10354,24 @@ msgid "Team"
 msgstr "Команда"
 
 #: frontend/src/pages/Team/Team.vue
-msgid "A team belongs to an organization. Choose it in the space switcher."
-msgstr "Команда есть у организации. Выберите её в переключателе пространств."
+msgid "Choose a team in the space switcher."
+msgstr "Выберите команду в переключателе пространств."
 
 #: frontend/src/pages/Team/Team.vue
-msgid "This organization shows its documents to managers only."
-msgstr "Документы этой организации видят только руководители."
+msgid "This team shows its documents to its leads only."
+msgstr "Документы этой команды видят только ведущие."
 
 #: frontend/src/pages/Team/Team.vue
 msgid "Left {0}"
 msgstr "Вышел(а) {0}"
 
 #: frontend/src/pages/Team/Team.vue
-msgid "No course of this organization builds a document yet."
-msgstr "Ни в одном курсе организации пока нет документа."
+msgid "No course of this team builds a document yet."
+msgstr "Ни в одном курсе команды пока нет документа."
 
 #: frontend/src/pages/Team/Team.vue
-msgid "Nobody has started this document in the organization yet."
-msgstr "В организации этот документ пока никто не начал."
-
-#: frontend/src/pages/Team/Team.vue
-msgid "left"
-msgstr "вышел(а)"
+msgid "Nobody has started this document in the team yet."
+msgstr "В команде этот документ пока никто не начал."
 
 #: frontend/src/pages/Team/Team.vue
 msgid "Not filled yet"
@@ -10398,16 +10394,16 @@ msgid "Progress report"
 msgstr "Отчёт"
 
 #: frontend/src/utils/team.ts
-msgid "Manager"
-msgstr "Руководитель"
+msgid "Lead"
+msgstr "Ведущий"
 
 #: frontend/src/utils/team.ts
 msgid "Not started"
 msgstr "Не начат"
 
 #: frontend/src/pages/Documents/Documents.vue
-msgid "The course is behind you, and the company's document is not complete yet. Fill it in here, or ask your agent: “let's fill in the document for the company”."
-msgstr "Курс пройден, а документ компании ещё не собран. Заполните его здесь или попросите своего агента: «давай заполним документ для компании»."
+msgid "The course is behind you, and the team's document is not complete yet. Fill it in here, or ask your agent: “let's fill in the document for the team”."
+msgstr "Курс пройден, а документ команды ещё не собран. Заполните его здесь или попросите агента: «давай заполним документ для команды»."
 
 #: frontend/src/components/Team/TeamMembers.vue
 #: frontend/src/pages/Team/Join.vue
@@ -10441,8 +10437,8 @@ msgstr "Ваши документы по курсам «{0}» увидят вс�
 
 #: frontend/src/components/Team/TeamMembers.vue
 #: frontend/src/pages/Team/Join.vue
-msgid "Your documents for the courses of {0} will be visible to its managers."
-msgstr "Ваши документы по курсам «{0}» увидят её руководители."
+msgid "Your documents for the courses of {0} will be visible to its leads."
+msgstr "Ваши документы по курсам «{0}» увидят её ведущие."
 
 #: frontend/src/components/Team/TeamMembers.vue
 #: frontend/src/pages/Team/Join.vue
@@ -10456,8 +10452,8 @@ msgstr "Вступить в «{0}»"
 
 #: frontend/src/components/Team/TeamMembers.vue
 #: frontend/src/pages/Team/Join.vue
-msgid "You are already in this organization."
-msgstr "Вы уже в этой организации."
+msgid "You are already in this team."
+msgstr "Вы уже в этой команде."
 
 #: frontend/src/components/Team/TeamMembers.vue
 #: frontend/src/pages/Team/Join.vue
@@ -10466,13 +10462,21 @@ msgstr "Открыть команду"
 
 #: frontend/src/components/Team/TeamMembers.vue
 #: frontend/src/pages/Team/Join.vue
-msgid "Your courses and documents for yourself stay yours: the company does not see them."
-msgstr "Ваши курсы и документы для себя остаются вашими: компания их не видит."
+msgid "Your courses and documents for yourself stay yours: the team does not see them."
+msgstr "Ваши курсы и документы для себя остаются вашими: команда их не видит."
 
 #: frontend/src/components/Team/TeamMembers.vue
 #: frontend/src/pages/Team/Join.vue
-msgid "The company will see which of its courses you have already passed."
-msgstr "Компания увидит, какие из её курсов вы уже прошли."
+msgid "While you are in the team, its admin and leads see your progress, homework and documents in its courses. If you leave, they no longer do."
+msgstr "Пока вы в команде, её администратор и ведущие видят ваш прогресс, домашние задания и документы по её курсам. Уйдёте — больше не увидят."
+
+#: frontend/src/pages/Team/Join.vue
+msgid "Your progress in a course is one: if you have already passed a course of the team on your own, the team will see that too."
+msgstr "Прогресс по курсу у вас один: если вы уже проходили курс команды сами, команда увидит и это."
+
+#: frontend/src/pages/Team/Join.vue
+msgid "Who sees what — in the privacy policy"
+msgstr "Кто что видит — в политике конфиденциальности"
 
 #: frontend/src/components/Team/TeamMembers.vue
 #: frontend/src/pages/Team/Join.vue
@@ -10543,31 +10547,31 @@ msgid "Assign the course"
 msgstr "Назначить"
 
 #: frontend/src/pages/Team/NewTeam.vue
-msgid "Create an organization"
-msgstr "Создать организацию"
+msgid "Create a team"
+msgstr "Создать команду"
 
 #: frontend/src/pages/Team/NewTeam.vue
-msgid "This organization was started by a user of the platform; we have not verified it. Join only if you know who invited you."
-msgstr "Эту организацию создал пользователь платформы, мы её не проверяли. Вступайте, только если знаете, кто вас пригласил."
+msgid "This team was started by a user of the platform. Join only if you know who invited you."
+msgstr "Эту команду создал пользователь платформы. Вступайте, только если знаете, кто вас пригласил."
 
 #: frontend/src/pages/Team/NewTeam.vue
 msgid "You become its administrator and invite people by a link."
 msgstr "Вы станете её администратором и пригласите людей ссылкой."
 
 #: frontend/src/pages/Team/NewTeam.vue
-msgid "Its courses are the open catalog; a course of your own process is made with us."
-msgstr "Её курсы — открытый каталог; курс по вашему процессу собираем вместе с нами."
+msgid "Its courses are the open catalog."
+msgstr "Её курсы — открытый каталог."
 
 #: frontend/src/pages/Team/NewTeam.vue
-msgid "Until we verify it, it holds a limited number of members."
-msgstr "Пока мы её не подтвердили, число участников ограничено."
+msgid "A team holds a limited number of members."
+msgstr "Число участников в команде ограничено."
 
 #: frontend/src/pages/Team/NewTeam.vue
 msgid "For example, the sales team"
 msgstr "Например, отдел продаж"
 
 #: frontend/src/pages/Team/NewTeam.vue
-msgid "Organization name"
+msgid "Team name"
 msgstr "Название"
 
 #: frontend/src/components/Team/TeamDocuments.vue
@@ -10599,16 +10603,16 @@ msgid "Everyone"
 msgstr "Все участники"
 
 #: frontend/src/components/Team/TeamMembers.vue
-msgid "Members: {0} of {1} while we have not verified the organization."
-msgstr "Участников: {0} из {1}, пока мы не подтвердили организацию."
+msgid "Members: {0} of {1}."
+msgstr "Участников: {0} из {1}."
 
 #: frontend/src/components/Team/TeamMembers.vue
 msgid "Role of {0}"
 msgstr "Роль: {0}"
 
 #: frontend/src/components/Team/TeamMembers.vue
-msgid "Leave the organization"
-msgstr "Выйти из организации"
+msgid "Leave the team"
+msgstr "Выйти из команды"
 
 #: frontend/src/components/Team/TeamMembers.vue
 msgid "Mark {0} as left"
@@ -10623,20 +10627,20 @@ msgid "Whoever has it will not be able to join. People who joined stay."
 msgstr "По ней больше нельзя будет вступить. Кто уже вступил, останется."
 
 #: frontend/src/components/Team/TeamMembers.vue
-msgid "Leave the organization?"
-msgstr "Выйти из организации?"
+msgid "Leave the team?"
+msgstr "Выйти из команды?"
 
 #: frontend/src/components/Team/TeamMembers.vue
 msgid "Mark {0} as left?"
 msgstr "Отметить уход: {0}?"
 
 #: frontend/src/components/Team/TeamMembers.vue
-msgid "You will lose access to its documents and team. Your documents stay with the organization."
-msgstr "Вы потеряете доступ к её документам и команде. Ваши документы останутся у организации."
+msgid "You will lose access to the team and its documents. The team will no longer see your work, and we will email you a copy of your documents in this team, if you have any."
+msgstr "Вы потеряете доступ к команде и её документам. Команда больше не увидит вашу работу, а копию ваших документов этой команды, если они есть, мы пришлём письмом."
 
 #: frontend/src/components/Team/TeamMembers.vue
-msgid "They will lose access to the organization. Their documents stay with it, marked as a former member."
-msgstr "Человек потеряет доступ к организации. Его документы останутся у неё с пометкой «бывший участник»."
+msgid "They will lose access to the team. The team will no longer see their work; we will email them a copy of their documents in this team, if they have any."
+msgstr "Человек потеряет доступ к команде. Команда больше не увидит его работу, а копию его документов этой команды, если они есть, мы пришлём ему письмом."
 
 #: frontend/src/components/Team/TeamMembers.vue
 msgid "Leave"
@@ -10675,8 +10679,8 @@ msgid "First try"
 msgstr "С первой попытки"
 
 #: frontend/src/components/Team/TeamReport.vue
-msgid "filled blocks in all documents of the course, in this organization."
-msgstr "заполненные блоки во всех документах курса в этой организации."
+msgid "filled blocks in all documents of the course, in this team."
+msgstr "заполненные блоки во всех документах курса в этой команде."
 
 #: frontend/src/components/Team/TeamReport.vue
 msgid "lessons whose quiz passed on the first attempt, of lessons passed."
@@ -10723,12 +10727,12 @@ msgid "Go to the home page"
 msgstr "На главную"
 
 #: frontend/src/pages/Team/NewTeam.vue
-msgid "Until we verify it, it holds up to {0} members."
-msgstr "Пока мы её не подтвердили, в ней может быть до {0} участников."
+msgid "A team holds up to {0} members."
+msgstr "В команде может быть до {0} участников."
 
 #: frontend/src/pages/Team/NewTeam.vue
-msgid "You have as many unverified organizations as one person may start. Write to us to verify one of them."
-msgstr "У вас уже столько неподтверждённых организаций, сколько можно создать одному человеку. Напишите нам, чтобы подтвердить одну из них."
+msgid "You have as many teams as one person may start."
+msgstr "У вас уже столько команд, сколько может создать один человек."
 
 #: frontend/src/components/CourseCard.vue
 #: frontend/src/components/Layouts/PageHeader.vue
@@ -11075,8 +11079,8 @@ msgid "All courses"
 msgstr "Все курсы"
 
 #: frontend/src/components/Homework/HomeworkQueue.vue
-msgid "All organizations"
-msgstr "Все организации"
+msgid "All teams"
+msgstr "Все команды"
 
 #: frontend/src/composables/useHomeworkReview.ts
 msgid "Could not load the queue"

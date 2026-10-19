@@ -40,7 +40,7 @@
 				>
 					{{
 						__(
-							"For a client company's employee, allocate the course instead: that adds the deadline and puts them in the manager's report."
+							"For a team member, allocate the course to the team instead: that adds the deadline and puts them in the lead's report."
 						)
 					}}
 					<a :href="safeUrl(allocationUrl)" class="text-ink-gray-8 underline">{{

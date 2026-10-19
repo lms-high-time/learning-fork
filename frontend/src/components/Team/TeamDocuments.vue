@@ -1,7 +1,7 @@
 <template>
 	<div class="space-y-5">
 		<p v-if="!documentChoices.length" class="text-p-base text-ink-gray-6">
-			{{ __('No course of this organization builds a document yet.') }}
+			{{ __('No course of this team builds a document yet.') }}
 		</p>
 		<template v-else>
 			<div class="flex flex-col gap-2 sm:flex-row">
@@ -32,7 +32,7 @@
 
 			<template v-else-if="compared">
 				<p v-if="!compared.authors.length" class="text-p-base text-ink-gray-6">
-					{{ __('Nobody has started this document in the organization yet.') }}
+					{{ __('Nobody has started this document in the team yet.') }}
 				</p>
 				<template v-else>
 					<!-- Authors: a click opens the one person's document whole. -->
@@ -55,7 +55,7 @@
 										author.blocks_filled,
 										author.blocks_total
 									)
-								}}<span v-if="author.left"> · {{ __('left') }}</span>
+								}}
 							</button>
 						</li>
 					</ul>
@@ -134,9 +134,6 @@
 									class="mb-1 text-p-sm-medium text-ink-gray-7"
 								>
 									{{ memberName(entry) }}
-									<span v-if="entry.left" class="text-ink-gray-5">
-										· {{ __('left') }}</span
-									>
 								</div>
 								<TeamEntryBody :entry="entry" />
 							</article>
@@ -171,7 +168,6 @@ import {
 	blockView,
 	firstDocument,
 	memberName,
-	presentFirst,
 	type TeamData,
 	type TeamDocuments,
 	type TeamEntry,
@@ -223,7 +219,7 @@ const compared = computed(() => {
 	const answer = documents.data as Answer<TeamDocuments> | null
 	return answer?.ok ? answer.data ?? null : null
 })
-const authors = computed(() => presentFirst(compared.value?.authors ?? []))
+const authors = computed(() => compared.value?.authors ?? [])
 const personChoices = computed(() => [
 	{ label: __('Everyone'), value: '' },
 	...authors.value.map((author) => ({
@@ -238,12 +234,7 @@ const shown = computed(() =>
 		.filter((block) => !onlyFilled.value || block.filled.length)
 )
 
-const names = (entries: TeamEntry[]) =>
-	entries
-		.map((entry) =>
-			entry.left ? `${memberName(entry)} · ${__('left')}` : memberName(entry)
-		)
-		.join(', ')
+const names = (entries: TeamEntry[]) => entries.map(memberName).join(', ')
 
 const jump = (key: string) =>
 	document

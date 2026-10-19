@@ -24,7 +24,7 @@ export const documentReaders = (
 	if (space.documents_visible_to === 'members')
 		return __('Visible to everyone in {0}').format(spaceLabel(space))
 	if (space.documents_visible_to === 'managers')
-		return __('Visible to the managers of {0}').format(spaceLabel(space))
+		return __('Visible to the leads of {0}').format(spaceLabel(space))
 	return __('Visible only to you')
 }
 

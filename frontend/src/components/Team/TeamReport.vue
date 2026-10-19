@@ -101,9 +101,7 @@
 					<dt class="inline font-medium">{{ __('Blocks') }}:</dt>
 					<dd class="ms-1 inline">
 						{{
-							__(
-								'filled blocks in all documents of the course, in this organization.'
-							)
+							__('filled blocks in all documents of the course, in this team.')
 						}}
 					</dd>
 				</div>

@@ -34,7 +34,6 @@ export type TeamData = {
 export type TeamEntry = {
 	user: string
 	full_name: string | null
-	left: boolean
 	filled: boolean
 	// The block as markdown: a table for a block filled row by row, «Title:
 	// value» lines for one filled once (learning-services#515); empty when
@@ -47,7 +46,6 @@ export type TeamDocuments = {
 	authors: {
 		user: string
 		full_name: string | null
-		left: boolean
 		blocks_filled: number
 		blocks_total: number
 	}[]
@@ -68,7 +66,7 @@ export type ReportRow = {
 
 const ROLES: Record<string, string> = {
 	Member: 'Member',
-	Manager: 'Manager',
+	Manager: 'Lead',
 	'Org Admin': 'Administrator',
 }
 
@@ -119,7 +117,7 @@ export const readersBeforeJoining = (
 				'Your documents for the courses of {0} will be visible to everyone in it.'
 		  ).format(title)
 		: __(
-				'Your documents for the courses of {0} will be visible to its managers.'
+				'Your documents for the courses of {0} will be visible to its leads.'
 		  ).format(title)
 
 /**
@@ -206,10 +204,6 @@ export const audienceText = (
 	return item.members.map((user) => names[user] || user).join(', ')
 }
 
-// Who is still in the team comes first, who left after (learning-services#378).
-export const presentFirst = <T extends { left: boolean }>(items: T[]): T[] =>
-	[...items].sort((a, b) => Number(a.left) - Number(b.left))
-
 export const memberName = (item: {
 	user: string
 	full_name: string | null
@@ -235,9 +229,8 @@ export const blockView = (
 	block: TeamDocuments['blocks'][number],
 	person: string | null
 ): BlockView => {
-	const entries = presentFirst(
-		block.entries.filter((entry) => !person || entry.user === person)
-	)
+	// Documents of those who left do not come at all (learning-services#585).
+	const entries = block.entries.filter((entry) => !person || entry.user === person)
 	const filled = entries.filter((entry) => !isEmpty(entry))
 	const same =
 		filled.length > 1 &&

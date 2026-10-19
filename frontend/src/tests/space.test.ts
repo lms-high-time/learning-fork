@@ -121,7 +121,7 @@ describe('space wording', () => {
 
 	it('says who else reads a document', () => {
 		expect(documentReaders(personal)).toBe('Visible only to you')
-		expect(documentReaders(company)).toBe('Visible to the managers of Кофейни')
+		expect(documentReaders(company)).toBe('Visible to the leads of Кофейни')
 		expect(
 			documentReaders({ ...company, documents_visible_to: 'members' })
 		).toBe('Visible to everyone in Кофейни')

@@ -73,7 +73,7 @@ const options = computed(() => [
 	})),
 	// Another workspace starts where one switches between them (#379).
 	{
-		label: __('Create an organization'),
+		label: __('Create a team'),
 		icon: 'plus',
 		onClick: () => router.push({ name: 'NewTeam' }),
 	},

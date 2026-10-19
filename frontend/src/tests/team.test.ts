@@ -56,7 +56,6 @@ import {
 	type ReportRow,
 	isEmpty,
 	percent,
-	presentFirst,
 	statusLabel,
 } from '@/utils/team'
 
@@ -99,7 +98,6 @@ const team = (canSeeReport: boolean) => ({
 const entry = (user: string, markdown: string) => ({
 	user,
 	full_name: user,
-	left: false,
 	filled: Boolean(markdown),
 	markdown,
 })
@@ -169,18 +167,8 @@ describe('team wording', () => {
 		expect(firstDocument([])).toBeNull()
 	})
 
-	it('puts who left after who is in the team', () => {
-		expect(
-			presentFirst([
-				{ user: 'g', left: true },
-				{ user: 'v', left: false },
-				{ user: 'b', left: false },
-			]).map((item) => item.user)
-		).toEqual(['v', 'b', 'g'])
-	})
-
 	it('draws an answer everyone gave once, and gaps as names', () => {
-		const same = { ...entry('b@x', '| P1 | Редко |'), left: true }
+		const same = entry('b@x', '| P1 | Редко |')
 		const view = blockView(
 			{
 				key: 'scale',
@@ -190,7 +178,7 @@ describe('team wording', () => {
 			null
 		)
 		expect(view.filled).toHaveLength(1)
-		expect(view.sameFor.map((item) => item.user)).toEqual(['a@x', 'b@x'])
+		expect(view.sameFor.map((item) => item.user)).toEqual(['b@x', 'a@x'])
 		expect(view.missing.map((item) => item.user)).toEqual(['c@x'])
 	})
 

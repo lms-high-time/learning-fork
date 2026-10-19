@@ -96,7 +96,7 @@
 				>
 					{{
 						__(
-							"The course is behind you, and the company's document is not complete yet. Fill it in here, or ask your agent: “let's fill in the document for the company”."
+							"The course is behind you, and the team's document is not complete yet. Fill it in here, or ask your agent: “let's fill in the document for the team”."
 						)
 					}}
 					<router-link :to="{ name: 'Agent' }" class="underline">{{

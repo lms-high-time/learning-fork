@@ -25,7 +25,7 @@
 				type="select"
 				class="w-full sm:w-56"
 				:options="organizationOptions"
-				:label="__('Organization')"
+				:label="__('Team')"
 			/>
 		</div>
 
@@ -172,7 +172,7 @@ const courseOptions = computed(() => [
 	})),
 ])
 const organizationOptions = computed(() => [
-	{ value: '', label: __('All organizations') },
+	{ value: '', label: __('All teams') },
 	...(data.value?.organizations ?? []).map((item) => ({
 		value: item.id,
 		label: item.title || item.id,

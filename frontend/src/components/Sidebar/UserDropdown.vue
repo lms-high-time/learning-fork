@@ -170,7 +170,7 @@ const userDropdownOptions = computed(() => {
 					// Anyone may start an organization and invite a team
 					// (learning-services#366).
 					icon: 'lucide-building-2',
-					label: __('Create an organization'),
+					label: __('Create a team'),
 					onClick: () => {
 						router.push({ name: 'NewTeam' })
 					},
