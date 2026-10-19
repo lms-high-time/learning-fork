@@ -208,7 +208,7 @@ describe('joining by link', () => {
 		const wrapper = await open()
 
 		expect(wrapper.find('[data-testid="join-terms"]').text()).toContain(
-			'While you are in the team, its admin and leads see your progress and documents in its courses. If you leave, they no longer do.'
+			'While you are in the team, its admin and leads see your progress, homework and documents in its courses. If you leave, they no longer do.'
 		)
 		await wrapper.find('[data-testid="join-accept"]').trigger('click')
 		expect(calls[0]).toEqual({

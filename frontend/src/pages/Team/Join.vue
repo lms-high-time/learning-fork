@@ -66,12 +66,24 @@
 					<li>
 						{{
 							__(
-								'While you are in the team, its admin and leads see your progress and documents in its courses. If you leave, they no longer do.'
+								'While you are in the team, its admin and leads see your progress, homework and documents in its courses. If you leave, they no longer do.'
+							)
+						}}
+					</li>
+					<li>
+						{{
+							__(
+								'Your progress in a course is one: if you have already passed a course of the team on your own, the team will see that too.'
 							)
 						}}
 					</li>
 					<li>{{ __('Nobody sees your conversations with the mentor.') }}</li>
 				</ul>
+				<p class="text-p-sm text-ink-gray-6">
+					<a :href="safeUrl('/privacy')" class="underline">{{
+						__('Who sees what — in the privacy policy')
+					}}</a>
+				</p>
 
 				<a
 					v-if="!isLoggedIn"

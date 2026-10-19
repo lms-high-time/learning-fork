@@ -10471,8 +10471,16 @@ msgstr "Ваши курсы и документы для себя остаютс
 
 #: frontend/src/components/Team/TeamMembers.vue
 #: frontend/src/pages/Team/Join.vue
-msgid "While you are in the team, its admin and leads see your progress and documents in its courses. If you leave, they no longer do."
-msgstr "Пока вы в команде, её администратор и ведущие видят ваш прогресс и документы по её курсам. Уйдёте — больше не увидят."
+msgid "While you are in the team, its admin and leads see your progress, homework and documents in its courses. If you leave, they no longer do."
+msgstr "Пока вы в команде, её администратор и ведущие видят ваш прогресс, домашние задания и документы по её курсам. Уйдёте — больше не увидят."
+
+#: frontend/src/pages/Team/Join.vue
+msgid "Your progress in a course is one: if you have already passed a course of the team on your own, the team will see that too."
+msgstr "Прогресс по курсу у вас один: если вы уже проходили курс команды сами, команда увидит и это."
+
+#: frontend/src/pages/Team/Join.vue
+msgid "Who sees what — in the privacy policy"
+msgstr "Кто что видит — в политике конфиденциальности"
 
 #: frontend/src/components/Team/TeamMembers.vue
 #: frontend/src/pages/Team/Join.vue
