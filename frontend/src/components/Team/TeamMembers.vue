@@ -67,7 +67,7 @@
 					/>
 					<template v-else>{{ roleLabel(member.role) }}</template>
 					<Button
-						v-if="canRemove(member, team) || (isMe(member) && !member.left)"
+						v-if="canRemove(member, team) || canLeave(member, session.user)"
 						variant="ghost"
 						:aria-label="
 							isMe(member)
@@ -93,7 +93,9 @@ import { computed, onMounted, ref } from 'vue'
 import { Button, call, createResource, FormControl, toast } from 'frappe-ui'
 import { sessionStore } from '@/stores/session'
 import { confirmAction } from '@/utils/confirm'
+import { leaveTeam } from '@/utils/leaveTeam'
 import {
+	canLeave,
 	canRemove,
 	formatDay,
 	memberName,
@@ -201,31 +203,26 @@ async function setRole(user: string, role: string) {
 	emit('changed')
 }
 
-// Leaving closes the organization's documents to the person at once; the
-// question says so before, not after (#379).
+// Marking someone as left closes the team's documents to them at once; the
+// question says so before, not after (#379). Leaving oneself is the same leave
+// as in the space switcher (#585).
 function remove(member: TeamMember) {
-	const self = isMe(member)
+	if (isMe(member)) {
+		leaveTeam(props.team.organization, member.user)
+		return
+	}
 	confirmAction({
-		title: self
-			? __('Leave the team?')
-			: __('Mark {0} as left?').format(memberName(member)),
-		message: self
-			? __(
-					'You will lose access to the team and its documents. The team will no longer see your work, and we will email you a copy of your documents in this team, if you have any.'
-			  )
-			: __(
-					'They will lose access to the team. The team will no longer see their work; we will email them a copy of their documents in this team, if they have any.'
-			  ),
-		label: self ? __('Leave') : __('Mark as left'),
+		title: __('Mark {0} as left?').format(memberName(member)),
+		message: __(
+			'They will lose access to the team. The team will no longer see their work; we will email them a copy of their documents in this team, if they have any.'
+		),
+		label: __('Mark as left'),
 		onConfirm: async () => {
 			const done = await act('remove_member', {
 				organization: props.team.organization,
 				user: member.user,
 			})
-			if (!done) return
-			// Who left has no team page to stay on.
-			if (self) window.location.href = '/lms'
-			else emit('changed')
+			if (done) emit('changed')
 		},
 	})
 }

@@ -7,8 +7,6 @@ import { confirmAction } from '@/utils/confirm'
 
 type Answer = { ok: boolean; error?: { code: string; message: string } }
 
-export const LEAVE_TEAM = 'leave-team'
-
 export const leaveTeam = (organization: string, user: string) =>
 	confirmAction({
 		title: __('Leave the team?'),

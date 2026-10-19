@@ -86,7 +86,8 @@ const options = computed(() => [
 		? [
 				{
 					label: __('Leave the team'),
-					icon: 'log-out',
+					icon: 'lucide-user-minus',
+					theme: 'red',
 					onClick: () => leaveTeam(space.current, session.user),
 				},
 		  ]

@@ -16,6 +16,9 @@ vi.mock('@/utils/confirm', () => ({ confirmAction }))
 
 import { leaveTeam } from '@/utils/leaveTeam'
 
+const location = { href: '' }
+Object.defineProperty(window, 'location', { value: location, writable: true })
+
 const confirmed = async () => {
 	const [[options]] = confirmAction.mock.calls
 	await options.onConfirm()
@@ -27,15 +30,19 @@ describe('leaveTeam', () => {
 		call.mockReset()
 		toast.error.mockReset()
 		confirmAction.mockReset()
+		location.href = ''
 	})
 
 	it('asks before leaving and leaves as oneself', async () => {
 		call.mockResolvedValue({ ok: true, data: { left: true } })
 
 		leaveTeam('org-1', 'me@example.com')
+		// Nothing is sent before the person confirms.
+		expect(call).not.toHaveBeenCalled()
 		const options = await confirmed()
 
 		expect(options.title).toBe('Leave the team?')
+		expect(location.href).toBe('/lms')
 		expect(call).toHaveBeenCalledWith('lms_frappe_app.api.team.remove_member', {
 			organization: 'org-1',
 			user: 'me@example.com',
@@ -57,5 +64,6 @@ describe('leaveTeam', () => {
 		expect(toast.error).toHaveBeenCalledWith(
 			'У команды должен остаться администратор'
 		)
+		expect(location.href).toBe('')
 	})
 })

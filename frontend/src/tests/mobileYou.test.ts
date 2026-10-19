@@ -28,6 +28,7 @@ const {
 	ensureMobileNavLinks,
 	isLoggedIn,
 	logoutSubmit,
+	leaveTeam,
 	loadUnreadCount,
 	otherLinks,
 	setThemePreference,
@@ -44,6 +45,7 @@ const {
 	ensureMobileNavLinks: vi.fn(() => Promise.resolve()),
 	isLoggedIn: { value: true },
 	logoutSubmit: vi.fn(),
+	leaveTeam: vi.fn(),
 	loadUnreadCount: vi.fn(),
 	otherLinks: { value: [] as unknown[] },
 	setThemePreference: vi.fn(),
@@ -54,6 +56,7 @@ const {
 	userResource: { data: null as Record<string, unknown> | null },
 	spaceStore: {
 		hasOrganizations: false,
+		isOrganization: false,
 		current: 'personal',
 		spaces: [] as { id: string; title: string | null }[],
 		load: vi.fn(),
@@ -74,10 +77,13 @@ vi.mock('pinia', () => ({ storeToRefs: (store: unknown) => store }))
 vi.mock('@/stores/session', () => ({
 	sessionStore: () => ({
 		isLoggedIn,
+		user: 'me@example.com',
 		logout: { submit: logoutSubmit },
 		brand: { favicon: '' },
 	}),
 }))
+
+vi.mock('@/utils/leaveTeam', () => ({ leaveTeam }))
 
 vi.mock('@/stores/user', () => ({ usersStore: () => ({ userResource }) }))
 
@@ -172,8 +178,10 @@ beforeEach(() => {
 	sidebarLinks.value = [...SIDEBAR]
 	otherLinks.value = [...OTHER]
 	spaceStore.hasOrganizations = false
+	spaceStore.isOrganization = false
 	spaceStore.current = 'personal'
 	spaceStore.spaces = []
+	leaveTeam.mockReset()
 	userResource.data = {
 		full_name: 'Raiza Safeel',
 		username: 'raiza',
@@ -392,5 +400,33 @@ describe('choosing a space', () => {
 
 		await rowLabelled(wrapper, 'Personal')?.trigger('click')
 		expect(spaceStore.choose).toHaveBeenCalledWith('personal')
+	})
+
+	// Leaving is its own list (learning-services#585): a team may be named
+	// anything, «leave-team» too, and a pick of it must still switch.
+	it('offers leaving only in a team space, apart from the spaces', async () => {
+		const personal = (await openYou()).wrapper
+		expect(personal.find('[data-testid="you-leave-team"]').exists()).toBe(false)
+
+		spaceStore.hasOrganizations = true
+		spaceStore.isOrganization = true
+		spaceStore.current = 'org-1'
+		spaceStore.spaces = [
+			{ id: 'personal', title: null },
+			{ id: 'leave-team', title: 'leave-team' },
+			{ id: 'org-1', title: 'Кофейни' },
+		]
+		const { wrapper } = await openYou()
+
+		await rowLabelled(wrapper, 'leave-team')?.trigger('click')
+		expect(spaceStore.choose).toHaveBeenCalledWith('leave-team')
+		expect(leaveTeam).not.toHaveBeenCalled()
+
+		await wrapper
+			.find('[data-testid="you-leave-team"]')
+			.findAll('button, a, [role="button"]')
+			.at(0)
+			?.trigger('click')
+		expect(leaveTeam).toHaveBeenCalledWith('org-1', 'me@example.com')
 	})
 })

@@ -74,8 +74,13 @@
 							? spaceGroups
 							: spaceGroups.filter((group) => group.key === 'NewTeam')
 					"
-					@action="onSpaceAction"
+					@action="space.choose"
 				/>
+				<!-- Its own list: a row action of the spaces above is a team's name,
+				     and any name may be taken (#585). -->
+				<div v-if="space.isOrganization" data-testid="you-leave-team">
+					<SettingsRowList :groups="leaveGroups" @action="leave" />
+				</div>
 			</div>
 			<SettingsRowList :groups="groups" @action="activate" />
 		</template>
@@ -132,7 +137,7 @@ import { buildYouRows } from '@/components/Settings/youRows'
 import SuggestedAction from '@/components/SuggestedAction.vue'
 import { useProfileSummary } from '@/composables/useProfileSummary'
 import { useSpace, PERSONAL, type Space } from '@/stores/space'
-import { LEAVE_TEAM, leaveTeam } from '@/utils/leaveTeam'
+import { leaveTeam } from '@/utils/leaveTeam'
 import { spaceLabel } from '@/utils/space'
 import {
 	buildAppearanceRows,
@@ -141,9 +146,9 @@ import {
 } from '@/components/Settings/mobileSettings'
 
 const router = useRouter()
-const { logout, brand } = sessionStore()
 // The store unwraps its refs: `session.user` is the address itself.
 const session = sessionStore()
+const { logout, brand } = session
 const { isLoggedIn } = storeToRefs(sessionStore())
 const { userResource } = usersStore()
 
@@ -278,8 +283,7 @@ const spaceGroups = computed(() => [
 			},
 		],
 	},
-	// The organization's team lives in its space (learning-services#358); so
-	// does leaving it, open to every member (learning-services#585).
+	// The organization's team lives in its space (learning-services#358).
 	...(space.isOrganization
 		? [
 				{
@@ -291,21 +295,28 @@ const spaceGroups = computed(() => [
 							icon: 'lucide-users',
 							to: { name: 'Team' },
 						},
-						{
-							key: LEAVE_TEAM,
-							label: 'Leave the team',
-							icon: 'lucide-log-out',
-							action: LEAVE_TEAM,
-						},
 					],
 				},
 		  ]
 		: []),
 ])
 
-const onSpaceAction = (action: string): void => {
-	if (action === LEAVE_TEAM) leaveTeam(space.current, session.user)
-	else space.choose(action)
+// Leaving the team of the open space, open to every member (#585).
+const leaveGroups = [
+	{
+		key: 'LeaveTeam',
+		rows: [
+			{
+				key: 'leave-team',
+				label: 'Leave the team',
+				icon: 'lucide-user-minus',
+				action: 'leave-team',
+			},
+		],
+	},
+]
+const leave = (): void => {
+	leaveTeam(space.current, session.user)
 }
 
 const showColourMode = ref(false)
