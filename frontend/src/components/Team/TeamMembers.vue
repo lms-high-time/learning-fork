@@ -211,10 +211,10 @@ function remove(member: TeamMember) {
 			: __('Mark {0} as left?').format(memberName(member)),
 		message: self
 			? __(
-					'You will lose access to the team and its documents. The team will no longer see your work, and we will email you a copy of your documents.'
+					'You will lose access to the team and its documents. The team will no longer see your work, and we will email you a copy of your documents in this team, if you have any.'
 			  )
 			: __(
-					'They will lose access to the team. The team will no longer see their work; they get a copy of their documents by email.'
+					'They will lose access to the team. The team will no longer see their work; we will email them a copy of their documents in this team, if they have any.'
 			  ),
 		label: self ? __('Leave') : __('Mark as left'),
 		onConfirm: async () => {

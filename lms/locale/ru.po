@@ -10374,10 +10374,6 @@ msgid "Nobody has started this document in the team yet."
 msgstr "В команде этот документ пока никто не начал."
 
 #: frontend/src/pages/Team/Team.vue
-msgid "left"
-msgstr "вышел(а)"
-
-#: frontend/src/pages/Team/Team.vue
 msgid "Not filled yet"
 msgstr "Пока не заполнено"
 
@@ -10563,8 +10559,8 @@ msgid "You become its administrator and invite people by a link."
 msgstr "Вы станете её администратором и пригласите людей ссылкой."
 
 #: frontend/src/pages/Team/NewTeam.vue
-msgid "Its courses are the open catalog; a course of your own process is made with us."
-msgstr "Её курсы — открытый каталог; курс по вашему процессу собираем вместе с нами."
+msgid "Its courses are the open catalog."
+msgstr "Её курсы — открытый каталог."
 
 #: frontend/src/pages/Team/NewTeam.vue
 msgid "A team holds a limited number of members."
@@ -10639,12 +10635,12 @@ msgid "Mark {0} as left?"
 msgstr "Отметить уход: {0}?"
 
 #: frontend/src/components/Team/TeamMembers.vue
-msgid "You will lose access to the team and its documents. The team will no longer see your work, and we will email you a copy of your documents."
-msgstr "Вы потеряете доступ к команде и её документам. Команда больше не увидит вашу работу, а копию ваших документов мы пришлём письмом."
+msgid "You will lose access to the team and its documents. The team will no longer see your work, and we will email you a copy of your documents in this team, if you have any."
+msgstr "Вы потеряете доступ к команде и её документам. Команда больше не увидит вашу работу, а копию ваших документов этой команды, если они есть, мы пришлём письмом."
 
 #: frontend/src/components/Team/TeamMembers.vue
-msgid "They will lose access to the team. The team will no longer see their work; they get a copy of their documents by email."
-msgstr "Человек потеряет доступ к команде. Команда больше не увидит его работу, а копию своих документов он получит письмом."
+msgid "They will lose access to the team. The team will no longer see their work; we will email them a copy of their documents in this team, if they have any."
+msgstr "Человек потеряет доступ к команде. Команда больше не увидит его работу, а копию его документов этой команды, если они есть, мы пришлём ему письмом."
 
 #: frontend/src/components/Team/TeamMembers.vue
 msgid "Leave"
@@ -10684,7 +10680,7 @@ msgstr "С первой попытки"
 
 #: frontend/src/components/Team/TeamReport.vue
 msgid "filled blocks in all documents of the course, in this team."
-msgstr "заполненных блоков во всех документах курса в этой команде."
+msgstr "заполненные блоки во всех документах курса в этой команде."
 
 #: frontend/src/components/Team/TeamReport.vue
 msgid "lessons whose quiz passed on the first attempt, of lessons passed."

@@ -9,11 +9,7 @@
 				{{ __('You become its administrator and invite people by a link.') }}
 			</li>
 			<li>
-				{{
-					__(
-						'Its courses are the open catalog; a course of your own process is made with us.'
-					)
-				}}
+				{{ __('Its courses are the open catalog.') }}
 			</li>
 			<li data-testid="new-team-limit">
 				{{
