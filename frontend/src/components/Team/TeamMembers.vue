@@ -67,7 +67,7 @@
 					/>
 					<template v-else>{{ roleLabel(member.role) }}</template>
 					<Button
-						v-if="canRemove(member, team)"
+						v-if="canRemove(member, team) || (isMe(member) && !member.left)"
 						variant="ghost"
 						:aria-label="
 							isMe(member)

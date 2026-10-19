@@ -52,10 +52,14 @@ import { useRouter } from 'vue-router'
 import SidebarLink from '@/components/Sidebar/SidebarLink.vue'
 import { useSpace, type Space } from '@/stores/space'
 import { spaceLabel } from '@/utils/space'
+import { sessionStore } from '@/stores/session'
+import { leaveTeam } from '@/utils/leaveTeam'
 
 defineProps<{ isCollapsed?: boolean }>()
 
 const space = useSpace()
+// The store unwraps its refs: `session.user` is the address itself.
+const session = sessionStore()
 
 onMounted(() => space.load())
 
@@ -77,6 +81,16 @@ const options = computed(() => [
 		icon: 'plus',
 		onClick: () => router.push({ name: 'NewTeam' }),
 	},
+	// Leaving is anyone's own: the team page may be closed to a member (#585).
+	...(space.isOrganization
+		? [
+				{
+					label: __('Leave the team'),
+					icon: 'log-out',
+					onClick: () => leaveTeam(space.current, session.user),
+				},
+		  ]
+		: []),
 ])
 
 const teamLink = {
