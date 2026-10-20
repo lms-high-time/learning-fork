@@ -53,5 +53,9 @@
 		"vite-plugin-pwa": "^1.2.0",
 		"vite-plugin-static-copy": "^1.0.6",
 		"vitest": "^4.1.7"
+	},
+	"resolutions": {
+		"**/engine.io-client/ws": "8.22.0",
+		"**/@tensorflow/tfjs-core/node-fetch": "2.7.0"
 	}
 }

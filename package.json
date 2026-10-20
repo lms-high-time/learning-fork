@@ -37,5 +37,8 @@
   },
   "dependencies": {
     "pre-commit": "^1.2.2"
+  },
+  "resolutions": {
+    "pre-commit/cross-spawn": "6.0.6"
   }
 }
