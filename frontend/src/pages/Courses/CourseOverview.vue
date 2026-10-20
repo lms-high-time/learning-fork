@@ -164,10 +164,16 @@
 				then gave way. Without lms_frappe_app the outline stays. -->
 				<CourseChapters
 					v-else-if="program"
+					:key="course.data.name"
 					:program="program"
 					:courseName="course.data.name"
 				/>
-				<section v-else-if="!mapSettled" data-testid="course-program-loading">
+				<section
+					v-else-if="!mapSettled"
+					data-testid="course-program-loading"
+					aria-busy="true"
+				>
+					<span class="sr-only">{{ __('Loading...') }}</span>
 					<SkeletonLoader variant="course-outline" :count="7" />
 				</section>
 
@@ -214,7 +220,7 @@
 					class="group/about"
 				>
 					<summary
-						class="flex cursor-pointer list-none items-center justify-between gap-4 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-outline-blue-6 [&::-webkit-details-marker]:hidden"
+						class="flex cursor-pointer list-none items-center justify-between gap-4 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-blue-6 [&::-webkit-details-marker]:hidden"
 					>
 						<h2 class="text-3xl-semibold text-ink-gray-9">
 							{{ __('About this course') }}
@@ -232,7 +238,10 @@
 
 				<!-- A review once the student has a chapter behind them, not before
 				the first lesson (learning-services#636). -->
+				<!-- Keyed: its «already reviewed» check is made once, for the
+				membership it mounted with. -->
 				<CourseReviews
+					:key="`${course.data.name}-${canReview}`"
 					:courseName="course.data.name"
 					:avg_rating="course.data.rating"
 					:membership="canReview ? course.data.membership : null"
@@ -278,6 +287,7 @@ import CourseInstructors from '@/components/CourseInstructors.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import RelatedCourses from '@/components/RelatedCourses.vue'
 import { coursePath, type ProgramData } from '@/utils/courseProgram'
+import { markdownLinks } from '@/utils/markdownLinks'
 import { SHOW_COURSE_AUTHORS } from '@/utils/courseAuthors'
 import { useSpace } from '@/stores/space'
 import { withSpace } from '@/utils/space'
@@ -342,6 +352,9 @@ watch(
 		// lms_frappe_app answers AppNotInstalledError. Unhandled, it surfaces
 		// as an application error on every course page — which is exactly how
 		// it took down three Cypress specs. No app, no map, no noise.
+		// Another course's map is no answer for this one: the page is reused
+		// from course to course (learning-services#636).
+		courseMap.reset?.()
 		if (name)
 			space
 				.load()
@@ -424,30 +437,32 @@ const program = computed<ProgramData | null>(() => {
 	const data = courseMap.data?.data
 	return data?.chapters?.some((chapter) => chapter.lessons.length) ? data : null
 })
+// Answered, whatever the answer — an empty one included, or the placeholder
+// would wait for good.
 const mapSettled = computed<boolean>(
-	() => Boolean(courseMap.data) || Boolean(courseMap.error)
+	() => Boolean(courseMap.fetched) || Boolean(courseMap.error)
 )
 
 // Where the student is, for the course card (learning-services#636).
 const path = computed(() => (program.value ? coursePath(program.value) : null))
 
+// Not while the map is on its way: the button came and went.
 const canReview = computed<boolean>(() => {
-	if (!props.course.data?.membership) return false
-	if (program.value)
-		return program.value.chapters.some((chapter) => chapter.status === 'passed')
-	return (props.course.data.membership.progress ?? 0) > 0
+	const membership = props.course.data?.membership
+	if (!membership || !mapSettled.value) return false
+	const chapters = program.value?.chapters
+	if (chapters?.some((chapter) => chapter.status !== undefined))
+		return chapters.some((chapter) => chapter.status === 'passed')
+	// A map without chapter statuses, or none at all: Learning's own count.
+	return (membership.progress ?? 0) > 0
 })
 
 // Authors write links in Markdown, and the description is shown as HTML: a
-// link written so came out as its brackets (learning-services#636). The
-// sanitizer still sees the result.
-const MARKDOWN_LINK = /\[([^\]\n]+)\]\((https?:\/\/[^)\s]+)\)/g
+// link written so came out as its brackets (learning-services#636). Only in
+// the text — never inside a tag, a link or code — and built as elements, not
+// strings; the sanitizer still sees the result.
 const description = computed<string>(() =>
-	(props.course.data?.description ?? '').replace(
-		MARKDOWN_LINK,
-		(_, text: string, url: string) =>
-			`<a href="${url.replace(/"/g, '%22')}">${text}</a>`
-	)
+	markdownLinks(props.course.data?.description ?? '')
 )
 
 const outlineStats = computed(() => {

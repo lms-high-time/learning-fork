@@ -48,7 +48,10 @@
 						}"
 					/>
 				</div>
-				<div class="mt-1.5 text-p-sm tabular-nums text-ink-gray-6">
+				<div
+					v-if="path.chapter"
+					class="mt-1.5 text-p-sm tabular-nums text-ink-gray-6"
+				>
 					{{
 						__('Lessons passed: {0} of {1}').format(
 							String(path.passed),
@@ -479,7 +482,7 @@ const studyLabel = computed<string>(() => {
 	if (entry.value?.study.channel === 'agent') return __('Connect your agent')
 	if (entry.value?.completed) return __('Repeat with the agent')
 	// Nothing to continue before the first lesson (learning-services#636).
-	return props.path?.passed === 0
+	return props.path && !props.path.started
 		? __('Start with the agent')
 		: __('Continue with the agent')
 })

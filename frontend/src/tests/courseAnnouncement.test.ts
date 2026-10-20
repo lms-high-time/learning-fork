@@ -64,7 +64,10 @@ vi.mock('@/stores/session', () => ({
 	sessionStore: () => ({ user: null }),
 }))
 vi.mock('@/components/CourseCardOverlay.vue', () => ({
-	default: { props: ['course', 'notify'], template: '<div data-testid="overlay" :data-notify="String(notify)" />' },
+	default: {
+		props: ['course', 'notify'],
+		template: '<div data-testid="overlay" :data-notify="String(notify)" />',
+	},
 }))
 vi.mock('@/components/CourseOutline.vue', () => ({
 	default: { template: '<div data-testid="outline" />' },
@@ -87,7 +90,7 @@ vi.mock('@/components/RelatedCourses.vue', () => ({
 vi.mock('@/components/ProgressBar.vue', () => ({
 	default: { template: '<div />' },
 }))
-vi.mock('@/components/CourseProgram/CourseProgram.vue', () => ({
+vi.mock('@/components/CourseProgram/CourseChapters.vue', () => ({
 	default: { template: '<div data-testid="program" />' },
 }))
 
@@ -130,7 +133,9 @@ describe('CourseOverview of an announced course', () => {
 		expect(wrapper.find('[data-testid="outline"]').exists()).toBe(false)
 		expect(wrapper.find('[data-testid="program"]').exists()).toBe(false)
 		expect(
-			wrapper.findAll('[data-testid="overlay"]').map((o) => o.attributes('data-notify'))
+			wrapper
+				.findAll('[data-testid="overlay"]')
+				.map((o) => o.attributes('data-notify'))
 		).toContain('true')
 	})
 
@@ -139,7 +144,9 @@ describe('CourseOverview of an announced course', () => {
 		const wrapper = mountOverview({ name: 'ops', title: 'Стыки', upcoming: 1 })
 		await flushPromises()
 
-		expect(wrapper.find('[data-testid="course-announcement-loading"]').exists()).toBe(true)
+		expect(
+			wrapper.find('[data-testid="course-announcement-loading"]').exists()
+		).toBe(true)
 		expect(wrapper.text()).not.toContain('The course is in the works.')
 		expect(wrapper.find('[data-testid="outline"]').exists()).toBe(false)
 	})
@@ -167,16 +174,27 @@ describe('CourseOverview of an announced course', () => {
 	})
 
 	it('subscribes a guest who came back from the login page', async () => {
-		mapData.value = { data: { upcoming: true, notify: false, objectives: [], chapters: [], documents: [] } }
+		mapData.value = {
+			data: {
+				upcoming: true,
+				notify: false,
+				objectives: [],
+				chapters: [],
+				documents: [],
+			},
+		}
 		route.query = { notify: '1' }
 		call.mockClear()
 		replace.mockClear()
 		mountOverview({ name: 'ops', title: 'Стыки', upcoming: 1 })
 		await flushPromises()
 
-		expect(call).toHaveBeenCalledWith('lms_frappe_app.api.student.notify_when_released', {
-			course: 'ops',
-		})
+		expect(call).toHaveBeenCalledWith(
+			'lms_frappe_app.api.student.notify_when_released',
+			{
+				course: 'ops',
+			}
+		)
 		expect(replace).toHaveBeenCalledWith({ query: {} })
 		route.query = {}
 	})
@@ -191,7 +209,9 @@ describe('CourseOverview of an announced course', () => {
 		})
 		await flushPromises()
 
-		expect(wrapper.find('[data-testid="course-announcement"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="course-announcement"]').exists()).toBe(
+			false
+		)
 	})
 
 	it('keeps the course as it was for a published course', async () => {
@@ -199,14 +219,20 @@ describe('CourseOverview of an announced course', () => {
 		const wrapper = mountOverview({ name: 'p3', title: 'P3', upcoming: 0 })
 		await flushPromises()
 
-		expect(wrapper.find('[data-testid="course-announcement"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="course-announcement"]').exists()).toBe(
+			false
+		)
 	})
 })
 
 describe('CourseOverview for a tester', () => {
 	it('says the course is tested before publication', async () => {
 		mapData.value = { data: { tester: true, chapters: [], documents: [] } }
-		const wrapper = mountOverview({ name: 'draft', title: 'Черновик', published: 0 })
+		const wrapper = mountOverview({
+			name: 'draft',
+			title: 'Черновик',
+			published: 0,
+		})
 		await flushPromises()
 
 		expect(wrapper.get('[data-testid="course-tester-note"]').text()).toContain(
@@ -219,7 +245,9 @@ describe('CourseOverview for a tester', () => {
 		const wrapper = mountOverview({ name: 'p3', title: 'P3', published: 1 })
 		await flushPromises()
 
-		expect(wrapper.find('[data-testid="course-tester-note"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="course-tester-note"]').exists()).toBe(
+			false
+		)
 	})
 })
 
@@ -257,7 +285,9 @@ describe('the course author', () => {
 			props: {
 				course: {
 					title: 'P3',
-					instructors: [{ name: 'admin@example.com', full_name: 'Administrator' }],
+					instructors: [
+						{ name: 'admin@example.com', full_name: 'Administrator' },
+					],
 				},
 			},
 			global: { mocks: { __: (s: string) => s } },
@@ -275,7 +305,15 @@ describe('CourseCard of an announced course', () => {
 		})
 
 	it('says the course is in the works', () => {
-		expect(mountCard({ upcoming: 1 }).find('[data-testid="course-card-upcoming"]').exists()).toBe(true)
-		expect(mountCard({ upcoming: 0 }).find('[data-testid="course-card-upcoming"]').exists()).toBe(false)
+		expect(
+			mountCard({ upcoming: 1 })
+				.find('[data-testid="course-card-upcoming"]')
+				.exists()
+		).toBe(true)
+		expect(
+			mountCard({ upcoming: 0 })
+				.find('[data-testid="course-card-upcoming"]')
+				.exists()
+		).toBe(false)
 	})
 })

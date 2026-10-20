@@ -24,8 +24,11 @@
 					data-testid="course-chapter"
 					@toggle="toggleChapter(chapterIndex, $event)"
 				>
+					<!-- Named by its title and count: the description under it is
+					read, not announced as the button's name. -->
 					<summary
-						class="grid cursor-pointer list-none grid-cols-[2rem_minmax(0,1fr)_auto] items-start gap-3 rounded py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-outline-blue-6 [&::-webkit-details-marker]:hidden"
+						:aria-labelledby="`chapter-${chapterIndex}-title chapter-${chapterIndex}-count`"
+						class="grid cursor-pointer list-none grid-cols-[2rem_minmax(0,1fr)_auto] items-start gap-3 rounded py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-blue-6 [&::-webkit-details-marker]:hidden"
 					>
 						<span
 							class="flex size-8 items-center justify-center rounded-full text-p-sm font-semibold tabular-nums"
@@ -39,7 +42,10 @@
 							<template v-else>{{ chapterIndex + 1 }}</template>
 						</span>
 						<span class="min-w-0 pt-1">
-							<span class="block text-lg-semibold text-ink-gray-9">
+							<span
+								:id="`chapter-${chapterIndex}-title`"
+								class="block text-lg-semibold text-ink-gray-9"
+							>
 								{{ chapter.title }}
 							</span>
 							<!-- What a chapter is about helps a visitor decide; a student
@@ -56,7 +62,12 @@
 						<span
 							class="flex items-center gap-2 pt-1.5 text-p-sm tabular-nums text-ink-gray-6"
 						>
-							<span data-testid="chapter-count">{{ countOf(chapter) }}</span>
+							<span data-testid="chapter-count" aria-hidden="true">{{
+								countOf(chapter)
+							}}</span>
+							<span :id="`chapter-${chapterIndex}-count`" class="sr-only">{{
+								countWords(chapter)
+							}}</span>
 							<span
 								class="lucide-chevron-down size-4 text-ink-gray-5 transition-transform group-open/chapter:rotate-180 motion-reduce:transition-none"
 								aria-hidden="true"
@@ -75,7 +86,7 @@
 								:data-status="statusOf(lesson)"
 							>
 								<summary
-									class="flex min-h-11 cursor-pointer list-none items-center gap-3 rounded-md px-2 py-2 hover:bg-surface-gray-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-outline-blue-6 [&::-webkit-details-marker]:hidden"
+									class="flex min-h-11 cursor-pointer list-none items-center gap-3 rounded-md px-2 py-2 hover:bg-surface-gray-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-blue-6 [&::-webkit-details-marker]:hidden"
 								>
 									<span
 										class="flex size-5 shrink-0 items-center justify-center"
@@ -128,7 +139,7 @@
 										class="shrink-0 text-p-xs text-ink-gray-6"
 										aria-hidden="true"
 									>
-										{{ __('In progress') }}
+										{{ __('Lesson in progress') }}
 									</span>
 									<span
 										class="lucide-chevron-down size-4 shrink-0 text-ink-gray-4 transition-transform group-open/lesson:rotate-180 motion-reduce:transition-none"
@@ -238,6 +249,16 @@ const countOf = (chapter: ProgramChapter): string => {
 	)
 }
 
+// What the count says, in words, for a screen reader.
+const countWords = (chapter: ProgramChapter): string => {
+	const progress = progressOf(chapter)
+	if (!progress) return plural(chapter.lessons.length, LESSONS)
+	return __('Lessons passed: {0} of {1}').format(
+		String(progress.passed),
+		String(progress.total)
+	)
+}
+
 const chapterMarkClass = (chapter: ProgramChapter, index: number): string => {
 	const progress = progressOf(chapter)
 	if (progress?.done) return 'bg-surface-green-2 text-ink-green-7'
@@ -254,7 +275,7 @@ const statusWord = (lesson: ProgramLesson): string => {
 		case 'completed':
 			return __('Lesson passed')
 		case 'in-progress':
-			return __('In progress')
+			return __('Lesson in progress')
 		case 'next':
 			return __('Up next')
 		default:

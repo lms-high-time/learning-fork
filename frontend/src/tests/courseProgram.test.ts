@@ -83,6 +83,14 @@ describe('openChapter', () => {
 		expect(openChapter([chapter(['l-1']), chapter(['l-2'])], undefined)).toBe(0)
 	})
 
+	it('opens the first chapter not passed when no next lesson is named', () => {
+		const chapters = [
+			chapter(['l-1'], 'passed'),
+			chapter(['l-2'], 'in_progress'),
+		]
+		expect(openChapter(chapters, undefined)).toBe(1)
+	})
+
 	it('opens none once the course is finished', () => {
 		expect(openChapter([chapter(['l-1'], 'passed')], null)).toBeNull()
 	})
@@ -117,7 +125,15 @@ describe('coursePath', () => {
 			chapter: 2,
 			lesson: 3,
 			done: false,
+			started: true,
 		})
+	})
+
+	it('counts a lesson talked through as started before it is closed', () => {
+		const half = data('l-1', [false, false, false])
+		expect(coursePath(half)?.started).toBe(false)
+		half.chapters[0].lessons[0].objectives = [{ text: 'a', status: 'touched' }]
+		expect(coursePath(half)?.started).toBe(true)
 	})
 
 	it('knows a finished course', () => {

@@ -387,6 +387,7 @@ describe('CourseCardOverlay: where the student is (#636)', () => {
 			chapter: 2,
 			lesson: 5,
 			done: false,
+			started: true,
 		})
 		await flushPromises()
 		const path = wrapper.get('[data-testid="course-path"]')
@@ -405,9 +406,25 @@ describe('CourseCardOverlay: where the student is (#636)', () => {
 			chapter: 1,
 			lesson: 1,
 			done: false,
+			started: false,
 		})
 		await flushPromises()
 		expect(wrapper.text()).toContain('Start with the agent')
+	})
+
+	it('continues a lesson already talked through, though none is closed', async () => {
+		entryResource.data = entry
+		const wrapper = mountOverlay({
+			passed: 0,
+			total: 21,
+			chapters: 7,
+			chapter: 1,
+			lesson: 1,
+			done: false,
+			started: true,
+		})
+		await flushPromises()
+		expect(wrapper.text()).toContain('Continue with the agent')
 	})
 
 	it('says the course is passed', async () => {
@@ -418,6 +435,7 @@ describe('CourseCardOverlay: where the student is (#636)', () => {
 			chapter: null,
 			lesson: null,
 			done: true,
+			started: true,
 		})
 		await flushPromises()
 		expect(wrapper.get('[data-testid="course-path"]').text()).toContain(

@@ -75,7 +75,7 @@
 							@change="setThemePreference(mode.value)"
 						/>
 						<span
-							class="block whitespace-nowrap rounded-md px-2 py-1 text-center md:px-3 text-p-sm font-medium text-ink-gray-6 transition-colors hover:text-ink-gray-9 peer-checked:bg-surface-base peer-checked:text-ink-gray-9 peer-checked:shadow-sm peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-outline-blue-6"
+							class="block whitespace-nowrap rounded-md px-2 py-1 text-center md:px-3 text-p-sm font-medium text-ink-gray-6 transition-colors hover:text-ink-gray-9 peer-checked:bg-surface-base peer-checked:text-ink-gray-9 peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-outline-blue-6"
 						>
 							{{ mode.label }}
 						</span>
@@ -111,7 +111,7 @@
 				</div>
 				<a
 					href="/update-password"
-					class="inline-flex h-8 items-center justify-center rounded border border-outline-gray-2 bg-surface-base px-3 text-base font-medium text-ink-gray-8 transition-colors hover:bg-surface-gray-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-outline-blue-6"
+					class="inline-flex h-8 items-center justify-center rounded border border-outline-gray-2 bg-surface-base px-3 text-base font-medium text-ink-gray-8 transition-colors hover:bg-surface-gray-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-blue-6"
 					data-testid="profile-password"
 				>
 					{{ __('Change password') }}

@@ -161,11 +161,16 @@ export function openChapter(
 	if (!chapters.length) return null
 	const enrolled = chapters.some((chapter) => chapter.status !== undefined)
 	if (!enrolled) return 0
-	if (!nextLesson) return null
-	const index = chapters.findIndex((chapter) =>
-		chapter.lessons.some((lesson) => lesson.id === nextLesson)
-	)
-	return index >= 0 ? index : 0
+	const index = nextLesson
+		? chapters.findIndex((chapter) =>
+				chapter.lessons.some((lesson) => lesson.id === nextLesson)
+		  )
+		: -1
+	if (index >= 0) return index
+	// No next lesson named: the first chapter not passed yet, or none at all
+	// once every chapter is.
+	const open = chapters.findIndex((chapter) => chapter.status !== 'passed')
+	return open >= 0 ? open : null
 }
 
 /** Where an enrolled student is in the course; null for a visitor. */
@@ -174,11 +179,14 @@ export type CoursePath = {
 	passed: number
 	total: number
 	chapters: number
-	/** 1-based chapter and lesson of the next lesson; null once there is none. */
+	/** The next lesson's chapter (1-based) and its number across the whole
+	 * course — «lesson 9 of 21», not within the chapter; null once there is none. */
 	chapter: number | null
 	lesson: number | null
 	/** Every lesson closed. */
 	done: boolean
+	/** Anything studied: a lesson closed or a topic reported on. */
+	started: boolean
 }
 
 export function coursePath(data: ProgramData): CoursePath | null {
@@ -194,5 +202,10 @@ export function coursePath(data: ProgramData): CoursePath | null {
 		chapter: next >= 0 ? lessons[next].chapterIndex + 1 : null,
 		lesson: next >= 0 ? next + 1 : null,
 		done: passed === lessons.length,
+		started:
+			passed > 0 ||
+			lessons.some((lesson) =>
+				lesson.objectives.some((objective) => objective.status)
+			),
 	}
 }

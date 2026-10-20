@@ -1,17 +1,10 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
+import { mount } from '@vue/test-utils'
 import { type ProgramData } from '@/utils/courseProgram'
 
 // learning-services#322, #636: the programme as a list of chapters, as the
 // student and a visitor meet it.
 
-vi.mock('frappe-ui', () => ({
-	Button: {
-		props: ['label', 'disabled'],
-		template:
-			'<button :aria-label="label" :disabled="disabled" @click="$emit(\'click\')"><slot name="icon" /><slot /></button>',
-	},
-}))
 vi.mock('vue-router', () => ({
 	useRouter: () => ({
 		resolve: (to: {

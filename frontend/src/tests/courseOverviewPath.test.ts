@@ -6,7 +6,12 @@ import { reactive } from 'vue'
 // window — and a visitor's page without the outline flashing before the map.
 
 const { maps, stub } = vi.hoisted(() => ({
-	maps: [] as { data: unknown; error: unknown }[],
+	maps: [] as {
+		data: unknown
+		error: unknown
+		fetched: boolean
+		reset: () => void
+	}[],
 	stub: (name: string, template = '<div />') => ({
 		default: { name, props: ['membership', 'path'], template },
 	}),
@@ -28,8 +33,14 @@ vi.mock('frappe-ui', () => ({
 			url: opts.url,
 			data: null as unknown,
 			error: null as unknown,
+			fetched: false,
 			loading: false,
 			fetch: vi.fn(() => Promise.resolve()),
+			reset() {
+				resource.data = null
+				resource.error = null
+				resource.fetched = false
+			},
 		})
 		if (opts.url === 'lms_frappe_app.api.public.course_map') maps.push(resource)
 		return resource
@@ -145,6 +156,12 @@ const open = async (membership: boolean) => {
 	return wrapper
 }
 
+// The map answers: what frappe-ui sets once a request comes back.
+const answer = (data: unknown) => {
+	maps[0].data = data
+	maps[0].fetched = true
+}
+
 beforeEach(() => {
 	maps.length = 0
 })
@@ -156,9 +173,44 @@ describe('the course page (#636)', () => {
 		expect(
 			wrapper.find('[data-testid="course-program-loading"]').exists()
 		).toBe(true)
-		maps[0].data = program(false)
+		answer(program(false))
 		await flushPromises()
 		expect(wrapper.find('[data-testid="course-chapters"]').exists()).toBe(true)
+	})
+
+	it('settles on an empty answer rather than waiting for good', async () => {
+		const wrapper = await open(false)
+		answer(null)
+		await flushPromises()
+		expect(
+			wrapper.find('[data-testid="course-program-loading"]').exists()
+		).toBe(false)
+	})
+
+	it('drops the last course’s map when another course opens', async () => {
+		const props = reactive({ course: course(true) })
+		const wrapper = mount(CourseOverview, {
+			props: props as never,
+			global: {
+				provide: { $user: { data: { name: 'a@b.c' } } },
+				mocks: { __ },
+				directives: { 'safe-html': () => {} },
+			},
+		})
+		await flushPromises()
+		answer(program(false))
+		await flushPromises()
+		expect(wrapper.find('[data-testid="course-chapters"]').exists()).toBe(true)
+		const next = course(true)
+		next.data.name = 'c-2'
+		await wrapper.setProps({ course: next } as never)
+		await flushPromises()
+		expect(wrapper.find('[data-testid="course-chapters"]').exists()).toBe(false)
+		expect(
+			wrapper.find('[data-testid="course-program-loading"]').exists()
+		).toBe(true)
+		const card = wrapper.findAllComponents({ name: 'CourseCardOverlay' })[0]
+		expect(card.props('path')).toBeNull()
 	})
 
 	it('falls back to the outline when the map cannot come', async () => {
@@ -197,7 +249,7 @@ describe('the course page (#636)', () => {
 
 	it('hands the course card where the student is', async () => {
 		const wrapper = await open(true)
-		maps[0].data = program(false)
+		answer(program(false))
 		await flushPromises()
 		const card = wrapper.findAllComponents({ name: 'CourseCardOverlay' })[0]
 		expect(card.props('path')).toMatchObject({
@@ -209,12 +261,12 @@ describe('the course page (#636)', () => {
 
 	it('asks for a review only once a chapter is passed', async () => {
 		const wrapper = await open(true)
-		maps[0].data = program(false)
+		answer(program(false))
 		await flushPromises()
 		const reviews = () =>
 			wrapper.findComponent({ name: 'CourseReviews' }).props('membership')
 		expect(reviews()).toBeNull()
-		maps[0].data = program(true)
+		answer(program(true))
 		await flushPromises()
 		expect(reviews()).toMatchObject({ name: 'm-1' })
 	})

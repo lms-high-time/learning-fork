@@ -11704,4 +11704,8 @@ msgstr "{0} глав"
 
 #: frontend/src/utils/plural.ts
 msgid "{0} chapters"
-msgstr "{0} глав"
+msgstr "{0} главы"
+
+#: frontend/src/components/CourseProgram/CourseChapters.vue
+msgid "Lesson in progress"
+msgstr "Начат"
