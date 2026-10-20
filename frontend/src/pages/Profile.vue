@@ -3,8 +3,10 @@
 	<div v-else-if="profile.data">
 		<PageHeader :breadcrumbs="breadcrumbs">
 			<template #actions>
+				<!-- Frappe's role refresh: a tool for the platform's roles, not a
+				learner's (learning-services#626). -->
 				<HeaderButton
-					v-if="isSessionUser()"
+					v-if="isSessionUser() && currentUserHasHigherAccess()"
 					variant="ghost"
 					:label="__('Refresh session')"
 					icon="lucide-refresh-ccw"
@@ -13,54 +15,72 @@
 			</template>
 		</PageHeader>
 		<!-- No cover, socials, «Open to» or headline: the profile is what the
-		mentor knows, shown below (learning-services#463). -->
-		<div class="mx-auto mt-8 max-w-4xl translate-x-0 px-5">
-			<div class="flex flex-col md:flex-row items-center">
-				<div>
-					<div class="relative">
-						<img
-							v-if="profile.data.user_image"
-							:src="safeUrl(profile.data.user_image)"
-							:alt="profile.data.full_name"
-							class="object-cover h-[100px] w-[100px] rounded-full border-4 border-white object-cover"
-						/>
-						<div
-							v-else
-							class="flex items-center justify-center h-[100px] w-[100px] rounded-full border-4 border-white bg-surface-gray-2 text-4xl-semibold text-ink-gray-7"
-						>
-							{{ profile.data.full_name.charAt(0).toUpperCase() }}
-						</div>
-					</div>
+		mentor knows, shown below (learning-services#463). One page, top to
+		bottom: who you are, what the mentor knows, settings, account
+		(learning-services#626). -->
+		<div class="mx-auto mt-8 max-w-3xl px-5">
+			<div class="flex flex-wrap items-center gap-x-5 gap-y-3">
+				<img
+					v-if="profile.data.user_image"
+					:src="safeUrl(profile.data.user_image)"
+					:alt="profile.data.full_name"
+					class="size-14 shrink-0 rounded-full object-cover md:size-16"
+				/>
+				<div
+					v-else
+					class="flex size-14 shrink-0 items-center justify-center rounded-full bg-surface-blue-2 text-xl font-semibold text-ink-blue-7 md:size-16"
+					aria-hidden="true"
+				>
+					{{ initials }}
 				</div>
-				<div class="ms-6 mt-5">
-					<h1 class="text-4xl-semibold text-ink-gray-9">
+				<div class="min-w-0 flex-1">
+					<h1 class="truncate text-2xl-semibold text-ink-gray-9">
 						{{ profile.data.full_name }}
 					</h1>
+					<p
+						v-if="isSessionUser()"
+						class="mt-0.5 truncate text-p-base text-ink-gray-6"
+						data-testid="profile-email"
+					>
+						{{ profile.data.name }}
+					</p>
 				</div>
 				<Button
-					v-if="isSessionUser() && !readOnlyMode"
-					class="mt-3 sm:mt-0 md:ms-auto"
-					@click="editProfile()"
+					v-if="isSessionUser() && !readOnlyMode && !editing"
+					ref="editButton"
+					class="max-md:w-full"
+					aria-controls="profile-name-edit"
+					:aria-expanded="editing"
+					data-testid="profile-edit"
+					@click="editing = true"
 				>
-					<template #prefix>
-						<span class="lucide-edit size-4 text-ink-gray-7" />
-					</template>
-					{{ __('Edit Profile') }}
+					{{ __('Edit name and photo') }}
 				</Button>
 			</div>
+			<ProfileNameEdit
+				v-if="editing"
+				id="profile-name-edit"
+				:profile="profile"
+				@close="stopEditing"
+			/>
 
-			<div class="mb-4 mt-10">
+			<div v-if="tabButtons.length > 1" class="mt-8">
 				<TabButtons
 					:class="
 						isMobile
 							? 'flex w-full [&>div]:w-full [&_button]:min-w-0 [&_button]:grow [&_button>span]:w-full'
 							: 'inline-block'
 					"
-					:options="getTabButtons()"
+					:options="tabButtons"
 					v-model="activeTab"
 				/>
 			</div>
 			<router-view :profile="profile" :key="profile.data?.name" />
+			<ProfileSettings
+				v-if="isSessionUser() && route.name === 'ProfileAbout'"
+				:user="profile.data.name"
+				:language="profile.data.language"
+			/>
 		</div>
 	</div>
 	<NotFound v-else-if="(profile.fetched || profile.error) && !profile.data" />
@@ -74,20 +94,28 @@ import {
 	toast,
 	usePageMeta,
 } from 'frappe-ui'
-import { computed, inject, watch, ref, onMounted, watchEffect } from 'vue'
+import {
+	computed,
+	inject,
+	nextTick,
+	watch,
+	ref,
+	onMounted,
+	watchEffect,
+} from 'vue'
 import PageHeader from '@/components/Layouts/PageHeader.vue'
 import HeaderButton from '@/components/HeaderButton.vue'
 import { sessionStore } from '@/stores/session'
 import { useRoute, useRouter } from 'vue-router'
 import { convertToTitleCase } from '@/utils'
 import { useScreenSize } from '@/utils/composables'
-import UserAvatar from '@/components/UserAvatar.vue'
+import ProfileNameEdit from '@/components/Profile/ProfileNameEdit.vue'
+import ProfileSettings from '@/components/Profile/ProfileSettings.vue'
 import NoPermission from '@/components/NoPermission.vue'
 import NotFound from '@/pages/NotFound.vue'
-import { openFormRoute } from '@/composables/useFormRoute'
 import { safeUrl } from '@/utils/safeUrl'
 
-const { user, brand } = sessionStore()
+const { brand } = sessionStore()
 const $user = inject('$user')
 const route = useRoute()
 const router = useRouter()
@@ -118,7 +146,7 @@ const profile = createResource({
 
 const setActiveTab = () => {
 	let fragments = route.path.split('/')
-	let sections = ['certificates', 'roles', 'slots', 'schedule']
+	let sections = ['roles', 'slots', 'schedule']
 	sections.forEach((section) => {
 		if (fragments.includes(section)) {
 			activeTab.value = convertToTitleCase(section)
@@ -127,19 +155,17 @@ const setActiveTab = () => {
 	if (!activeTab.value) activeTab.value = 'About'
 }
 
-// The edit form is a child route, not a tab, and `edit` matches none of the tab
-// segments — so setActiveTab lands on About and this effect would push the About
-// tab straight over a deep link to the form before it ever renders.
+// Only when the tab and the route disagree: pushing the route already shown
+// would drop its query, the `?edit=1` a link to the edit form arrives with.
 watchEffect(() => {
-	if (!activeTab.value || route.name === 'ProfileEditForm') return
+	if (!activeTab.value) return
 	let target = {
 		About: { name: 'ProfileAbout' },
-		Certificates: { name: 'ProfileCertificates' },
 		Roles: { name: 'ProfileRoles' },
 		Slots: { name: 'ProfileEvaluator' },
 		Schedule: { name: 'ProfileEvaluationSchedule' },
 	}[activeTab.value]
-	router.push(target)
+	if (route.name !== target.name) router.push(target)
 })
 
 watch(
@@ -149,15 +175,28 @@ watch(
 	}
 )
 
-const editProfile = () => {
-	openFormRoute(router, {
-		name: 'ProfileEditForm',
-		params: { username: props.username },
-	})
-}
-
 const isSessionUser = () => {
 	return $user.data?.name === profile.data?.name
+}
+
+// The name and photo are edited in place (learning-services#626). The old
+// /user/X/edit link lands here with `?edit=1` and opens the fields — on the
+// owner's own profile, once it is known to be theirs.
+const editing = ref(false)
+const editButton = ref(null)
+watch(
+	() => [route.query.edit, profile.data?.name],
+	([edit]) => {
+		if (edit !== '1' || !profile.data) return
+		if (isSessionUser() && !readOnlyMode) editing.value = true
+		router.replace({ query: {} })
+	},
+	{ immediate: true }
+)
+const stopEditing = async () => {
+	editing.value = false
+	await nextTick()
+	editButton.value?.$el?.focus?.()
 }
 
 const currentUserHasHigherAccess = () => {
@@ -171,11 +210,11 @@ const isEvaluatorOrModerator = () => {
 	)
 }
 
+// No «Certificates» tab (learning-services#626); its old link lands on About.
+// A learner is left with one tab, so the strip is not shown at all; the
+// platform's roles keep theirs.
 const getTabButtons = () => {
-	let buttons = [
-		{ label: __('About me'), value: 'About' },
-		{ label: __('Certificates'), value: 'Certificates' },
-	]
+	let buttons = [{ label: __('About me'), value: 'About' }]
 	if ($user.data?.is_moderator) {
 		buttons.push({ label: __('Roles'), value: 'Roles' })
 	}
@@ -186,6 +225,18 @@ const getTabButtons = () => {
 	}
 	return buttons
 }
+
+const tabButtons = computed(() => getTabButtons())
+
+const initials = computed(() => {
+	const first = profile.data?.first_name?.trim()?.charAt(0) ?? ''
+	const last = profile.data?.last_name?.trim()?.charAt(0) ?? ''
+	return (
+		first + last ||
+		profile.data?.full_name?.charAt(0) ||
+		''
+	).toUpperCase()
+})
 
 const reloadUser = () => {
 	call('frappe.sessions.clear')
@@ -201,22 +252,18 @@ const reloadUser = () => {
 		})
 }
 
+// Your own profile is «My Profile», as in the menu; «People» is the
+// platform's list of everyone, and means nothing to a learner
+// (learning-services#626).
 const breadcrumbs = computed(() => {
-	let crumbs = [
-		{
-			label: __('People'),
-		},
+	if (isSessionUser()) return [{ label: __('My Profile') }]
+	return [
+		{ label: __('People') },
 		{
 			label: profile.data?.full_name,
-			route: {
-				name: 'Profile',
-				params: {
-					username: user.doc?.username,
-				},
-			},
+			route: { name: 'Profile', params: { username: props.username } },
 		},
 	]
-	return crumbs
 })
 
 usePageMeta(() => {

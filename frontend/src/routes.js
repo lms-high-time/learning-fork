@@ -263,11 +263,16 @@ export const routes = [
 				component: () =>
 					import('@/pages/ProfileEvaluationSchedule.vue'),
 			},
+			// The name and photo are edited in place on the profile now
+			// (learning-services#626); the old link opens them there.
 			{
 				name: 'ProfileEditForm',
 				path: 'edit',
-				component: () => import('@/pages/Forms/ProfileEditForm.vue'),
-				props: true,
+				redirect: (to) => ({
+					name: 'ProfileAbout',
+					params: to.params,
+					query: { edit: '1' },
+				}),
 			},
 		],
 	},

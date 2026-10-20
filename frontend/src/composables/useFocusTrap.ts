@@ -11,8 +11,8 @@ const FOCUSABLE =
 	'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), iframe, summary, [contenteditable]:not([contenteditable="false"]), [tabindex]:not([tabindex="-1"])'
 
 // frappe-ui's FileUploader renders <input type="file" class="hidden"> — display
-// none, but no `hidden` attribute — and ChapterForm, NewCourseForm, JobForm,
-// ProfileEditForm and CourseImportForm all reach one. Filtering on the
+// none, but no `hidden` attribute — and ChapterForm, NewCourseForm, JobForm
+// and CourseImportForm all reach one. Filtering on the
 // attribute alone left it in the cycle as a stop that cannot hold focus, which
 // also made it `last` on any form ending in an uploader and so wrapped Tab off
 // the wrong element.
