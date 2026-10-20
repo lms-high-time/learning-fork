@@ -4,7 +4,11 @@ on:
   pull_request:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [ main, high-time ]
+  # Weekly full pass for the secrets and dependencies job: a CVE lands in a
+  # lockfile nobody touched. The other jobs stay PR-only.
+  schedule:
+    - cron: "53 6 * * 1"
 
 jobs:
   commit-lint:
@@ -78,3 +82,75 @@ jobs:
         # --error is required: a bare `semgrep scan` prints its findings and
         # still exits 0, so without it this step could never fail.
         run: semgrep scan --error --config ./.github/semgrep/tailwind-rtl.yml
+
+  # Secrets (gitleaks) and vulnerable JS dependencies (trivy on yarn.lock and
+  # frontend/yarn.lock). Design and decisions:
+  # lms-high-time/learning-services#629. Blocks on any secret and on any
+  # HIGH/CRITICAL vulnerability that has a fix; a scanner that fails is red,
+  # not "clean".
+  #
+  # What it does NOT do: Python dependencies (no lockfile here — the stand
+  # image is scanned by trivy in learning-services), and upstream code issues
+  # (that is the Semgrep Rules job, PR-only and diff-aware).
+  secrets-deps:
+    name: Secrets and Dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      GITLEAKS_IMAGE: zricethezav/gitleaks:v8.21.2@sha256:0e99e8821643ea5b235718642b93bb32486af9c8162c8b8731f7cbdc951a7f46
+      TRIVY_IMAGE: aquasec/trivy:0.57.1@sha256:5c59e08f980b5d4d503329773480fcea2c9bdad7e381d846fbf9f2ecb8050f6b
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # PR: its own commits; push: the pushed commits (an unreachable
+      # `before`, e.g. after a force push, means a full scan); schedule and
+      # manual runs: every branch's full history.
+      - name: Range
+        id: range
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          case "$EVENT" in
+            pull_request) echo "log=$PR_BASE..$PR_HEAD" >> "$GITHUB_OUTPUT" ;;
+            push)
+              if git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+                echo "log=$BEFORE..$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+              else
+                echo "log=--all" >> "$GITHUB_OUTPUT"
+              fi ;;
+            *) echo "log=--all" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      # Our own gitleaks config: an explicit --config wins over a
+      # .gitleaks.toml in the tree, so a PR cannot allowlist itself away;
+      # .gitleaksignore still applies. The exit code is kept, not trusted
+      # alone: gitleaks writes `[]` and exits 1 on a git error.
+      - name: Secrets
+        env:
+          LOG_OPTS: ${{ steps.range.outputs.log }}
+        run: |
+          printf '[extend]\nuseDefault = true\n' > "$RUNNER_TEMP/gitleaks.toml"
+          rc=0
+          docker run --rm -u "$(id -u):$(id -g)" -v "$PWD:/repo:ro" -v "$RUNNER_TEMP:/out" "$GITLEAKS_IMAGE" \
+            git /repo --redact --no-banner --config /out/gitleaks.toml --log-opts="$LOG_OPTS" \
+            --exit-code 0 -f json -r /out/gitleaks.json || rc=$?
+          [ "$rc" = 0 ] || { echo "::error::gitleaks failed (exit $rc) — see the log above"; exit 1; }
+          leaks=$(jq length "$RUNNER_TEMP/gitleaks.json") || { echo "::error::gitleaks report unreadable"; exit 1; }
+          jq -r '.[] | "::error::secret \(.RuleID) in \(.Commit[0:7]) \(.File | gsub("[\r\n%]"; "_")):\(.StartLine) — revoke it and drop it from history; a false positive goes to .gitleaksignore with a comment"' "$RUNNER_TEMP/gitleaks.json"
+          [ "$leaks" = 0 ]
+
+      # trivy exits 1 only when it finds a HIGH/CRITICAL vulnerability with a
+      # fix; any other failure is non-zero too — both are red.
+      - name: Dependencies
+        run: |
+          docker run --rm -v "$PWD:/repo:ro" "$TRIVY_IMAGE" fs \
+            --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed \
+            --skip-dirs '**/node_modules' --exit-code 1 /repo
