@@ -26,6 +26,11 @@ permissions:
 jobs:
   assets:
     name: Build and publish
+    # A manual run from any other branch would publish that branch as the
+    # stand's assets: the watcher deploys whatever lands in the release. Only
+    # high-time — which is reached through a reviewed PR — may publish
+    # (lms-high-time/learning-services#629).
+    if: github.ref == 'refs/heads/high-time'
     runs-on: ubuntu-latest
     env:
       # Vite builds of this SPA exceed Node's default heap and abort with

@@ -1,0 +1,7 @@
+# False positives and accepted history for gitleaks (one fingerprint per
+# line). Every entry carries its reason — lms-high-time/learning-services#629.
+#
+# Upstream frappe/lms Cypress Dashboard record key, committed in 2023 by
+# upstream (test: course creation flow). Public for years and not ours to
+# revoke; it only matters to the weekly full-history scan.
+92a8ce6ef4dfb2716a14102db704bf4ae9f9a253:.github/workflows/ui-tests.yml:generic-api-key:107
