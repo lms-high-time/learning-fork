@@ -5,6 +5,8 @@ import {
 	eventLabel,
 	isCurator,
 	isFilesAllowed,
+	isOverdue,
+	isPractice,
 	isTextAllowed,
 	lastComment,
 	lastEvent,
@@ -59,6 +61,37 @@ describe('dueLabel', () => {
 		expect(dueLabel({ mode: 'none', days: null, date: null })).toBe(
 			'No deadline'
 		)
+	})
+
+	it('names practice instead of a deadline (learning-services#627)', () => {
+		expect(dueLabel({ mode: 'none', days: null, date: null }, null, false)).toBe(
+			'Practice, no deadline'
+		)
+		// The author's rule or a stray date does not turn practice into a deadline.
+		expect(
+			dueLabel(
+				{ mode: 'relative', days: 5, date: null },
+				'2030-02-20 23:59:59',
+				false
+			)
+		).toBe('Practice, no deadline')
+	})
+})
+
+describe('practice (learning-services#627)', () => {
+	it('is only an explicit «not required»', () => {
+		expect(isPractice({ required: false })).toBe(true)
+		expect(isPractice({ required: true })).toBe(false)
+		// An answer without the flag keeps the deadline it had.
+		expect(isPractice({})).toBe(false)
+		expect(isPractice(null)).toBe(false)
+	})
+
+	it('is never overdue, whatever the flag says', () => {
+		expect(isOverdue({ required: true, overdue: true })).toBe(true)
+		expect(isOverdue({ required: true, overdue: false })).toBe(false)
+		expect(isOverdue({ required: false, overdue: true })).toBe(false)
+		expect(isOverdue(null)).toBe(false)
 	})
 })
 

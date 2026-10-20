@@ -19,15 +19,26 @@
 						>{{ statusLabel(submission?.status) }}</span
 					>
 				</div>
-				<div class="text-p-sm text-ink-gray-6">
-					{{ dueLabel(homework.due, submission?.due_at) }}
+				<div class="text-p-sm text-ink-gray-6" data-testid="homework-due">
+					{{ dueLabel(homework.due, submission?.due_at, !practice) }}
 					<span
-						v-if="submission?.overdue"
+						v-if="isOverdue(submission)"
 						class="font-medium text-ink-red-7"
 						data-testid="homework-overdue"
 						>· {{ __('Overdue') }}</span
 					>
 				</div>
+				<p
+					v-if="practice && invited"
+					class="text-p-sm text-ink-gray-6"
+					data-testid="homework-practice"
+				>
+					{{
+						__(
+							"If you'd like to try it in your own work, you can send it here."
+						)
+					}}
+				</p>
 			</header>
 
 			<div
@@ -173,6 +184,8 @@ import {
 	formatMoment,
 	formatSize,
 	isFilesAllowed,
+	isOverdue,
+	isPractice,
 	isTextAllowed,
 	lastComment,
 	lastEvent,
@@ -208,6 +221,12 @@ const filesAllowed = computed(() =>
 	homework.value ? isFilesAllowed(homework.value.answer_mode) : false
 )
 const editable = computed(() => canEdit(submission.value?.status))
+// Practice (learning-services#627): no deadline, and an offer, not a demand —
+// made while there is nothing handed in yet.
+const practice = computed(() => isPractice(submission.value ?? homework.value))
+const invited = computed(
+	() => !submission.value || submission.value.status === 'Assigned'
+)
 const submitted = computed(() => Boolean(submission.value?.version))
 const comment = computed(() => lastComment(submission.value?.history ?? []))
 

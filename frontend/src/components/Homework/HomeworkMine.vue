@@ -80,12 +80,20 @@
 									:class="STATUS_CLASSES[row.status]"
 									>{{ statusLabel(row.status) }}</span
 								>
-								<span v-if="row.due_at" class="text-ink-gray-6">{{
+								<span
+									v-if="isPractice(row)"
+									class="text-ink-gray-6"
+									data-testid="mine-practice"
+									>{{ __('Practice, no deadline') }}</span
+								>
+								<span v-else-if="row.due_at" class="text-ink-gray-6">{{
 									__('Due {0}').format(formatDay(row.due_at))
 								}}</span>
-								<span v-if="row.overdue" class="font-medium text-ink-red-7">{{
-									__('Overdue')
-								}}</span>
+								<span
+									v-if="isOverdue(row)"
+									class="font-medium text-ink-red-7"
+									>{{ __('Overdue') }}</span
+								>
 							</div>
 						</component>
 					</li>
@@ -102,6 +110,8 @@ import { useContractResource } from '@/composables/useContractResource'
 import { useSpace } from '@/stores/space'
 import { formatDay } from '@/utils/team'
 import {
+	isOverdue,
+	isPractice,
 	lessonPath,
 	statusLabel,
 	STATUS_CLASSES,

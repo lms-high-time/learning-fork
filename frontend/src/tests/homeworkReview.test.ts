@@ -61,6 +61,7 @@ const card = (overrides: Partial<ReviewCard> = {}): ReviewCard => ({
 	submission: {
 		id: 'HS-1',
 		status: 'Submitted',
+		required: true,
 		due_at: '2030-01-15 23:59:59',
 		overdue: false,
 		version: 2,
@@ -126,6 +127,7 @@ const card = (overrides: Partial<ReviewCard> = {}): ReviewCard => ({
 		title: 'Встреча со спонсором',
 		description: 'Проведите **встречу**.',
 		answer_mode: 'text_and_files',
+		required: true,
 		due: { mode: 'relative', days: 5, date: null },
 	},
 	student: { name: 'Анна Ученица' },
@@ -216,6 +218,32 @@ describe('HomeworkReview', () => {
 		expect(JSON.parse(lesson.attributes('data-to')!)).toBe(
 			'/courses/c-1/learn/1-2'
 		)
+	})
+
+	it('shows the deadline of a required homework', async () => {
+		serve(card())
+		const wrapper = await open()
+		expect(wrapper.text()).toContain('Due 15 января 2030 г.')
+		expect(wrapper.text()).not.toContain('Practice')
+	})
+
+	it('marks practice instead of a deadline (learning-services#627)', async () => {
+		const base = card()
+		serve(
+			card({
+				submission: {
+					...base.submission,
+					required: false,
+					due_at: null,
+					overdue: true,
+				},
+				// The flags differ on purpose: the submission's, set once, wins.
+				homework: base.homework,
+			})
+		)
+		const wrapper = await open()
+		expect(wrapper.text()).toContain('Practice, no deadline')
+		expect(wrapper.text()).not.toContain('Overdue')
 	})
 
 	it('compares the answer with the version reviewed last', async () => {

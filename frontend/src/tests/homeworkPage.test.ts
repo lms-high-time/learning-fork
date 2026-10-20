@@ -70,6 +70,7 @@ const row = (overrides: Partial<HomeworkRow> = {}): HomeworkRow => ({
 	lesson_url: '/lms/courses/c-1/learn/1-2',
 	title: 'Встреча со спонсором',
 	status: 'Submitted',
+	required: true,
 	due_at: '2030-01-15 23:59:59',
 	overdue: false,
 	version: 1,
@@ -152,6 +153,36 @@ describe('Homework page', () => {
 		expect(returned.find('a').attributes('href')).toBe(
 			'/courses/c-1/learn/1-2#homework'
 		)
+	})
+
+	it('marks practice instead of a deadline (learning-services#627)', async () => {
+		server.answers[URL] = {
+			ok: true,
+			data: {
+				space: 'personal',
+				items: [
+					row(),
+					row({
+						id: 'HS-2',
+						lesson: 'L2',
+						title: 'Устав проекта',
+						status: 'Assigned',
+						required: false,
+						due_at: null,
+						overdue: true,
+					}),
+				],
+			},
+		}
+		const wrapper = await open()
+		const [required, practice] = wrapper.findAll('[data-testid="homework-row"]')
+		expect(required.text()).toContain('Due 15 января 2030 г.')
+		expect(required.find('[data-testid="mine-practice"]').exists()).toBe(false)
+		expect(practice.find('[data-testid="mine-practice"]').text()).toBe(
+			'Practice, no deadline'
+		)
+		expect(practice.text()).not.toContain('Due')
+		expect(practice.text()).not.toContain('Overdue')
 	})
 
 	it('says what the server refused instead of an empty list', async () => {

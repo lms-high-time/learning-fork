@@ -50,6 +50,7 @@ const row = (overrides: Partial<QueueRow> = {}): QueueRow => ({
 	submitted_at: '2030-01-12 12:00:00',
 	version: 2,
 	reviewed_version: 1,
+	required: true,
 	due_at: '2030-01-15 23:59:59',
 	overdue: false,
 	...overrides,
@@ -143,6 +144,30 @@ describe('HomeworkQueue', () => {
 			name: 'Homework',
 			query: { tab: 'queue', submission: 'HS-1' },
 		})
+	})
+
+	it('marks practice, which has no deadline (learning-services#627)', async () => {
+		serve({
+			items: [
+				row(),
+				row({
+					id: 'HS-2',
+					organization: 'personal',
+					organization_title: 'Личное',
+					required: false,
+					due_at: null,
+					overdue: true,
+				}),
+			],
+			total: 2,
+		})
+		const wrapper = await open()
+		const [required, practice] = wrapper.findAll('[data-testid="queue-row"]')
+		expect(required.find('[data-testid="queue-practice"]').exists()).toBe(false)
+		expect(practice.find('[data-testid="queue-practice"]').text()).toBe(
+			'Practice'
+		)
+		expect(practice.text()).not.toContain('Overdue')
 	})
 
 	it('filters by course, organization and status', async () => {
