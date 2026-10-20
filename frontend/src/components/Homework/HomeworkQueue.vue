@@ -99,13 +99,20 @@
 								:class="STATUS_CLASSES[row.status]"
 								>{{ statusLabel(row.status) }}</span
 							>
+							<!-- Practice: nobody set a deadline; the tutor still sees it. -->
+							<span
+								v-if="isPractice(row)"
+								class="inline-flex items-center rounded-full bg-surface-gray-2 px-2 py-0.5 text-p-xs font-medium text-ink-gray-6"
+								data-testid="queue-practice"
+								>{{ __('Practice') }}</span
+							>
 							<span v-if="row.submitted_at" class="text-ink-gray-6">{{
 								__('Submitted {0}').format(formatMoment(row.submitted_at))
 							}}</span>
 							<span v-if="row.version" class="text-ink-gray-6">{{
 								__('Version {0}').format(row.version)
 							}}</span>
-							<span v-if="row.overdue" class="font-medium text-ink-red-7">{{
+							<span v-if="isOverdue(row)" class="font-medium text-ink-red-7">{{
 								__('Overdue')
 							}}</span>
 						</div>
@@ -131,6 +138,8 @@ import { FormControl, LoadingIndicator } from 'frappe-ui'
 import { useReviewQueue } from '@/composables/useHomeworkReview'
 import {
 	formatMoment,
+	isOverdue,
+	isPractice,
 	QUEUE_STATUSES,
 	queueFilters,
 	queueQuery,

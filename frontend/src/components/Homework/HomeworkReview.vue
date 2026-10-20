@@ -70,7 +70,7 @@
 					}}</span>
 					<span v-if="due"> · {{ due }}</span>
 					<span
-						v-if="card.submission.overdue"
+						v-if="isOverdue(card.submission)"
 						class="font-medium text-ink-red-7"
 						>· {{ __('Overdue') }}</span
 					>
@@ -193,6 +193,8 @@ import {
 import {
 	dueLabel,
 	formatMoment,
+	isOverdue,
+	isPractice,
 	lessonPath,
 	queueFilters,
 	queueQuery,
@@ -234,6 +236,8 @@ const title = computed(
 const due = computed(() => {
 	const value = card.value
 	if (!value) return null
+	// The submission's flag, not the assignment's: it is set once, on issue.
+	if (isPractice(value.submission)) return __('Practice, no deadline')
 	if (value.homework)
 		return dueLabel(value.homework.due, value.submission.due_at)
 	return value.submission.due_at

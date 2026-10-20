@@ -21,6 +21,12 @@ export type Homework = {
 	title: string
 	description: string | null
 	answer_mode: AnswerMode
+	/**
+	 * Owed to the team that assigned the course; `false` — practice, no
+	 * deadline (learning-services#627). Once there is a submission, its flag.
+	 */
+	required: boolean
+	/** The deadline in force for this learner; practice's is `none`. */
 	due: HomeworkDue
 }
 
@@ -54,6 +60,8 @@ export type HomeworkVersion = {
 export type Submission = {
 	id: string
 	status: HomeworkStatus
+	/** Set when the submission is made and not recomputed (learning-services#627). */
+	required: boolean
 	due_at: string | null
 	overdue: boolean
 	version: number | null
@@ -83,6 +91,7 @@ export type HomeworkRow = {
 	lesson_url: string | null
 	title: string
 	status: HomeworkStatus
+	required: boolean
 	due_at: string | null
 	overdue: boolean
 	version: number | null
@@ -111,6 +120,7 @@ export type QueueRow = {
 	submitted_at: string | null
 	version: number | null
 	reviewed_version: number | null
+	required: boolean
 	due_at: string | null
 	overdue: boolean
 }
@@ -221,11 +231,33 @@ export const DAYS_AFTER_LESSON: PluralForms = {
 }
 
 /**
- * The deadline in words. The submission's own `due_at` wins: it is the date the
- * learner was given when the lesson closed, and the author's rule changing
- * later does not move it.
+ * Practice (learning-services#627): homework nobody waits for by a date — the
+ * learner's own space, or a course they took from the team's catalogue
+ * themselves. Only an explicit `false` is practice.
  */
-export function dueLabel(due: HomeworkDue, dueAt?: string | null): string {
+export const isPractice = (
+	item: { required?: boolean } | null | undefined
+): boolean => item?.required === false
+
+/**
+ * «Overdue» belongs to a required homework only. The server never marks
+ * practice overdue; the label does not lean on that.
+ */
+export const isOverdue = (
+	item: { required?: boolean; overdue?: boolean } | null | undefined
+): boolean => Boolean(item?.overdue) && !isPractice(item)
+
+/**
+ * The deadline in words. Practice has none, whatever the author's rule says.
+ * The submission's own `due_at` wins: it is the date the learner was given
+ * when the lesson closed, and the author's rule changing later does not move it.
+ */
+export function dueLabel(
+	due: HomeworkDue,
+	dueAt?: string | null,
+	required: boolean = true
+): string {
+	if (!required) return __('Practice, no deadline')
 	if (dueAt) return __('Due {0}').format(formatDay(dueAt))
 	if (due.mode === 'absolute' && due.date)
 		return __('Due {0}').format(formatDay(due.date))

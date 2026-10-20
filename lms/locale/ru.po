@@ -10950,6 +10950,19 @@ msgid "No deadline"
 msgstr "Без срока"
 
 #: frontend/src/utils/homework.ts
+#: frontend/src/components/Homework/HomeworkMine.vue
+msgid "Practice, no deadline"
+msgstr "Практика, без срока"
+
+#: frontend/src/components/Homework/LessonHomework.vue
+msgid "If you'd like to try it in your own work, you can send it here."
+msgstr "Если захотите применить у себя — можно прислать здесь."
+
+#: frontend/src/components/Homework/HomeworkQueue.vue
+msgid "Practice"
+msgstr "Практика"
+
+#: frontend/src/utils/homework.ts
 msgid "{0} KB"
 msgstr "{0} КБ"
 

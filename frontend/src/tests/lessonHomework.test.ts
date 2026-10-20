@@ -64,6 +64,7 @@ const homework = (
 	title: 'Встреча со спонсором',
 	description: 'Проведите **встречу** и пришлите протокол.',
 	answer_mode: 'text_and_files' as const,
+	required: true,
 	due: { mode: 'relative' as const, days: 5, date: null },
 	...overrides,
 })
@@ -84,6 +85,7 @@ const tutor = { by: 'tutor@x', by_name: 'Тьютор Иванов' }
 const submission = (overrides: Partial<Submission> = {}): Submission => ({
 	id: 'HS-1',
 	status: 'Submitted',
+	required: true,
 	due_at: '2030-01-15 23:59:59',
 	overdue: false,
 	version: 1,
@@ -204,6 +206,94 @@ describe('LessonHomework', () => {
 		)
 		expect(block.find('strong').text()).toBe('встречу')
 		expect(block.find('button[type="submit"]').text()).toBe('Hand in')
+	})
+
+	it('keeps a required homework a deadline, with no practice offer', async () => {
+		answer({ homework: homework() })
+		const wrapper = await mountBlock()
+		expect(wrapper.find('[data-testid="homework-due"]').text()).toBe(
+			'5 days after the lesson'
+		)
+		expect(wrapper.find('[data-testid="homework-practice"]').exists()).toBe(
+			false
+		)
+	})
+
+	it('offers practice without a deadline (learning-services#627)', async () => {
+		answer({
+			homework: homework({
+				required: false,
+				due: { mode: 'none', days: null, date: null },
+			}),
+		})
+		const wrapper = await mountBlock()
+		expect(wrapper.find('[data-testid="homework-due"]').text()).toBe(
+			'Practice, no deadline'
+		)
+		expect(wrapper.find('[data-testid="homework-practice"]').text()).toBe(
+			"If you'd like to try it in your own work, you can send it here."
+		)
+		expect(wrapper.find('button[type="submit"]').text()).toBe('Hand in')
+	})
+
+	it('takes practice from the submission, and never calls it overdue', async () => {
+		answer({
+			// The flags differ on purpose: the submission's, set once, wins.
+			homework: homework(),
+			submission: submission({
+				status: 'Assigned',
+				required: false,
+				due_at: null,
+				overdue: true,
+				version: null,
+				submitted_at: null,
+				history: [],
+				versions: [],
+			}),
+		})
+		const wrapper = await mountBlock()
+		expect(wrapper.find('[data-testid="homework-due"]').text()).toBe(
+			'Practice, no deadline'
+		)
+		expect(wrapper.find('[data-testid="homework-overdue"]').exists()).toBe(
+			false
+		)
+		expect(wrapper.find('[data-testid="homework-practice"]').exists()).toBe(
+			true
+		)
+	})
+
+	it('reads an answer without the flag as required', async () => {
+		const { required: _homework, ...assignment } = homework()
+		const { required: _submission, ...answered } = submission({
+			status: 'Returned',
+			overdue: true,
+		})
+		answer({
+			homework: assignment as LessonHomeworkData['homework'],
+			submission: answered as Submission,
+		})
+		const wrapper = await mountBlock()
+		expect(wrapper.find('[data-testid="homework-due"]').text()).toBe(
+			'Due 15 января 2030 г. · Overdue'
+		)
+		expect(wrapper.find('[data-testid="homework-practice"]').exists()).toBe(
+			false
+		)
+	})
+
+	it('drops the practice offer once the answer is handed in', async () => {
+		answer({
+			homework: homework({ required: false }),
+			submission: submission({ required: false, due_at: null }),
+		})
+		const wrapper = await mountBlock()
+		expect(wrapper.find('[data-testid="homework-due"]').text()).toBe(
+			'Practice, no deadline'
+		)
+		expect(wrapper.find('[data-testid="homework-practice"]').exists()).toBe(
+			false
+		)
 	})
 
 	it('offers files alone for a files-only homework', async () => {
