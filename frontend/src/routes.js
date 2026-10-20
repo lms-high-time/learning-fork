@@ -243,9 +243,11 @@ export const routes = [
 				component: () => import('@/pages/ProfileAbout.vue'),
 			},
 			{
+				// The tab is gone (learning-services#626); its old link lands on
+				// the profile.
 				name: 'ProfileCertificates',
 				path: 'certificates',
-				component: () => import('@/pages/ProfileCertificates.vue'),
+				redirect: { name: 'ProfileAbout' },
 			},
 			{
 				name: 'ProfileRoles',
@@ -263,11 +265,16 @@ export const routes = [
 				component: () =>
 					import('@/pages/ProfileEvaluationSchedule.vue'),
 			},
+			// The name and photo are edited in place on the profile now
+			// (learning-services#626); the old link opens them there.
 			{
 				name: 'ProfileEditForm',
 				path: 'edit',
-				component: () => import('@/pages/Forms/ProfileEditForm.vue'),
-				props: true,
+				redirect: (to) => ({
+					name: 'ProfileAbout',
+					params: to.params,
+					query: { ...to.query, edit: '1' },
+				}),
 			},
 		],
 	},

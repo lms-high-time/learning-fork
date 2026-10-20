@@ -100,6 +100,7 @@ enableAutoUnmount(afterEach)
 
 beforeEach(() => {
 	delete (window as any).read_only_mode
+	localStorage.clear()
 	setActivePinia(createPinia())
 	server.clear()
 	viewer.data = { name: 'me@x' }
@@ -122,7 +123,7 @@ describe('About me', () => {
 		expect(texts(wrapper, 'profile-fact-text')).toEqual([
 			'Руководитель проектов',
 		])
-		expect(texts(wrapper, 'profile-fact-empty')).toEqual(['Not filled yet'])
+		expect(texts(wrapper, 'profile-fact-empty')).toEqual(['Not specified'])
 	})
 
 	it('shows what else the mentor knows', async () => {
@@ -364,7 +365,8 @@ describe('a fact', () => {
 		server.answers[URL] = { ok: true, data: profileOf() }
 		const wrapper = await open()
 		const edits = wrapper.findAll('[data-testid="profile-fact-edit"]')
-		expect(edits.map((button) => button.text())).toEqual(['Fix', 'Fill in'])
+		// A filled fact's buttons are icons; an empty one says «Fill in».
+		expect(edits.map((button) => button.text())).toEqual(['', 'Fill in'])
 		expect(edits.map((button) => button.attributes('aria-label'))).toEqual([
 			'Fix: Роль',
 			'Fill in: Отрасль',
@@ -409,5 +411,97 @@ describe('a fact', () => {
 		expect(wrapper.get('textarea').attributes('aria-label')).toBe(
 			'What your mentor knows'
 		)
+	})
+})
+
+describe('the groups', () => {
+	const twoBlocks = () =>
+		profileOf({
+			blocks: [
+				profileOf().blocks[0],
+				{
+					id: 'goal',
+					title: 'Цель',
+					facts: [
+						{ key: 'goal', label: 'Цель', text: 'Отчёты', updated: null },
+						{
+							key: 'current_task',
+							label: 'Задача',
+							text: 'Свод по объектам',
+							updated: null,
+						},
+					],
+				},
+			],
+		})
+	const groups = (wrapper: Awaited<ReturnType<typeof open>>) =>
+		wrapper.findAll('details[data-testid="profile-block"]')
+
+	it('start folded, with what is filled and how much is not', async () => {
+		server.answers[URL] = { ok: true, data: twoBlocks() }
+		const wrapper = await open()
+		expect(groups(wrapper).map((group) => group.attributes('open'))).toEqual([
+			undefined,
+			undefined,
+		])
+		const [work, goal] = groups(wrapper).map((group) =>
+			group.get('summary').text()
+		)
+		expect(work).toContain('Руководитель проектов')
+		expect(work).toContain('1 of 2')
+		expect(goal).toContain('Отчёты · Свод по объектам')
+		expect(goal).toContain('2 of 2')
+	})
+
+	it('says how much of the profile is filled', async () => {
+		server.answers[URL] = { ok: true, data: profileOf() }
+		const wrapper = await open()
+		expect(wrapper.get('[data-testid="profile-filled"]').text()).toBe(
+			'Filled in 1 of 9'
+		)
+	})
+
+	it('remembers on this device what was opened', async () => {
+		server.answers[URL] = { ok: true, data: twoBlocks() }
+		const wrapper = await open()
+		const goal = groups(wrapper)[1]
+		;(goal.element as HTMLDetailsElement).open = true
+		await goal.trigger('toggle')
+		expect(JSON.parse(localStorage.getItem('profileOpenGroups')!)).toEqual([
+			'goal',
+		])
+
+		wrapper.unmount()
+		const again = await open()
+		expect(groups(again).map((group) => group.attributes('open'))).toEqual([
+			undefined,
+			'',
+		])
+	})
+
+	it('opens and folds them all at once', async () => {
+		server.answers[URL] = { ok: true, data: twoBlocks() }
+		const wrapper = await open()
+		const toggle = wrapper.get('[data-testid="profile-groups-toggle"]')
+		expect(toggle.text()).toBe('Expand all')
+		await toggle.trigger('click')
+		expect(
+			groups(wrapper).every((group) => group.attributes('open') === '')
+		).toBe(true)
+		expect(toggle.text()).toBe('Collapse all')
+		await toggle.trigger('click')
+		expect(
+			groups(wrapper).some((group) => group.attributes('open') === '')
+		).toBe(false)
+	})
+
+	it('start folded when the device keeps nothing', async () => {
+		localStorage.setItem('profileOpenGroups', '{broken')
+		server.answers[URL] = { ok: true, data: twoBlocks() }
+		const wrapper = await open()
+		expect(groups(wrapper).map((group) => group.attributes('open'))).toEqual([
+			undefined,
+			undefined,
+		])
 	})
 })

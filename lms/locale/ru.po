@@ -6337,7 +6337,7 @@ msgstr "Пожалуйста, введите действительную отм
 
 #: frontend/src/components/Modals/EditProfile.vue:148
 msgid "Please fill the mandatory fields: {0}"
-msgstr ""
+msgstr "Заполните обязательные поля: {0}"
 
 #: lms/lms/doctype/lms_batch/lms_batch.py:72
 msgid "Please install the Payments App to create a paid batch. Refer to the documentation for more details. {0}"
@@ -8705,7 +8705,7 @@ msgstr ""
 #: frontend/src/components/Controls/ImageUploader.vue:15
 #: frontend/src/components/Controls/Uploader.vue:42
 msgid "Upload"
-msgstr "Выгрузить"
+msgstr "Загрузить"
 
 #: frontend/src/components/Assignment.vue:74
 msgid "Upload Assignment"
@@ -9943,7 +9943,7 @@ msgstr "Тема"
 
 #: frontend/src/components/Settings/mobileSettings.ts
 msgid "System"
-msgstr "Как в системе"
+msgstr "Как на устройстве"
 
 #: frontend/src/components/Settings/mobileSettings.ts
 msgid "Light"
@@ -11251,7 +11251,7 @@ msgstr "Не удалось загрузить профиль"
 
 #: frontend/src/pages/ProfileAbout.vue
 msgid "Delete this fact?"
-msgstr "Удалить этот факт?"
+msgstr "Удалить эти сведения?"
 
 #: frontend/src/pages/ProfileAbout.vue
 msgid "Your mentor will forget it."
@@ -11275,7 +11275,7 @@ msgstr "Ваш наставник"
 
 #: frontend/src/components/Profile/ProfileFact.vue
 msgid "Fix: {0}"
-msgstr "Исправить: {0}"
+msgstr "Изменить: {0}"
 
 #: frontend/src/components/Profile/ProfileFact.vue
 msgid "Fill in: {0}"
@@ -11578,3 +11578,98 @@ msgstr "В главе пройдено уроков: {0} из {1}"
 #: frontend/src/components/CourseProgram/ProgramMap.vue
 msgid "{0} of {1} lessons passed"
 msgstr "пройдено уроков: {0} из {1}"
+
+#: frontend/src/pages/ProfileAbout.vue
+msgid "Filled in {0} of {1}"
+msgstr "Заполнено {0} из {1}"
+
+#: frontend/src/pages/ProfileAbout.vue
+msgid "Expand all"
+msgstr "Развернуть все"
+
+#: frontend/src/pages/ProfileAbout.vue
+msgid "Collapse all"
+msgstr "Свернуть все"
+
+#: frontend/src/pages/Profile.vue
+#: frontend/src/components/Profile/ProfileNameEdit.vue
+msgid "Edit name and photo"
+msgstr "Изменить имя и фото"
+
+#: frontend/src/components/Profile/ProfileNameEdit.vue
+msgid "Photo"
+msgstr "Фото"
+
+#: frontend/src/components/Profile/ProfileSettings.vue
+msgid "Interface language"
+msgstr "Язык интерфейса"
+
+#: frontend/src/components/Profile/ProfileSettings.vue
+msgid "Choose"
+msgstr "Выберите"
+
+#: frontend/src/components/Profile/ProfileSettings.vue
+msgid "Change password"
+msgstr "Изменить пароль"
+
+#: frontend/src/components/Profile/ProfileSettings.vue
+#: frontend/src/components/Sidebar/UserDropdown.vue
+msgid "Log out"
+msgstr "Выйти"
+
+#: frontend/src/components/Sidebar/UserDropdown.vue
+msgid "Dark theme"
+msgstr "Тёмная тема"
+
+#: frontend/src/components/Sidebar/UserDropdown.vue
+msgid "Light theme"
+msgstr "Светлая тема"
+
+#: frontend/src/components/Sidebar/UserDropdown.vue
+msgid "Clear Demo Data"
+msgstr "Удалить демо-данные"
+
+#: frontend/src/components/Sidebar/UserDropdown.vue
+msgid "Login to Frappe Cloud"
+msgstr "Войти в Frappe Cloud"
+
+#: frontend/src/pages/ProfileAbout.vue
+msgid "What your mentor knows about you"
+msgstr "Что наставник знает о вас"
+
+#: frontend/src/pages/ProfileAbout.vue
+msgid "Your mentor takes this into account when working through your tasks in lessons. Your team lead does not see it."
+msgstr "Наставник учитывает это на уроках, когда разбирает ваши задачи. Руководитель вашей команды этого не видит."
+
+#: frontend/src/pages/ProfileAbout.vue
+msgid "Tell your mentor about you"
+msgstr "Рассказать наставнику о себе"
+
+#: frontend/src/pages/ProfileAbout.vue
+msgid "More about you"
+msgstr "Ещё о вас"
+
+#: frontend/src/pages/ProfileAbout.vue
+#: frontend/src/components/Profile/ProfileFact.vue
+msgid "Not specified"
+msgstr "Не указано"
+
+#: frontend/src/components/Profile/ProfileSettings.vue
+msgid "The page will reload."
+msgstr "Страница перезагрузится."
+
+#: frontend/src/components/Profile/ProfileSettings.vue
+msgid "Saved on this device only."
+msgstr "Сохранится только на этом устройстве."
+
+#: frontend/src/components/Profile/ProfileSettings.vue
+msgid "Needed to sign in by email. If you sign in with Google, you need no password."
+msgstr "Нужен для входа по почте. Если вы входите через Google, пароль не нужен."
+
+#: frontend/src/components/Profile/ProfileSettings.vue
+msgid "Signed in as {0}"
+msgstr "Вы вошли как {0}"
+
+#: frontend/src/components/Profile/ProfileNameEdit.vue
+msgid "Profile updated successfully"
+msgstr "Профиль обновлён"

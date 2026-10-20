@@ -90,10 +90,6 @@ const EXEMPT = new Map<string, string>([
 		'../components/Settings/Raven/RavenNotInstalledBanner.vue',
 		'constant https literal',
 	],
-	[
-		'../pages/ProfileCertificates.vue',
-		'template literal rooted at /api/method/',
-	],
 ])
 
 describe('bound url attributes route through safeUrl', () => {
