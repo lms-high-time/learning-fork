@@ -4,7 +4,7 @@ on:
   pull_request:
   workflow_dispatch:
   push:
-    branches: [ main, high-time ]
+    branches: [ high-time ]
   # Weekly full pass for the secrets and dependencies job: a CVE lands in a
   # lockfile nobody touched. The other jobs stay PR-only.
   schedule:
@@ -90,8 +90,12 @@ jobs:
   # not "clean".
   #
   # What it does NOT do: Python dependencies (no lockfile here — the stand
-  # image is scanned by trivy in learning-services), and upstream code issues
-  # (that is the Semgrep Rules job, PR-only and diff-aware).
+  # image is scanned by trivy in learning-services); upstream code issues
+  # (that is the Semgrep Rules job, PR-only and diff-aware); dev
+  # dependencies (trivy skips them — everything bundled is in
+  # frontend/package.json `dependencies`); and it cannot stop a PR from
+  # editing this workflow or .gitleaksignore — that only shows up as a
+  # warning, review is the real guard.
   secrets-deps:
     name: Secrets and Dependencies
     runs-on: ubuntu-latest
@@ -114,12 +118,17 @@ jobs:
         id: range
         env:
           EVENT: ${{ github.event_name }}
-          PR_BASE: ${{ github.event.pull_request.base.sha }}
           PR_HEAD: ${{ github.event.pull_request.head.sha }}
           BEFORE: ${{ github.event.before }}
         run: |
           case "$EVENT" in
-            pull_request) echo "log=$PR_BASE..$PR_HEAD" >> "$GITHUB_OUTPUT" ;;
+            # The checkout is the merge commit: its first parent is the base
+            # tip, so HEAD^1..PR_HEAD is exactly the PR's commits, even if the
+            # base branch was force-pushed and PR_BASE is gone.
+            pull_request)
+              echo "log=HEAD^1..$PR_HEAD" >> "$GITHUB_OUTPUT"
+              changed=$(git diff --name-only HEAD^1 HEAD | grep -E '^(\.github/workflows/linters\.yml|\.gitleaksignore|\.gitleaks\.toml)$' | paste -sd, - || true)
+              [ -z "$changed" ] || echo "::warning::this PR changes the gate itself: $changed — check it in review" ;;
             push)
               if git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
                 echo "log=$BEFORE..$GITHUB_SHA" >> "$GITHUB_OUTPUT"
@@ -151,6 +160,10 @@ jobs:
       # fix; any other failure is non-zero too — both are red.
       - name: Dependencies
         run: |
+          # No lockfile means nothing scanned — not "clean".
+          for f in yarn.lock frontend/yarn.lock; do
+            [ -f "$f" ] || { echo "::error::$f is missing — trivy would scan nothing"; exit 1; }
+          done
           docker run --rm -v "$PWD:/repo:ro" "$TRIVY_IMAGE" fs \
             --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed \
             --skip-dirs '**/node_modules' --exit-code 1 /repo
