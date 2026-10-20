@@ -55,6 +55,17 @@ export default defineConfig({
 		alias: {
 			'@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src'),
 		},
-		dedupe: ['vue', 'frappe-ui'],
+		// Same prosemirror dedupe as vite.config.js: without it tests ran a
+		// different prosemirror-model than the production bundle (1.25.12 vs
+		// 1.25.4, learning-services#640), and a fix living in the model's
+		// attribute validation was tested but never shipped.
+		dedupe: [
+			'prosemirror-model',
+			'prosemirror-state',
+			'prosemirror-view',
+			'prosemirror-transform',
+			'vue',
+			'frappe-ui',
+		],
 	},
 })
