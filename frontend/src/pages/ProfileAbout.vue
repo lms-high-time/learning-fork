@@ -84,7 +84,7 @@
 					class="grid cursor-pointer list-none grid-cols-[1rem_minmax(0,1fr)_auto] items-center gap-3 rounded py-3.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-outline-blue-6 [&::-webkit-details-marker]:hidden"
 				>
 					<span
-						class="lucide-chevron-right size-4 text-ink-gray-5 transition-transform group-open/fold:rotate-90 motion-reduce:transition-none"
+						class="lucide-chevron-right size-4 text-ink-gray-5 rtl:-scale-x-100 transition-transform group-open/fold:rotate-90 motion-reduce:transition-none"
 						aria-hidden="true"
 					/>
 					<span class="min-w-0">

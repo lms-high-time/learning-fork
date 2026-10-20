@@ -56,6 +56,8 @@ const emit = defineEmits(['close'])
 
 const user = inject('$user')
 const root = ref(null)
+// Whose name this is, fixed when the fields open: only ever the viewer's own.
+const owner = user?.data?.name
 const saving = ref(false)
 
 // A field never filled in arrives as null; an input can only give back ''.
@@ -79,11 +81,12 @@ const save = async () => {
 		)
 		return
 	}
+	if (!owner || owner !== props.profile.data?.name) return
 	saving.value = true
 	try {
 		await call('frappe.client.set_value', {
 			doctype: 'User',
-			name: props.profile.data.name,
+			name: owner,
 			fieldname: {
 				first_name: first,
 				last_name: draft.last_name.trim(),
@@ -95,8 +98,13 @@ const save = async () => {
 		toast.error(error?.messages?.[0] || __('Could not save'))
 		return
 	}
-	// The page and the sidebar both show the name.
-	await props.profile.reload()
+	// Saved: the page and the sidebar read the name again, and a read that
+	// fails leaves the save done all the same.
+	try {
+		await props.profile.reload()
+	} catch {
+		// The page shows the old name until it loads again.
+	}
 	user?.reload?.()
 	saving.value = false
 	toast.success(__('Profile updated successfully'))

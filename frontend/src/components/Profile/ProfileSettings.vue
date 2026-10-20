@@ -32,7 +32,7 @@
 					aria-labelledby="profile-language"
 					class="h-8 w-full rounded border-outline-gray-2 bg-surface-base ps-3 pe-8 text-base text-ink-gray-9 md:w-44"
 					data-testid="profile-language"
-					@change="changeLanguage($event.target.value)"
+					@change="changeLanguage($event.target)"
 				>
 					<option v-if="!language" value="" disabled>
 						{{ __('Choose') }}
@@ -183,7 +183,8 @@ const modes: { value: ThemePreference; label: string }[] = [
 
 // A language takes hold only once the whole app loads again.
 const savingLanguage = ref(false)
-const changeLanguage = async (value: string) => {
+const changeLanguage = async (select: HTMLSelectElement) => {
+	const value = select.value
 	if (!value || value === props.language) return
 	savingLanguage.value = true
 	try {
@@ -196,6 +197,8 @@ const changeLanguage = async (value: string) => {
 		window.location.reload()
 	} catch {
 		savingLanguage.value = false
+		// The list goes back to the language that is still set.
+		select.value = props.language ?? ''
 		toast.error(__('Could not save'))
 	}
 }

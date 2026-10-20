@@ -49,8 +49,6 @@
 					v-if="isSessionUser() && !readOnlyMode && !editing"
 					ref="editButton"
 					class="max-md:w-full"
-					aria-controls="profile-name-edit"
-					:aria-expanded="editing"
 					data-testid="profile-edit"
 					@click="editing = true"
 				>
@@ -58,8 +56,7 @@
 				</Button>
 			</div>
 			<ProfileNameEdit
-				v-if="editing"
-				id="profile-name-edit"
+				v-if="editing && isSessionUser()"
 				:profile="profile"
 				@close="stopEditing"
 			/>
@@ -168,9 +165,12 @@ watchEffect(() => {
 	if (route.name !== target.name) router.push(target)
 })
 
+// The page is reused from one profile to the next: what was being edited
+// belongs to the profile left behind.
 watch(
 	() => props.username,
 	() => {
+		editing.value = false
 		profile.reload()
 	}
 )
@@ -189,7 +189,8 @@ watch(
 	([edit]) => {
 		if (edit !== '1' || !profile.data) return
 		if (isSessionUser() && !readOnlyMode) editing.value = true
-		router.replace({ query: {} })
+		const { edit: _, ...rest } = route.query
+		router.replace({ query: rest })
 	},
 	{ immediate: true }
 )

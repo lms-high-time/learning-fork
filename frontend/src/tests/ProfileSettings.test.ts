@@ -73,6 +73,13 @@ describe('profile settings', () => {
 		await flushPromises()
 		expect(reload).not.toHaveBeenCalled()
 		expect(toast.error).toHaveBeenCalledWith('Could not save')
+		// The list shows the language that is still set.
+		expect(
+			(
+				wrapper.get('[data-testid="profile-language"]')
+					.element as HTMLSelectElement
+			).value
+		).toBe('ru')
 	})
 
 	it('still shows a language it does not list', () => {

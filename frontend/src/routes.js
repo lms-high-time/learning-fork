@@ -243,9 +243,11 @@ export const routes = [
 				component: () => import('@/pages/ProfileAbout.vue'),
 			},
 			{
+				// The tab is gone (learning-services#626); its old link lands on
+				// the profile.
 				name: 'ProfileCertificates',
 				path: 'certificates',
-				component: () => import('@/pages/ProfileCertificates.vue'),
+				redirect: { name: 'ProfileAbout' },
 			},
 			{
 				name: 'ProfileRoles',
@@ -271,7 +273,7 @@ export const routes = [
 				redirect: (to) => ({
 					name: 'ProfileAbout',
 					params: to.params,
-					query: { edit: '1' },
+					query: { ...to.query, edit: '1' },
 				}),
 			},
 		],

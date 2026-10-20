@@ -75,7 +75,9 @@ vi.mock('@/components/Layouts/PageHeader.vue', () => ({
 }))
 vi.mock('@/components/HeaderButton.vue', stub)
 vi.mock('@/components/NoPermission.vue', stub)
-vi.mock('@/components/Profile/ProfileSettings.vue', stub)
+vi.mock('@/components/Profile/ProfileSettings.vue', () => ({
+	default: { template: '<section data-testid="profile-settings" />' },
+}))
 vi.mock('@/pages/NotFound.vue', stub)
 
 // The REAL route table, not a copy.
@@ -196,6 +198,20 @@ describe('the old edit link', () => {
 		)
 	})
 
+	it('keeps whatever else the link carried', async () => {
+		const router = makeRouter()
+		await router.push(`/user/${USERNAME}/edit?fromLesson=1`)
+		await mountProfile(router)
+		await flushPromises()
+		expect(router.currentRoute.value.query).toEqual({ fromLesson: '1' })
+	})
+
+	it('sends the old certificates link to the profile', async () => {
+		const router = makeRouter()
+		await router.push(`/user/${USERNAME}/certificates`)
+		expect(router.currentRoute.value.name).toBe('ProfileAbout')
+	})
+
 	it('leaves the other profile tabs alone', () => {
 		const router = makeRouter()
 		expect(router.resolve(`/user/${USERNAME}`).name).toBe('ProfileAbout')
@@ -243,6 +259,71 @@ describe('the profile header', () => {
 		const wrapper = await mountProfile(router)
 		await flushPromises()
 		expect(wrapper.get('[data-testid="crumbs"]').text()).toBe('People / John')
+	})
+})
+
+describe('someone else’s profile', () => {
+	it('shows a moderator neither the email nor the settings', async () => {
+		viewer.data = {
+			name: 'admin@example.com',
+			username: 'admin',
+			is_moderator: true,
+		}
+		const router = makeRouter()
+		await router.push(`/user/${USERNAME}`)
+		const wrapper = await mountProfile(router)
+		await flushPromises()
+		expect(wrapper.find('[data-testid="profile-email"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="profile-settings"]').exists()).toBe(
+			false
+		)
+		expect(wrapper.find('[data-testid="profile-edit"]').exists()).toBe(false)
+	})
+
+	it('does not take the open name fields along to it', async () => {
+		// A moderator opens the fields on their own profile, then goes back to
+		// a learner's: the page is reused, the fields must not be.
+		viewer.data = { name: ME, username: USERNAME, is_moderator: true }
+		const router = makeRouter()
+		await router.push(`/user/${USERNAME}`)
+		const wrapper = await mountProfile(router)
+		await flushPromises()
+		await wrapper.get('[data-testid="profile-edit"]').trigger('click')
+		await flushPromises()
+		expect(wrapper.find('[data-testid="profile-name-edit"]').exists()).toBe(
+			true
+		)
+		profileResource.data = {
+			...profileResource.data!,
+			name: 'alice@example.com',
+			username: 'alice',
+			full_name: 'Alice',
+		}
+		await wrapper.setProps({ username: 'alice' })
+		await flushPromises()
+		expect(wrapper.find('[data-testid="profile-name-edit"]').exists()).toBe(
+			false
+		)
+	})
+})
+
+describe('the own profile', () => {
+	it('shows the settings under «About me» only', async () => {
+		viewer.data = { name: ME, username: USERNAME, is_moderator: true }
+		const about = makeRouter()
+		await about.push(`/user/${USERNAME}`)
+		const onAbout = await mountProfile(about)
+		await flushPromises()
+		expect(onAbout.find('[data-testid="profile-settings"]').exists()).toBe(true)
+
+		const roles = makeRouter()
+		await roles.push(`/user/${USERNAME}/roles`)
+		const onRoles = await mountProfile(roles)
+		await flushPromises()
+		expect(roles.currentRoute.value.name).toBe('ProfileRoles')
+		expect(onRoles.find('[data-testid="profile-settings"]').exists()).toBe(
+			false
+		)
 	})
 })
 
@@ -315,6 +396,23 @@ describe('the name and photo fields', () => {
 		await flushPromises()
 		expect(toast.error).toHaveBeenCalledWith('Нельзя')
 		expect(wrapper.emitted('close')).toBeUndefined()
+	})
+
+	it('save nothing when the profile on screen is not the viewer’s', async () => {
+		viewer.data = { name: 'admin@example.com', username: 'admin' }
+		const wrapper = open()
+		await wrapper.get('[data-testid="profile-save"]').trigger('click')
+		await flushPromises()
+		expect(call).not.toHaveBeenCalled()
+	})
+
+	it('close once saved even when the page cannot read the profile again', async () => {
+		call.mockResolvedValue({})
+		profileResource.reload.mockRejectedValue(new Error('offline'))
+		const wrapper = open()
+		await wrapper.get('[data-testid="profile-save"]').trigger('click')
+		await flushPromises()
+		expect(wrapper.emitted('close')).toHaveLength(1)
 	})
 
 	it('close on Escape', async () => {

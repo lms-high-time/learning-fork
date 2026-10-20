@@ -6337,7 +6337,7 @@ msgstr "Пожалуйста, введите действительную отм
 
 #: frontend/src/components/Modals/EditProfile.vue:148
 msgid "Please fill the mandatory fields: {0}"
-msgstr ""
+msgstr "Заполните обязательные поля: {0}"
 
 #: lms/lms/doctype/lms_batch/lms_batch.py:72
 msgid "Please install the Payments App to create a paid batch. Refer to the documentation for more details. {0}"
@@ -11579,11 +11579,9 @@ msgstr "В главе пройдено уроков: {0} из {1}"
 msgid "{0} of {1} lessons passed"
 msgstr "пройдено уроков: {0} из {1}"
 
-
 #: frontend/src/pages/ProfileAbout.vue
 msgid "Filled in {0} of {1}"
 msgstr "Заполнено {0} из {1}"
-
 
 #: frontend/src/pages/ProfileAbout.vue
 msgid "Expand all"
@@ -11592,9 +11590,6 @@ msgstr "Развернуть все"
 #: frontend/src/pages/ProfileAbout.vue
 msgid "Collapse all"
 msgstr "Свернуть все"
-
-
-
 
 #: frontend/src/pages/Profile.vue
 #: frontend/src/components/Profile/ProfileNameEdit.vue
@@ -11609,17 +11604,13 @@ msgstr "Фото"
 msgid "Interface language"
 msgstr "Язык интерфейса"
 
-
 #: frontend/src/components/Profile/ProfileSettings.vue
 msgid "Choose"
 msgstr "Выберите"
 
-
-
 #: frontend/src/components/Profile/ProfileSettings.vue
 msgid "Change password"
 msgstr "Изменить пароль"
-
 
 #: frontend/src/components/Profile/ProfileSettings.vue
 #: frontend/src/components/Sidebar/UserDropdown.vue
@@ -11678,3 +11669,7 @@ msgstr "Нужен для входа по почте. Если вы входит
 #: frontend/src/components/Profile/ProfileSettings.vue
 msgid "Signed in as {0}"
 msgstr "Вы вошли как {0}"
+
+#: frontend/src/components/Profile/ProfileNameEdit.vue
+msgid "Profile updated successfully"
+msgstr "Профиль обновлён"
