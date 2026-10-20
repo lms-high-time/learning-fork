@@ -64,7 +64,7 @@
 		<div v-if="groupIds.length > 1" class="mt-5 flex justify-end">
 			<button
 				type="button"
-				class="rounded py-1 text-p-sm font-medium text-ink-blue-7 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-outline-blue-6"
+				class="rounded py-1 text-p-sm font-medium text-ink-blue-7 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-blue-6"
 				data-testid="profile-groups-toggle"
 				@click="setAllOpen(!allOpen)"
 			>
@@ -81,7 +81,7 @@
 				@toggle="remember(group.id, $event)"
 			>
 				<summary
-					class="grid cursor-pointer list-none grid-cols-[1rem_minmax(0,1fr)_auto] items-center gap-3 rounded py-3.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-outline-blue-6 [&::-webkit-details-marker]:hidden"
+					class="grid cursor-pointer list-none grid-cols-[1rem_minmax(0,1fr)_auto] items-center gap-3 rounded py-3.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-blue-6 [&::-webkit-details-marker]:hidden"
 				>
 					<span
 						class="lucide-chevron-right size-4 text-ink-gray-5 rtl:-scale-x-100 transition-transform group-open/fold:rotate-90 motion-reduce:transition-none"

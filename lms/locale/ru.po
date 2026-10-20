@@ -119,7 +119,7 @@ msgstr "О"
 
 #: frontend/src/pages/Courses/CourseOverview.vue:124
 msgid "About this course"
-msgstr ""
+msgstr "О курсе"
 
 #. Label of the verify_terms (Check) field in DocType 'User'
 #: lms/fixtures/custom_field.json
@@ -11686,3 +11686,39 @@ msgstr "Вы вошли как {0}"
 #: frontend/src/components/Profile/ProfileNameEdit.vue
 msgid "Profile updated successfully"
 msgstr "Профиль обновлён"
+
+#: frontend/src/components/CourseCardOverlay.vue
+msgid "Start with the agent"
+msgstr "Начать с агентом"
+
+#: frontend/src/components/CourseCardOverlay.vue
+msgid "You have passed the course"
+msgstr "Курс пройден"
+
+#: frontend/src/components/CourseCardOverlay.vue
+msgid "Chapter {0} of {1} · lesson {2} of {3}"
+msgstr "Глава {0} из {1} · урок {2} из {3}"
+
+#: frontend/src/components/CourseCardOverlay.vue
+msgid "Lessons passed: {0} of {1}"
+msgstr "Пройдено уроков: {0} из {1}"
+
+#: frontend/src/utils/plural.ts
+msgid "{0} chapter"
+msgstr "{0} глава"
+
+#: frontend/src/utils/plural.ts
+msgid "{0} chapters [few]"
+msgstr "{0} главы"
+
+#: frontend/src/utils/plural.ts
+msgid "{0} chapters [many]"
+msgstr "{0} глав"
+
+#: frontend/src/utils/plural.ts
+msgid "{0} chapters"
+msgstr "{0} главы"
+
+#: frontend/src/components/CourseProgram/CourseChapters.vue
+msgid "Lesson in progress"
+msgstr "Начат"

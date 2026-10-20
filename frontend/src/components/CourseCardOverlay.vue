@@ -13,7 +13,57 @@
 			>
 				{{ __('Course in the works') }}
 			</div>
-			<div v-else class="text-3xl-semibold text-ink-gray-9 mb-4">
+			<!-- A student has the course already: where they are in it leads, not
+			its price (learning-services#636). -->
+			<div
+				v-else-if="course.data?.membership && path"
+				data-testid="course-path"
+				class="mb-4"
+			>
+				<div class="text-lg-semibold text-ink-gray-9">
+					{{
+						path.done
+							? __('You have passed the course')
+							: path.chapter
+							? __('Chapter {0} of {1} · lesson {2} of {3}').format(
+									String(path.chapter),
+									String(path.chapters),
+									String(path.lesson),
+									String(path.total)
+							  )
+							: __('Lessons passed: {0} of {1}').format(
+									String(path.passed),
+									String(path.total)
+							  )
+					}}
+				</div>
+				<div
+					class="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-gray-3"
+					aria-hidden="true"
+				>
+					<div
+						class="h-full rounded-full bg-surface-blue-6"
+						:style="{
+							width: `${Math.round((100 * path.passed) / path.total)}%`,
+						}"
+					/>
+				</div>
+				<div
+					v-if="path.chapter"
+					class="mt-1.5 text-p-sm tabular-nums text-ink-gray-6"
+				>
+					{{
+						__('Lessons passed: {0} of {1}').format(
+							String(path.passed),
+							String(path.total)
+						)
+					}}
+				</div>
+			</div>
+			<div
+				v-else-if="!course.data?.membership"
+				class="text-3xl-semibold text-ink-gray-9 mb-4"
+			>
 				{{ priceLabel }}
 			</div>
 			<div v-if="!readOnlyMode">
@@ -243,6 +293,7 @@ import { useTelemetry } from 'frappe-ui/frappe'
 import { openExternal } from '@/utils/openExternal'
 import { safeUrl } from '@/utils/safeUrl'
 import { useSpace } from '@/stores/space'
+import type { CoursePath } from '@/utils/courseProgram'
 import { withSpace } from '@/utils/space'
 import type {
 	CourseDetails,
@@ -264,8 +315,10 @@ const props = withDefaults(
 		/** Whether the viewer already asked to hear of the release of an
 		 * announced course; the page reads it from the course map. */
 		notify?: boolean
+		/** Where an enrolled student is, from the course map; null otherwise. */
+		path?: CoursePath | null
 	}>(),
-	{ notify: false }
+	{ notify: false, path: null }
 )
 
 const subscribed = ref<boolean>(props.notify)
@@ -427,8 +480,10 @@ const entry = computed<CourseEntry | null>(
 
 const studyLabel = computed<string>(() => {
 	if (entry.value?.study.channel === 'agent') return __('Connect your agent')
-	return entry.value?.completed
-		? __('Repeat with the agent')
+	if (entry.value?.completed) return __('Repeat with the agent')
+	// Nothing to continue before the first lesson (learning-services#636).
+	return props.path && !props.path.started
+		? __('Start with the agent')
 		: __('Continue with the agent')
 })
 

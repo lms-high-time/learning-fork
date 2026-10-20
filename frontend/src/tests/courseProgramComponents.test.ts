@@ -1,17 +1,10 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
-import { centeredIndex, type ProgramData } from '@/utils/courseProgram'
+import { mount } from '@vue/test-utils'
+import { type ProgramData } from '@/utils/courseProgram'
 
-// learning-services#322: the program's map, slide and slider as the student
-// meets them.
+// learning-services#322, #636: the programme as a list of chapters, as the
+// student and a visitor meet it.
 
-vi.mock('frappe-ui', () => ({
-	Button: {
-		props: ['label', 'disabled'],
-		template:
-			'<button :aria-label="label" :disabled="disabled" @click="$emit(\'click\')"><slot name="icon" /><slot /></button>',
-	},
-}))
 vi.mock('vue-router', () => ({
 	useRouter: () => ({
 		resolve: (to: {
@@ -21,13 +14,8 @@ vi.mock('vue-router', () => ({
 		}),
 	}),
 }))
-vi.mock('@/utils/composables', () => ({
-	useScreenSize: () => ({ isMobile: false }),
-}))
 
-import ProgramMap from '@/components/CourseProgram/ProgramMap.vue'
-import LessonSlide from '@/components/CourseProgram/LessonSlide.vue'
-import CourseProgram from '@/components/CourseProgram/CourseProgram.vue'
+import CourseChapters from '@/components/CourseProgram/CourseChapters.vue'
 
 const __ = (message: string) => {
 	if (!/{\d+}/.test(message)) return message
@@ -117,279 +105,93 @@ afterEach(() => {
 	vi.unstubAllGlobals()
 })
 
-describe('ProgramMap', () => {
-	it('draws each lesson with its status and says it in words', () => {
-		const wrapper = mount(ProgramMap, {
-			props: { chapters: enrolled.chapters, nextLesson: 'l-3', current: 2 },
-			global,
-		})
-		const dots = wrapper.findAll('button')
-
-		expect(dots.map((dot) => dot.attributes('data-status'))).toEqual([
-			'completed',
-			'in-progress',
-			'next',
-		])
-		expect(dots[1].attributes('aria-label')).toBe(
-			'Lesson 2. Цели и источники — in progress — 1 of 3 topics'
-		)
-		expect(dots[2].attributes('aria-current')).toBe('step')
-		expect(dots[2].attributes('data-next')).toBe('')
+const open = (program: ProgramData) =>
+	mount(CourseChapters, {
+		props: { program, courseName: 'course-1' },
+		global,
 	})
 
-	it('groups the dots by chapter without writing the titles out', () => {
-		// learning-services#326: the titles over the dots looked poor; the
-		// chapter is on the slide, and a hover still names the group.
-		const wrapper = mount(ProgramMap, {
-			props: { chapters: enrolled.chapters, nextLesson: 'l-3', current: 0 },
-			global,
-		})
-		const groups = wrapper.findAll('[data-testid="map-chapter"]')
-		// A hover tells a student how far they are in the chapter (#547).
-		expect(groups.map((g) => g.attributes('title'))).toEqual([
-			'Рамка — Chapter passed',
-			'Выявление — 0 of 2 lessons passed',
-		])
-		expect(groups.map((g) => g.attributes('data-status'))).toEqual([
-			'passed',
-			'in_progress',
-		])
-		expect(groups.map((g) => g.findAll('button').length)).toEqual([1, 2])
-		expect(wrapper.text()).not.toContain('Рамка')
+describe('CourseChapters', () => {
+	it('lists every chapter with how far the student is in it', () => {
+		const wrapper = open(enrolled)
+		const chapters = wrapper.findAll('[data-testid="course-chapter"]')
+		expect(chapters).toHaveLength(2)
+		expect(
+			wrapper.findAll('[data-testid="chapter-count"]').map((c) => c.text())
+		).toEqual(['1 of 1', '0 of 2'])
 	})
 
-	it('reports the slide a dot stands for', async () => {
-		const wrapper = mount(ProgramMap, {
-			props: { chapters: enrolled.chapters, nextLesson: 'l-3', current: 0 },
-			global,
-		})
-		await wrapper.findAll('button')[1].trigger('click')
-		expect(wrapper.emitted('select')?.[0]).toEqual([1])
-	})
-
-	it('shows a visitor no progress', () => {
-		const wrapper = mount(ProgramMap, {
-			props: { chapters: guest.chapters, current: 0 },
-			global,
-		})
-		const dot = wrapper.findAll('button')[1]
-		expect(dot.attributes('data-status')).toBe('none')
-		expect(dot.attributes('aria-label')).toBe('Lesson 2. Цели и источники')
+	it('opens the student’s chapter and marks the next lesson', () => {
+		const wrapper = open(enrolled)
+		const chapters = wrapper.findAll('[data-testid="course-chapter"]')
+		expect(chapters.map((c) => c.attributes('open'))).toEqual([undefined, ''])
 		expect(
 			wrapper
-				.findAll('[data-testid="map-chapter"]')
-				.map((g) => g.attributes('title'))
-		).toEqual(['Рамка', 'Выявление'])
-	})
-})
-
-describe('LessonSlide', () => {
-	const slide = (props: Record<string, unknown>) =>
-		mount(LessonSlide, {
-			props: {
-				lesson: { ...enrolled.chapters[1].lessons[0], chapter: 'Выявление' },
-				status: 'in-progress',
-				position: 2,
-				total: 3,
-				lessonUrl: '/lms/courses/course-1/learn/2-1',
-				...props,
-			},
-			global,
-		})
-
-	it('counts covered topics and marks each one', () => {
-		const wrapper = slide({})
-		expect(wrapper.get('[data-testid="objectives-count"]').text()).toContain(
-			'1 of 3 covered'
-		)
-		expect(
-			wrapper.findAll('li').map((li) => li.attributes('data-status'))
-		).toEqual(['covered', 'touched', 'none'])
+				.findAll('[data-testid="course-lesson"]')
+				.map((l) => l.attributes('data-status'))
+		).toEqual(['completed', 'in-progress', 'next'])
+		expect(wrapper.text()).toContain('Up next')
 	})
 
-	it('links to the lesson page, not a second button into the session', () => {
-		// learning-services#326: the course card holds the one button.
-		const link = slide({}).get('[data-testid="slide-action"]')
-		expect(link.attributes('href')).toBe('/lms/courses/course-1/learn/2-1')
-		expect(link.text()).toBe('Open lesson')
-		expect(slide({}).find('button').exists()).toBe(false)
+	it('opens the first chapter to a visitor and shows no progress', () => {
+		const wrapper = open(guest)
+		const chapters = wrapper.findAll('[data-testid="course-chapter"]')
+		expect(chapters.map((c) => c.attributes('open'))).toEqual(['', undefined])
+		expect(
+			wrapper.findAll('[data-testid="chapter-count"]').map((c) => c.text())
+		).toEqual(['{0} lesson'.replace('{0}', '1'), '2 lessons'])
+		expect(
+			wrapper
+				.findAll('[data-testid="course-lesson"]')
+				.map((l) => l.attributes('data-status'))
+		).toEqual(['none', 'none', 'none'])
+		expect(wrapper.text()).not.toContain('covered')
 	})
 
-	it('hides topics past six behind a count', async () => {
-		const many = Array.from({ length: 8 }, (_, i) => ({ text: `t${i}` }))
-		const wrapper = slide({
-			lesson: {
-				...enrolled.chapters[1].lessons[0],
-				objectives: many,
-				chapter: 'Выявление',
-			},
-		})
-		expect(wrapper.findAll('li')).toHaveLength(6)
-		await wrapper.get('button').trigger('click')
-		expect(wrapper.findAll('li')).toHaveLength(8)
+	it('says the course’s size', () => {
+		expect(open(enrolled).text()).toContain('2 chapters · 3 lessons')
 	})
 
-	// learning-services#547: the chapter's description and progress on its
-	// lessons' slides.
-	it('tells what the chapter is about and how far the student is in it', () => {
-		const wrapper = slide({ chapter: enrolled.chapters[0] })
-		expect(
-			wrapper.get('[data-testid="slide-chapter-description"]').text()
-		).toBe('Что считать риском')
-		expect(wrapper.get('[data-testid="slide-chapter-progress"]').text()).toBe(
-			'Chapter passed'
-		)
-		const next = slide({ chapter: enrolled.chapters[1] })
-		expect(
-			next.find('[data-testid="slide-chapter-description"]').exists()
-		).toBe(false)
-		expect(next.get('[data-testid="slide-chapter-progress"]').text()).toBe(
-			'Chapter: 0 of 2 lessons passed'
-		)
+	it('links each lesson to its page', () => {
+		const links = open(enrolled)
+			.findAll('[data-testid="lesson-open"]')
+			.map((a) => a.attributes('href'))
+		expect(links).toEqual([
+			'/lms/courses/course-1/learn/1-1',
+			'/lms/courses/course-1/learn/2-1',
+			'/lms/courses/course-1/learn/2-2',
+		])
 	})
 
-	it('gives a visitor the chapter description but no progress', () => {
-		const wrapper = slide({ status: 'none', chapter: guest.chapters[0] })
+	it('keeps the lesson’s opening and topics under it', () => {
+		const wrapper = open(enrolled)
+		const first = wrapper.findAll('[data-testid="course-lesson"]')[0]
+		expect(first.text()).toContain('Зачем это вам')
+		expect(first.find('[data-testid="lesson-objectives"]').exists()).toBe(true)
+	})
+
+	it('opens none once every chapter is passed', () => {
+		const finished: ProgramData = {
+			...enrolled,
+			next_lesson: null,
+			chapters: enrolled.chapters.map((chapter) => ({
+				...chapter,
+				status: 'passed',
+			})),
+		}
+		const wrapper = open(finished)
 		expect(
-			wrapper.get('[data-testid="slide-chapter-description"]').text()
-		).toBe('Что считать риском')
-		expect(
-			wrapper.find('[data-testid="slide-chapter-progress"]').exists()
-		).toBe(false)
-		expect(
-			slide({ status: 'none', chapter: guest.chapters[1] })
-				.find('[data-testid="slide-chapter"]')
-				.exists()
+			wrapper
+				.findAll('[data-testid="course-chapter"]')
+				.some((c) => c.attributes('open') === '')
 		).toBe(false)
 	})
 
-	it('gives a visitor no count, and the same way to the lesson', () => {
-		const wrapper = slide({ status: 'none' })
-		expect(wrapper.find('[data-testid="objectives-count"]').exists()).toBe(
-			false
-		)
-		expect(wrapper.find('[data-testid="slide-status"]').exists()).toBe(false)
-		expect(wrapper.get('[data-testid="slide-action"]').attributes('href')).toBe(
-			'/lms/courses/course-1/learn/2-1'
-		)
-	})
-})
-
-describe('CourseProgram', () => {
-	const fetchMock = vi.fn()
-
-	beforeEach(() => {
-		fetchMock.mockReset()
-		vi.stubGlobal('fetch', fetchMock)
-	})
-
-	it('opens on the next lesson and links each slide to its page', async () => {
-		const wrapper = mount(CourseProgram, {
-			props: { program: enrolled, courseName: 'course-1' },
-			global,
-		})
-		await flushPromises()
-
-		expect(
-			wrapper.get('[aria-current="step"]').attributes('aria-label')
-		).toContain('Lesson 3')
-		expect(
-			wrapper
-				.get('.slide.is-current [data-testid="slide-action"]')
-				.attributes('href')
-		).toBe('/lms/courses/course-1/learn/2-2')
-		// Where to study is the course card's question now: no request per slide.
-		expect(fetchMock).not.toHaveBeenCalled()
-	})
-
-	it('hands each slide its own chapter', async () => {
-		const wrapper = mount(CourseProgram, {
-			props: { program: enrolled, courseName: 'course-1' },
-			global,
-		})
-		await flushPromises()
-		const progress = wrapper
-			.findAll('[data-testid="slide-chapter-progress"]')
-			.map((p) => p.text())
-		expect(progress).toEqual([
-			'Chapter passed',
-			'Chapter: 0 of 2 lessons passed',
-			'Chapter: 0 of 2 lessons passed',
-		])
-	})
-
-	it('moves to the lesson picked on the map', async () => {
-		const wrapper = mount(CourseProgram, {
-			props: { program: enrolled, courseName: 'course-1' },
-			global,
-		})
-		await flushPromises()
-		await wrapper.findAll('nav button')[0].trigger('click')
-		await flushPromises()
-
-		expect(wrapper.get('.slide.is-current').attributes('data-index')).toBe('0')
-		expect(
-			wrapper
-				.get('.slide.is-current [data-testid="slide-action"]')
-				.attributes('href')
-		).toBe('/lms/courses/course-1/learn/1-1')
-	})
-
-	it('keeps the lesson an arrow chose while the slides pass the middle', async () => {
-		// learning-services#402: slides passing the middle during the smooth
-		// scroll took over, and the dots ran one ahead of the card in front.
-		vi.useFakeTimers()
-		const wrapper = mount(CourseProgram, {
-			props: { program: enrolled, courseName: 'course-1' },
-			global,
-		})
-		await flushPromises()
-		const before = Number(
-			wrapper.get('.slide.is-current').attributes('data-index')
-		)
-		// The key goes the same way as the arrow button: select(current - 1).
-		await wrapper
-			.get('[role="region"]')
-			.trigger('keydown', { key: 'ArrowLeft' })
-		// jsdom lays every slide at 0: the one «in the middle» is the first.
-		await wrapper.get('[data-testid="program-slides"]').trigger('scroll')
-		vi.advanceTimersByTime(200)
-		await flushPromises()
-
-		expect(wrapper.get('.slide.is-current').attributes('data-index')).toBe(
-			String(before - 1)
-		)
-		expect(
-			wrapper.get('[aria-current="step"]').attributes('aria-label')
-		).toContain(`Lesson ${before}`)
-		vi.useRealTimers()
-	})
-
-	it('points a visitor at the lesson page too', async () => {
-		const wrapper = mount(CourseProgram, {
-			props: { program: guest, courseName: 'course-1' },
-			global,
-		})
-		await flushPromises()
-
-		expect(
-			wrapper
-				.get('.slide.is-current [data-testid="slide-action"]')
-				.attributes('href')
-		).toBe('/lms/courses/course-1/learn/1-1')
-	})
-})
-
-describe('centeredIndex', () => {
-	it('picks the slide whose centre is nearest to the middle', () => {
-		const slides = [
-			{ left: 0, width: 600 },
-			{ left: 616, width: 600 },
-			{ left: 1232, width: 600 },
-		]
-		expect(centeredIndex(slides, 916)).toBe(1)
-		expect(centeredIndex(slides, 1300)).toBe(2)
-		expect(centeredIndex(slides, 10)).toBe(0)
-		expect(centeredIndex([], 100)).toBe(-1)
+	it('remembers a chapter the student opened', async () => {
+		const wrapper = open(enrolled)
+		const first = wrapper.findAll('[data-testid="course-chapter"]')[0]
+		;(first.element as HTMLDetailsElement).open = true
+		await first.trigger('toggle')
+		expect(first.attributes('open')).toBe('')
 	})
 })
