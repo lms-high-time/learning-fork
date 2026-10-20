@@ -3,7 +3,7 @@
 		ref="page"
 		:tabs="tabs"
 		:breadcrumbs="breadcrumbs"
-		:published="Boolean(course.data?.published)"
+		:published="isAdmin && Boolean(course.data?.published)"
 		:upcoming="Boolean(course.data?.upcoming)"
 		:loading="!course.data"
 		:doc="course"

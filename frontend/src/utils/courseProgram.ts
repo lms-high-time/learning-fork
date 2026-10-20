@@ -1,5 +1,5 @@
 /**
- * Rules behind the course program: the navigation dots and the lesson slides.
+ * Rules behind the course program: its chapters, lessons and where the student is.
  *
  * Kept out of the components so the rules that matter are pinned by tests: which
  * status a lesson shows, and that only covered topics count as mastered — a topic
@@ -150,35 +150,49 @@ export function chapterProgress(
 }
 
 /**
- * The slide to open on: the next lesson for an enrolled student, the first
- * lesson otherwise — including a finished course, where there is no next one.
+ * The chapter the programme opens on: the one with the next lesson for an
+ * enrolled student, the first one for a visitor. A finished course opens on
+ * none — every chapter is passed and nothing in it calls (learning-services#636).
  */
-export function startIndex(
-	lessons: { id: string }[],
+export function openChapter(
+	chapters: ProgramChapter[],
 	nextLesson: string | null | undefined
-): number {
-	const index = lessons.findIndex((lesson) => lesson.id === nextLesson)
+): number | null {
+	if (!chapters.length) return null
+	const enrolled = chapters.some((chapter) => chapter.status !== undefined)
+	if (!enrolled) return 0
+	if (!nextLesson) return null
+	const index = chapters.findIndex((chapter) =>
+		chapter.lessons.some((lesson) => lesson.id === nextLesson)
+	)
 	return index >= 0 ? index : 0
 }
 
-/**
- * The slide under the middle of the slider: the one whose centre is nearest
- * to the viewport's. Not «whichever is 60% visible» — on a wide screen the
- * neighbours are visible whole, and the current lesson jumped one ahead of
- * the card in the middle (learning-services#402).
- */
-export function centeredIndex(
-	slides: { left: number; width: number }[],
-	viewportCenter: number
-): number {
-	let best = -1
-	let distance = Infinity
-	slides.forEach((slide, index) => {
-		const off = Math.abs(slide.left + slide.width / 2 - viewportCenter)
-		if (off < distance) {
-			distance = off
-			best = index
-		}
-	})
-	return best
+/** Where an enrolled student is in the course; null for a visitor. */
+export type CoursePath = {
+	/** Lessons closed out of all of them. */
+	passed: number
+	total: number
+	chapters: number
+	/** 1-based chapter and lesson of the next lesson; null once there is none. */
+	chapter: number | null
+	lesson: number | null
+	/** Every lesson closed. */
+	done: boolean
+}
+
+export function coursePath(data: ProgramData): CoursePath | null {
+	const lessons = flattenLessons(data.chapters)
+	if (!lessons.length || lessons.some((l) => l.completed === undefined))
+		return null
+	const passed = lessons.filter((lesson) => lesson.completed).length
+	const next = lessons.findIndex((lesson) => lesson.id === data.next_lesson)
+	return {
+		passed,
+		total: lessons.length,
+		chapters: data.chapters.length,
+		chapter: next >= 0 ? lessons[next].chapterIndex + 1 : null,
+		lesson: next >= 0 ? next + 1 : null,
+		done: passed === lessons.length,
+	}
 }

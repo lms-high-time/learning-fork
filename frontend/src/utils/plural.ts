@@ -87,3 +87,11 @@ export const COURSES: PluralForms = {
 	many: '{0} courses [many]',
 	other: '{0} courses',
 }
+
+// The course's chapters, as the programme names them (learning-services#636).
+export const CHAPTERS: PluralForms = {
+	one: '{0} chapter',
+	few: '{0} chapters [few]',
+	many: '{0} chapters [many]',
+	other: '{0} chapters',
+}

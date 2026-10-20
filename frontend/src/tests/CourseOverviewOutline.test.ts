@@ -98,7 +98,7 @@ vi.mock('@/components/UserAvatar.vue', () => ({
 vi.mock('@/components/RelatedCourses.vue', () => ({
 	default: { template: '<div />' },
 }))
-vi.mock('@/components/CourseProgram/CourseProgram.vue', () => ({
+vi.mock('@/components/CourseProgram/CourseChapters.vue', () => ({
 	default: { template: '<div />' },
 }))
 

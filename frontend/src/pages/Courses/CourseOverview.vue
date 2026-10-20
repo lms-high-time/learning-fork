@@ -43,7 +43,7 @@
 								class="lucide-dot size-5 text-ink-gray-7"
 							/>
 						</template>
-						<template v-if="course.data.enrollments">
+						<template v-if="hasEnrollments">
 							<div class="flex items-center gap-1.5">
 								<span class="lucide-users-round size-4" />
 								<span>{{
@@ -114,7 +114,7 @@
 						{{ course.data.short_introduction }}
 					</p>
 					<div class="md:hidden space-y-4">
-						<CourseCardOverlay :course="course" :notify="notify" />
+						<CourseCardOverlay :course="course" :notify="notify" :path="path" />
 						<CourseDocumentCard
 							:documents="documents"
 							:courseName="course.data.name"
@@ -158,14 +158,17 @@
 					</p>
 				</section>
 
-				<!-- The program replaces both the old honeycomb map and the outline:
-				the same lessons, once, with each one's status and topics
-				(learning-services#322). Without lms_frappe_app the outline stays. -->
-				<section v-else-if="program" data-testid="course-program-section">
-					<h2 class="text-3xl-semibold text-ink-gray-9 mb-4">
-						{{ __('Course program') }}
-					</h2>
-					<CourseProgram :program="program" :courseName="course.data.name" />
+				<!-- The program: chapters, their lessons with each one's status, and
+				a lesson's topics under it (learning-services#322, #636). Until the
+				map answers, a placeholder — the outline in its place flashed and
+				then gave way. Without lms_frappe_app the outline stays. -->
+				<CourseChapters
+					v-else-if="program"
+					:program="program"
+					:courseName="course.data.name"
+				/>
+				<section v-else-if="!mapSettled" data-testid="course-program-loading">
+					<SkeletonLoader variant="course-outline" :count="7" />
 				</section>
 
 				<section v-else>
@@ -202,24 +205,37 @@
 
 				<!-- A description that only repeats the introduction above says it
 				twice; an announcement page is short enough for that to show. -->
-				<section
+				<!-- Open to a visitor deciding on the course; folded for a student,
+				who has decided (learning-services#636). -->
+				<details
 					v-if="course.data.description && !descriptionRepeatsIntro"
+					:open="!course.data.membership"
 					data-testid="course-about"
-					class="space-y-3"
+					class="group/about"
 				>
-					<h2 class="text-3xl-semibold text-ink-gray-9">
-						{{ __('About this course') }}
-					</h2>
+					<summary
+						class="flex cursor-pointer list-none items-center justify-between gap-4 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-outline-blue-6 [&::-webkit-details-marker]:hidden"
+					>
+						<h2 class="text-3xl-semibold text-ink-gray-9">
+							{{ __('About this course') }}
+						</h2>
+						<span
+							class="lucide-chevron-down size-5 text-ink-gray-5 transition-transform group-open/about:rotate-180 motion-reduce:transition-none"
+							aria-hidden="true"
+						/>
+					</summary>
 					<div
-						v-safe-html:rich="course.data.description"
-						class="ProseMirror prose prose-sm max-w-none !whitespace-normal prose-table:table-fixed prose-td:p-2 prose-th:p-2 prose-td:border prose-th:border prose-td:border-outline-gray-2 prose-th:border-outline-gray-2 prose-td:relative prose-th:relative prose-th:bg-surface-gray-2"
+						v-safe-html:rich="description"
+						class="ProseMirror prose prose-sm mt-4 max-w-prose !whitespace-normal prose-a:text-ink-blue-7 prose-table:table-fixed prose-td:p-2 prose-th:p-2 prose-td:border prose-th:border prose-td:border-outline-gray-2 prose-th:border-outline-gray-2 prose-td:relative prose-th:relative prose-th:bg-surface-gray-2"
 					/>
-				</section>
+				</details>
 
+				<!-- A review once the student has a chapter behind them, not before
+				the first lesson (learning-services#636). -->
 				<CourseReviews
 					:courseName="course.data.name"
 					:avg_rating="course.data.rating"
-					:membership="course.data.membership || null"
+					:membership="canReview ? course.data.membership : null"
 				/>
 			</div>
 
@@ -228,7 +244,7 @@
 			>
 				<!-- The way in, and what the course leaves you with (#340); the
 				author is in the header already (learning-services#326). -->
-				<CourseCardOverlay :course="course" :notify="notify" />
+				<CourseCardOverlay :course="course" :notify="notify" :path="path" />
 				<CourseDocumentCard
 					:documents="documents"
 					:courseName="course.data.name"
@@ -255,13 +271,13 @@ import type {
 import CourseCardOverlay from '@/components/CourseCardOverlay.vue'
 import CourseDocumentCard from '@/components/CourseDocumentCard.vue'
 import CourseOutline from '@/components/CourseOutline.vue'
-import CourseProgram from '@/components/CourseProgram/CourseProgram.vue'
+import CourseChapters from '@/components/CourseProgram/CourseChapters.vue'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
 import CourseReviews from '@/components/CourseReviews.vue'
 import CourseInstructors from '@/components/CourseInstructors.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import RelatedCourses from '@/components/RelatedCourses.vue'
-import type { ProgramData } from '@/utils/courseProgram'
+import { coursePath, type ProgramData } from '@/utils/courseProgram'
 import { SHOW_COURSE_AUTHORS } from '@/utils/courseAuthors'
 import { useSpace } from '@/stores/space'
 import { withSpace } from '@/utils/space'
@@ -358,8 +374,11 @@ const mapLoaded = computed<boolean>(() => Boolean(courseMap.data))
 // The meta line: a dot goes between items, so each item's dot shows only when
 // a later item does — hiding the author left one hanging (learning-services#396).
 const hasRating = computed<boolean>(() => Number(props.course.data?.rating) > 0)
-const hasEnrollments = computed<boolean>(() =>
-	Boolean(props.course.data?.enrollments)
+// A student has joined already: how many others did is the shop window's
+// (learning-services#636).
+const hasEnrollments = computed<boolean>(
+	() =>
+		Boolean(props.course.data?.enrollments) && !props.course.data?.membership
 )
 const showAuthors = computed<boolean>(
 	() => SHOW_COURSE_AUTHORS && Boolean(props.course.data?.instructors?.length)
@@ -405,6 +424,31 @@ const program = computed<ProgramData | null>(() => {
 	const data = courseMap.data?.data
 	return data?.chapters?.some((chapter) => chapter.lessons.length) ? data : null
 })
+const mapSettled = computed<boolean>(
+	() => Boolean(courseMap.data) || Boolean(courseMap.error)
+)
+
+// Where the student is, for the course card (learning-services#636).
+const path = computed(() => (program.value ? coursePath(program.value) : null))
+
+const canReview = computed<boolean>(() => {
+	if (!props.course.data?.membership) return false
+	if (program.value)
+		return program.value.chapters.some((chapter) => chapter.status === 'passed')
+	return (props.course.data.membership.progress ?? 0) > 0
+})
+
+// Authors write links in Markdown, and the description is shown as HTML: a
+// link written so came out as its brackets (learning-services#636). The
+// sanitizer still sees the result.
+const MARKDOWN_LINK = /\[([^\]\n]+)\]\((https?:\/\/[^)\s]+)\)/g
+const description = computed<string>(() =>
+	(props.course.data?.description ?? '').replace(
+		MARKDOWN_LINK,
+		(_, text: string, url: string) =>
+			`<a href="${url.replace(/"/g, '%22')}">${text}</a>`
+	)
+)
 
 const outlineStats = computed(() => {
 	const chapters = outline.data || []

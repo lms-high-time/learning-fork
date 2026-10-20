@@ -69,9 +69,10 @@ const __ = (message: string) => {
 	}
 }
 
-const mountOverlay = () =>
+const mountOverlay = (path: Record<string, unknown> | null = null) =>
 	mount(CourseCardOverlay, {
 		props: {
+			path: path as never,
 			course: {
 				data: {
 					name: 'course-1',
@@ -91,7 +92,8 @@ const mountOverlay = () =>
 				// `to` comes out as an attribute: a test can check where a link goes.
 				RouterLink: {
 					props: ['to'],
-					template: '<a data-testid="reader" :data-to="JSON.stringify(to)"><slot /></a>',
+					template:
+						'<a data-testid="reader" :data-to="JSON.stringify(to)"><slot /></a>',
 				},
 			},
 		},
@@ -116,7 +118,9 @@ describe('CourseCardOverlay in a program (#405)', () => {
 					total: 3,
 					member: true,
 					next: last ? null : { id: 'c-3', title: 'Недельный ритм' },
-					locked_by: locked ? { id: 'c-0', title: 'Где теряется работа' } : null,
+					locked_by: locked
+						? { id: 'c-0', title: 'Где теряется работа' }
+						: null,
 				},
 			],
 		},
@@ -140,7 +144,9 @@ describe('CourseCardOverlay in a program (#405)', () => {
 		const wrapper = mountOverlay()
 		await flushPromises()
 
-		expect(wrapper.find('[data-testid="course-program-next"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="course-program-next"]').exists()).toBe(
+			false
+		)
 	})
 
 	it('shows where the course stands in the program', async () => {
@@ -151,7 +157,9 @@ describe('CourseCardOverlay in a program (#405)', () => {
 		expect(wrapper.get('[data-testid="course-programs"]').text()).toContain(
 			'Course 2 of 3 in the program «Работа между отделами»'
 		)
-		expect(wrapper.find('[data-testid="course-program-lock"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="course-program-lock"]').exists()).toBe(
+			false
+		)
 	})
 
 	it('leaves an announcement to its release notice', async () => {
@@ -174,7 +182,9 @@ describe('CourseCardOverlay in a program (#405)', () => {
 		})
 		await flushPromises()
 
-		expect(wrapper.find('[data-testid="course-program-lock"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="course-program-lock"]').exists()).toBe(
+			false
+		)
 		expect(wrapper.find('[data-testid="course-notify"]').exists()).toBe(true)
 		expect(wrapper.get('[data-testid="course-programs"]').text()).toContain(
 			'Course 2 of 3'
@@ -188,7 +198,10 @@ describe('CourseCardOverlay in a program (#405)', () => {
 			data: {
 				title: 'Цели',
 				completed: false,
-				study: { channel: 'web', url: 'https://lms.example.com/chat?lesson=l-2' },
+				study: {
+					channel: 'web',
+					url: 'https://lms.example.com/chat?lesson=l-2',
+				},
 			},
 		}
 		const wrapper = mountOverlay()
@@ -340,7 +353,9 @@ describe('CourseCardOverlay for an announced course', () => {
 		const wrapper = mountAnnounced({ notify: true })
 
 		expect(wrapper.find('[data-testid="course-notify"]').exists()).toBe(false)
-		expect(wrapper.find('[data-testid="course-notify-done"]').exists()).toBe(true)
+		expect(wrapper.find('[data-testid="course-notify-done"]').exists()).toBe(
+			true
+		)
 	})
 
 	it('sends a guest to log in rather than calling the server', async () => {
@@ -350,5 +365,69 @@ describe('CourseCardOverlay for an announced course', () => {
 		await flushPromises()
 
 		expect(call).not.toHaveBeenCalled()
+	})
+})
+
+describe('CourseCardOverlay: where the student is (#636)', () => {
+	const entry = {
+		ok: true,
+		data: {
+			title: 'Разобраться в напряжении',
+			completed: false,
+			study: { channel: 'web', url: 'https://lms.example.com/chat' },
+		},
+	}
+
+	it('leads with the chapter and lesson, not the price', async () => {
+		entryResource.data = entry
+		const wrapper = mountOverlay({
+			passed: 4,
+			total: 21,
+			chapters: 7,
+			chapter: 2,
+			lesson: 5,
+			done: false,
+		})
+		await flushPromises()
+		const path = wrapper.get('[data-testid="course-path"]')
+		expect(path.text()).toContain('Chapter 2 of 7 · lesson 5 of 21')
+		expect(path.text()).toContain('Lessons passed: 4 of 21')
+		expect(wrapper.text()).not.toContain('Free')
+		expect(wrapper.text()).toContain('Continue with the agent')
+	})
+
+	it('starts rather than continues before the first lesson', async () => {
+		entryResource.data = entry
+		const wrapper = mountOverlay({
+			passed: 0,
+			total: 21,
+			chapters: 7,
+			chapter: 1,
+			lesson: 1,
+			done: false,
+		})
+		await flushPromises()
+		expect(wrapper.text()).toContain('Start with the agent')
+	})
+
+	it('says the course is passed', async () => {
+		const wrapper = mountOverlay({
+			passed: 21,
+			total: 21,
+			chapters: 7,
+			chapter: null,
+			lesson: null,
+			done: true,
+		})
+		await flushPromises()
+		expect(wrapper.get('[data-testid="course-path"]').text()).toContain(
+			'You have passed the course'
+		)
+	})
+
+	it('shows a student no price even without the map', async () => {
+		const wrapper = mountOverlay(null)
+		await flushPromises()
+		expect(wrapper.text()).not.toContain('Free')
 	})
 })
