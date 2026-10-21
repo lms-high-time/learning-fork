@@ -4,6 +4,11 @@ on:
     - cron: "00 16 * * 5"
   workflow_dispatch:
 
+# Read-only by default (OpenSSF Scorecard Token-Permissions); a job that
+# writes asks for it itself.
+permissions:
+  contents: read
+
 jobs:
   regenerate-pot-file:
     name: Release
@@ -17,17 +22,17 @@ jobs:
 
     steps:
         - name: Checkout
-          uses: actions/checkout@v4
+          uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
           with:
             ref: ${{ matrix.branch }}
 
         - name: Setup Python
-          uses: actions/setup-python@v6
+          uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
           with:
             python-version: "3.14"
 
         - name: Setup Node.js
-          uses: actions/setup-node@v6
+          uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
           with:
             node-version: 24
 

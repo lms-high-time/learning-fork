@@ -1,0 +1,34 @@
+# Dependabot for the High Time fork (lms-high-time/learning-services#668).
+#
+# GitHub Actions only. Every `uses:` is pinned to a commit SHA with a version
+# comment; without a bot those pins go stale silently. One grouped PR a week.
+#
+# No npm version updates, on purpose. frontend/package.json and both
+# yarn.lock files are upstream's (frappe/lms): a weekly bump PR from us
+# rewrites the lockfile, and every upstream sync then conflicts in it — the
+# cost lands on the sync, which is exactly when nobody wants it. What
+# matters about npm here is vulnerabilities, and that is covered elsewhere:
+# the "Secrets and Dependencies" job in linters.yml (trivy, weekly schedule
+# too) blocks HIGH/CRITICAL with a fix and lists MEDIUM with a fix in what
+# ships. If Dependabot security updates are switched on in the repository
+# settings, they work on the lockfiles without an entry here.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: high-time
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions:
+        patterns: ["*"]
+    # Same major only: the pins were taken in the major each workflow
+    # already used, and majors in upstream's workflows would conflict on
+    # every sync. A major is a deliberate change, not a weekly bump.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    commit-message:
+      prefix: "ci"
+    labels: []
