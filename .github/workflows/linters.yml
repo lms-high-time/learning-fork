@@ -92,7 +92,8 @@ jobs:
   # frontend/yarn.lock). Design and decisions:
   # lms-high-time/learning-services#629. Blocks on any secret and on any
   # HIGH/CRITICAL vulnerability that has a fix; a scanner that fails is red,
-  # not "clean".
+  # not "clean". MEDIUM with a fix in what ships is a warning and a summary
+  # table, never red (learning-services#668).
   #
   # What it does NOT do: Python dependencies (no lockfile here — the stand
   # image is scanned by trivy in learning-services); upstream code issues
@@ -169,6 +170,41 @@ jobs:
           for f in yarn.lock frontend/yarn.lock; do
             [ -f "$f" ] || { echo "::error::$f is missing — trivy would scan nothing"; exit 1; }
           done
-          docker run --rm -v "$PWD:/repo:ro" "$TRIVY_IMAGE" fs \
+          mkdir -p "$RUNNER_TEMP/trivy-cache"
+          docker run --rm -v "$PWD:/repo:ro" -v "$RUNNER_TEMP/trivy-cache:/root/.cache/trivy" "$TRIVY_IMAGE" fs \
             --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed \
             --skip-dirs '**/node_modules' --exit-code 1 /repo
+
+      # MEDIUM with a fix in what ships (trivy skips devDependencies, so this
+      # is the bundle plus frappe-ui's tree): advisory only. A MEDIUM in a
+      # sanitizer is still an XSS — dompurify sat at 17 of them unnoticed
+      # (learning-services#668) — but some fixes exist only in a major the
+      # upstream pins (echarts 6 via frappe-ui), so red here would be red for
+      # weeks. Bump it, or say in the PR why not. Runs even when the gate above
+      # is red; a scanner failure here is a warning, the gate decides.
+      - name: Dependencies (MEDIUM, advisory)
+        if: ${{ !cancelled() }}
+        run: |
+          rc=0
+          mkdir -p "$RUNNER_TEMP/trivy-cache"
+          docker run --rm -v "$PWD:/repo:ro" -v "$RUNNER_TEMP:/out" -v "$RUNNER_TEMP/trivy-cache:/root/.cache/trivy" "$TRIVY_IMAGE" fs \
+            --scanners vuln --severity MEDIUM --ignore-unfixed \
+            --skip-dirs '**/node_modules' --exit-code 0 -f json -o /out/trivy-medium.json /repo || rc=$?
+          [ "$rc" = 0 ] || { echo "::warning::trivy (MEDIUM) failed (exit $rc) — advisory only"; exit 0; }
+          report="$RUNNER_TEMP/trivy-medium.json"
+          n=$(jq '[.Results[]?.Vulnerabilities[]?] | length' "$report") || { echo "::warning::trivy MEDIUM report unreadable"; exit 0; }
+          if [ "$n" = 0 ]; then
+            echo "No MEDIUM vulnerability with a fix in shipped dependencies." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          {
+            echo "### MEDIUM with a fix in shipped dependencies: $n"
+            echo
+            echo "Advisory, does not block. Bump it, or say in the PR why not."
+            echo
+            echo "| Lockfile | Package | Installed | Fixed in | ID |"
+            echo "|---|---|---|---|---|"
+            jq -r '.Results[]? | .Target as $t | .Vulnerabilities[]? | "| \($t) | \(.PkgName) | \(.InstalledVersion) | \(.FixedVersion) | \(.VulnerabilityID) |"' "$report"
+          } >> "$GITHUB_STEP_SUMMARY"
+          pkgs=$(jq -r '[.Results[]?.Vulnerabilities[]? | "\(.PkgName)@\(.InstalledVersion)"] | unique | join(", ")' "$report")
+          echo "::warning::$n MEDIUM vulnerabilities with a fix in shipped dependencies: $pkgs — see the run summary"
