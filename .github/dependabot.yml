@@ -23,6 +23,12 @@ updates:
     groups:
       actions:
         patterns: ["*"]
+    # Same major only: the pins were taken in the major each workflow
+    # already used, and majors in upstream's workflows would conflict on
+    # every sync. A major is a deliberate change, not a weekly bump.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     commit-message:
       prefix: "ci"
     labels: []
