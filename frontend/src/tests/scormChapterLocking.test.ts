@@ -60,6 +60,7 @@ vi.mock('frappe-ui', async () => {
 			return resource
 		},
 		call: vi.fn(() => Promise.resolve()),
+		toast: { error: vi.fn() },
 		usePageMeta: vi.fn(),
 		Button: {
 			name: 'Button',
@@ -73,6 +74,12 @@ vi.mock('@/stores/session', () => ({
 }))
 vi.mock('@/stores/sidebar', () => ({
 	useSidebar: () => ({ isSidebarCollapsed: false }),
+}))
+vi.mock('@/stores/space', () => ({
+	useSpace: () => ({
+		load: vi.fn(() => Promise.resolve()),
+		enrolFor: vi.fn(() => 'personal'),
+	}),
 }))
 vi.mock('@/components/Layouts/PageHeader.vue', () => ({
 	default: { name: 'PageHeader', template: '<div><slot /></div>' },
@@ -95,6 +102,7 @@ const translateStub = (s: string) =>
 
 vi.stubGlobal('__', translateStub)
 
+import { call, toast } from 'frappe-ui'
 import SCORMChapter from '@/pages/SCORMChapter.vue'
 
 const findResource = (url: string) =>
@@ -238,5 +246,25 @@ describe('SCORMChapter.vue refuses a gated chapter', () => {
 
 		expect((wrapper.vm as any).isLocked).toBe(false)
 		expect(wrapper.find('iframe').exists()).toBe(true)
+	})
+})
+
+// The platform refuses a bare LMS Enrollment insert, so the page enrols through
+// the app's contract method, the way the lesson page does (learning-services#674).
+describe('SCORMChapter.vue enrols through the platform', () => {
+	it('calls enroll with the chosen space and reports a refusal', async () => {
+		wrapper = await mountChapter()
+		vi.mocked(call).mockResolvedValueOnce({
+			ok: false,
+			error: { message: 'Cannot enroll' },
+		})
+
+		await (wrapper.vm as any).enrollStudent()
+
+		expect(call).toHaveBeenCalledWith('lms_frappe_app.api.student.enroll', {
+			course: 'COURSE-1',
+			space: 'personal',
+		})
+		expect(toast.error).toHaveBeenCalledWith('Cannot enroll')
 	})
 })
