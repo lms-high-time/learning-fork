@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { createResource } from 'frappe-ui'
 import { usersStore } from './user'
+import { clearBrowserData } from '@/utils/browserData'
 import { computed, reactive, ref } from 'vue'
 
 export const sessionStore = defineStore('lms-session', () => {
@@ -23,9 +24,11 @@ export const sessionStore = defineStore('lms-session', () => {
 
 	const logout = createResource({
 		url: 'logout',
-		onSuccess() {
+		async onSuccess() {
 			userResource.reset()
 			user.value = null
+			// Before navigating: once the page unloads, the cleanup cannot finish.
+			await clearBrowserData()
 			// To the site root rather than a reload: the page the visitor was on is
 			// usually not browsable by a guest, and a reload left them looking at
 			// an access error.

@@ -4,7 +4,8 @@
  * Logging out used to reload the current page. With guest access off, that
  * page is not browsable by a guest, so the visitor was left looking at an
  * access error on the page they had just been using. They now go to the site
- * root, which every visitor can open.
+ * root, which every visitor can open. Before leaving, the site storage in
+ * this browser is cleared (lms-high-time/learning-services#688).
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
@@ -38,21 +39,37 @@ describe('logout', () => {
 		Object.defineProperty(window, 'location', { value: location, configurable: true })
 	})
 
-	it('sends the signed-out visitor to the site root', () => {
+	it('sends the signed-out visitor to the site root', async () => {
 		sessionStore()
 
-		resources.get('logout').onSuccess()
+		await resources.get('logout').onSuccess()
 
 		expect(location.href).toBe('/')
 		expect(location.reload).not.toHaveBeenCalled()
 	})
 
-	it('forgets the user before leaving', () => {
+	it('forgets the user before leaving', async () => {
 		const session = sessionStore()
 
-		resources.get('logout').onSuccess()
+		await resources.get('logout').onSuccess()
 
 		expect(userResource.reset).toHaveBeenCalled()
 		expect(session.isLoggedIn).toBe(false)
+	})
+
+	it('clears the site storage before leaving', async () => {
+		sessionStore()
+		localStorage.setItem('Quiz title', '[]')
+		sessionStorage.setItem('note', '1')
+		let storedOnLeaving = -1
+		Object.defineProperty(location, 'href', {
+			configurable: true,
+			get: () => 'https://lms.example.com/lms/courses/p3',
+			set: () => (storedOnLeaving = localStorage.length + sessionStorage.length),
+		})
+
+		await resources.get('logout').onSuccess()
+
+		expect(storedOnLeaving).toBe(0)
 	})
 })
