@@ -9,11 +9,13 @@ from datetime import date, datetime, timedelta
 
 import frappe
 from frappe import _
+from frappe.core.api.file import get_max_file_size
 from frappe.utils import escape_html, validate_email_address
 from frappe.utils.file_manager import is_safe_path
 
 from lms.lms.utils import create_user as create_lms_user
 from lms.lms.utils import get_editorjs_blocks
+from lms.lms.zip_limits import validate_zip_limits
 
 
 def export_course_zip(course_name):
@@ -333,6 +335,9 @@ def import_course_zip(zip_file_path):
 	validate_zip_file(actual_path)
 
 	with zipfile.ZipFile(actual_path, "r") as zip_file:
+		# Entries are read into memory whole (`json.load`, assets): each one is
+		# capped at the site's upload limit too.
+		validate_zip_limits(zip_file, max_entry_bytes=get_max_file_size())
 		course_data = read_json_from_zip(zip_file, "course.json")
 		if not course_data:
 			frappe.throw(_("Invalid course ZIP: Missing course.json"))
