@@ -11722,3 +11722,7 @@ msgstr "{0} главы"
 #: frontend/src/components/CourseProgram/CourseChapters.vue
 msgid "Lesson in progress"
 msgstr "Начат"
+
+#: frontend/src/components/Sidebar/UserDropdown.vue
+msgid "Agents and sessions"
+msgstr "Агенты и сессии"

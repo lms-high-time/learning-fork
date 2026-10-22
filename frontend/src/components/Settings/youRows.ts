@@ -23,12 +23,14 @@ export const iconClass = (icon?: string): string | undefined =>
 // classes are generated only for names that appear somewhere in the source —
 // a name first seen at runtime paints nothing. These are the icons
 // lms_frappe_app gives its pages (study in the browser, the documents, connect
-// an agent); listed here so their classes exist. The agent page lost its icon
-// on the phone for exactly this reason (learning-services#310).
+// an agent, agents and sessions); listed here so their classes exist. The agent
+// page lost its icon on the phone for exactly this reason
+// (learning-services#310).
 export const PLATFORM_PAGE_ICONS: readonly string[] = [
 	'lucide-message-circle',
 	'lucide-file-text',
 	'lucide-bot',
+	'lucide-shield-check',
 ]
 
 // The sections survive as a sort order, not as three headings: one "Pages"
