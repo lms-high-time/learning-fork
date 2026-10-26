@@ -56,6 +56,8 @@ const moderator = ref(false)
 const course_creator = ref(false)
 const batch_evaluator = ref(false)
 const lms_student = ref(false)
+// Switch state by role key, so the role named in a call picks its ref.
+const roleRefs = { moderator, course_creator, batch_evaluator, lms_student }
 const readOnlyMode = window.read_only_mode
 
 const props = defineProps({
@@ -73,14 +75,8 @@ const roles = createResource({
 		}
 	},
 	onSuccess(data) {
-		let roles = [
-			'moderator',
-			'course_creator',
-			'batch_evaluator',
-			'lms_student',
-		]
-		for (let role of roles) {
-			if (data[role]) eval(role).value = true
+		for (const [role, state] of Object.entries(roleRefs)) {
+			if (data[role]) state.value = true
 		}
 	},
 })
@@ -100,7 +96,7 @@ const saveRole = async (role) => {
 		role == 'lms_student'
 			? 'LMS Student'
 			: convertToTitleCase(role.split('_').join(' '))
-	const value = eval(role).value
+	const value = roleRefs[role].value
 
 	await call('lms.lms.api.save_role', {
 		user: props.profile.data?.name,

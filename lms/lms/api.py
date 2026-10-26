@@ -54,6 +54,7 @@ from lms.lms.utils import (
 	has_lms_role,
 	has_moderator_role,
 )
+from lms.lms.zip_limits import validate_zip_limits
 
 
 @frappe.whitelist()
@@ -1595,11 +1596,8 @@ def extract_package(course: str, title: str, scorm_package: dict):
 	zip_path = package.get_full_path()
 	extract_path = _scorm_extract_path(course, title)
 
-	# Clear any previously extracted package so a re-upload doesn't leave stale files served (path confirmed under the course dir above).
-	if os.path.exists(extract_path):
-		shutil.rmtree(extract_path)
-
 	with zipfile.ZipFile(zip_path, "r") as zf:
+		validate_zip_limits(zf)
 		dest = os.path.realpath(extract_path)
 		for info in zf.infolist():
 			# Reject symlink entries outright: a symlink + a path through it could escape the course dir once materialised.
@@ -1608,6 +1606,10 @@ def extract_package(course: str, title: str, scorm_package: dict):
 			target = os.path.realpath(os.path.join(extract_path, info.filename))
 			if not target.startswith(dest + os.sep) and target != dest:
 				frappe.throw(_("Invalid file path in package"))
+
+		# Only once the new package has passed: clear the previous extraction so a re-upload doesn't leave stale files served (path confirmed under the course dir above). A rejected package leaves the chapter playing the old one.
+		if os.path.exists(extract_path):
+			shutil.rmtree(extract_path)
 		zf.extractall(extract_path)
 
 	return extract_path

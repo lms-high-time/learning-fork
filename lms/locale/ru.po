@@ -11726,3 +11726,15 @@ msgstr "Начат"
 #: frontend/src/components/Sidebar/UserDropdown.vue
 msgid "Agents and sessions"
 msgstr "Агенты и сессии"
+
+#: lms/lms/zip_limits.py
+msgid "The archive contains more than {0} files."
+msgstr "В архиве больше {0} файлов."
+
+#: lms/lms/zip_limits.py
+msgid "The archive unpacks to more than {0} MB."
+msgstr "Распакованный архив больше {0} МБ."
+
+#: lms/lms/zip_limits.py
+msgid "A file in the archive is larger than {0} MB."
+msgstr "Файл в архиве больше {0} МБ."
