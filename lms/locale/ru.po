@@ -11723,6 +11723,10 @@ msgstr "{0} главы"
 msgid "Lesson in progress"
 msgstr "Начат"
 
+#: frontend/src/components/Sidebar/UserDropdown.vue
+msgid "Agents and sessions"
+msgstr "Агенты и сессии"
+
 #: lms/lms/zip_limits.py
 msgid "The archive contains more than {0} files."
 msgstr "В архиве больше {0} файлов."

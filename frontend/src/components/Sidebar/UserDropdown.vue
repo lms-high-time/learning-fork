@@ -167,6 +167,19 @@ const userDropdownOptions = computed(() => {
 					},
 				},
 				{
+					// Connected agents and browser sessions, with revoking, live on
+					// a page of lms_frappe_app outside this SPA
+					// (learning-services#669, #691).
+					icon: 'lucide-shield-check',
+					label: __('Agents and sessions'),
+					onClick: () => {
+						window.location.href = '/connections'
+					},
+					condition: () => {
+						return isLoggedIn
+					},
+				},
+				{
 					// Anyone may start an organization and invite a team
 					// (learning-services#366).
 					icon: 'lucide-building-2',
