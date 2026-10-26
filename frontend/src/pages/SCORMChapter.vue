@@ -45,6 +45,7 @@ import {
 	createDocumentResource,
 	createListResource,
 	createResource,
+	toast,
 	usePageMeta,
 } from 'frappe-ui'
 import { computed, inject, onBeforeMount, ref } from 'vue'
@@ -52,12 +53,14 @@ import { useRouter } from 'vue-router'
 import PageHeader from '@/components/Layouts/PageHeader.vue'
 import LockedLessonNotice from '@/components/LockedLessonNotice.vue'
 import { useSidebar } from '@/stores/sidebar'
+import { useSpace } from '@/stores/space'
 import { sessionStore } from '../stores/session'
 import { safeUrl } from '@/utils/safeUrl'
 
 const router = useRouter()
 const { brand } = sessionStore()
 const sidebarStore = useSidebar()
+const space = useSpace()
 const user = inject('$user')
 const readyToRender = ref(false)
 const isSuccessfullyCompleted = ref(false)
@@ -255,18 +258,25 @@ const progress = createResource({
 	},
 })
 
-const enrollStudent = () => {
-	enrollment.insert.submit(
-		{
+// Through our contract, not a bare LMS Enrollment: the platform refuses a
+// direct insert, and in an organization's space the enrolment is its
+// allocation (learning-services#347, #674).
+const enrollStudent = async () => {
+	try {
+		await space.load()
+		const result = await call('lms_frappe_app.api.student.enroll', {
 			course: props.courseName,
-			member: user.data?.name,
-		},
-		{
-			onSuccess(data) {
-				window.location.reload()
-			},
+			space: space.enrolFor(props.courseName),
+		})
+		if (!result?.ok) {
+			toast.error(result?.error?.message ?? __('Could not enroll'))
+			return
 		}
-	)
+		window.location.reload()
+	} catch (err) {
+		toast.error(__(err.messages?.[0] || err))
+		console.error(err)
+	}
 }
 
 const setupSCORMAPI = () => {
