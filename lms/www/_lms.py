@@ -8,7 +8,7 @@ from frappe.utils.data import escape_html
 from frappe.utils.jinja_globals import is_rtl
 from frappe.utils.telemetry import capture
 
-from lms.lms.utils import get_lms_path, get_lms_route
+from lms.lms.utils import course_translation_fields, get_lms_path, get_lms_route, localize_course
 
 no_cache = 1
 
@@ -108,12 +108,16 @@ def get_meta_from_document(app_path):
 		course = frappe.db.get_value(
 			"LMS Course",
 			course_name,
-			["title", "image", "description", "tags"],
+			["title", "image", "description", "tags", *course_translation_fields()],
 			as_dict=True,
 		)
 
 		if not course:
 			return frappe._dict()
+
+		# The page title and description a search engine or a link preview shows
+		# match the page itself, in the reader's language (learning-services#738).
+		localize_course(course)
 
 		if course.description:
 			soup = BeautifulSoup(course.description, "html.parser")
