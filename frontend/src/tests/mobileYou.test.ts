@@ -297,6 +297,22 @@ describe('the offer to tell the mentor about yourself', () => {
 	})
 })
 
+// learning-services#746: the platform may not circulate without an
+// age-rating sign, and a phone has no sidebar to carry it.
+describe('the age-rating sign', () => {
+	it('is shown to a signed-in user', async () => {
+		const { wrapper } = await openYou()
+		expect(wrapper.find('[data-testid="age-rating"]').text()).toBe('12+')
+	})
+
+	it('is shown to a signed-out visitor', async () => {
+		isLoggedIn.value = false
+		userResource.data = null
+		const { wrapper } = await openYou()
+		expect(wrapper.find('[data-testid="age-rating"]').text()).toBe('12+')
+	})
+})
+
 describe('a signed-out visitor who types the URL', () => {
 	it('is asked to log in rather than shown an account', async () => {
 		isLoggedIn.value = false

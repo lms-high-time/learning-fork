@@ -11738,3 +11738,8 @@ msgstr "Распакованный архив больше {0} МБ."
 #: lms/lms/zip_limits.py
 msgid "A file in the archive is larger than {0} MB."
 msgstr "Файл в архиве больше {0} МБ."
+
+#: frontend/src/components/Sidebar/AppSidebar.vue
+#: frontend/src/pages/MobileYou.vue
+msgid "Age rating"
+msgstr "Возрастная категория"

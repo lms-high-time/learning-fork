@@ -84,6 +84,15 @@
 			</div>
 			<SettingsRowList :groups="groups" @action="activate" />
 		</template>
+		<!-- A phone has no sidebar, which carries the age-rating sign on a
+		desktop (learning-services#746). -->
+		<p
+			data-testid="age-rating"
+			class="pt-6 text-center text-p-xs text-ink-gray-5"
+			:title="__('Age rating')"
+		>
+			12+
+		</p>
 
 		<BottomSheet
 			:model-value="showColourMode"
