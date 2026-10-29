@@ -33,17 +33,29 @@ def _request(cookie: str | None = None, accept_language: str = "ru"):
 	return Request(builder.get_environ())
 
 
+# The languages these tests speak. Frappe reads only enabled ones from the
+# cookie and Accept-Language; a fresh site may have Russian off.
+LANGUAGES = ("en", "ru")
+
+
 class TestReaderLang(BaseTestUtils):
 	def setUp(self):
 		super().setUp()
 		self.saved = (frappe.session.user, frappe.local.lang, getattr(frappe.local, "request", None))
 		self.system = frappe.get_system_settings("language") or "en"
+		self.disabled = [code for code in LANGUAGES if not frappe.db.get_value("Language", code, "enabled")]
+		for code in self.disabled:
+			frappe.db.set_value("Language", code, "enabled", 1)
+		frappe.client_cache.delete_value("languages")
 
 	def tearDown(self):
 		user, lang, request = self.saved
 		frappe.set_user(user)
 		frappe.local.lang = lang
 		frappe.local.request = request
+		for code in self.disabled:
+			frappe.db.set_value("Language", code, "enabled", 0)
+		frappe.client_cache.delete_value("languages")
 		super().tearDown()
 
 	def _as_guest(self, cookie=None):
