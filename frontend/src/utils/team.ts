@@ -2,6 +2,7 @@
 // documents they build in its space. Shapes and wording live here so they are
 // tested without a server; the page only draws them.
 
+import { pageLang } from '@/utils/lang'
 import { plural, type PluralForms } from '@/utils/plural'
 import type { HomeworkDue } from '@/utils/homework'
 
@@ -252,9 +253,7 @@ export const blockView = (
 // Dates the way the reader writes them, not ISO (learning-services#379).
 export const formatDay = (
 	iso: string | null,
-	lang: string = (typeof document !== 'undefined' &&
-		document.documentElement.lang) ||
-		'ru'
+	lang: string = pageLang()
 ): string => {
 	if (!iso) return '—'
 	const day = new Date(`${iso.slice(0, 10)}T00:00:00`)

@@ -106,6 +106,15 @@ beforeEach(() => {
 	server.clear()
 })
 
+// The dates are written in the page's language; this suite reads a Russian
+// page, as the server renders it (learning-services#765).
+beforeEach(() => {
+	document.documentElement.lang = 'ru'
+})
+afterEach(() => {
+	document.documentElement.lang = ''
+})
+
 describe('Homework page', () => {
 	it('asks for the homework of the current space', async () => {
 		server.answers[URL] = { ok: true, data: { space: 'org-1', items: [] } }

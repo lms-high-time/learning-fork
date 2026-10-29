@@ -100,13 +100,37 @@ describe('helpers', () => {
 
 	it('says when a document changed: the time today, the day this year', () => {
 		const now = new Date(2026, 9, 1, 18, 0)
-		expect(changedAt(null, now)).toBeNull()
-		expect(changedAt('2026-10-01T14:32:00', now)?.short).toBe('14:32')
-		expect(changedAt('2026-09-28T22:14:42.064609', now)?.short).toBe('28 сент.')
-		expect(changedAt('2025-12-30T10:00:00', now)?.short).toBe('30.12.2025')
-		expect(changedAt('2026-09-28T22:14:42', now)?.full).toBe(
+		expect(changedAt(null, now, 'ru')).toBeNull()
+		expect(changedAt('2026-10-01T14:32:00', now, 'ru')?.short).toBe('14:32')
+		expect(changedAt('2026-09-28T22:14:42.064609', now, 'ru')?.short).toBe(
+			'28 сент.'
+		)
+		expect(changedAt('2025-12-30T10:00:00', now, 'ru')?.short).toBe(
+			'30.12.2025'
+		)
+		expect(changedAt('2026-09-28T22:14:42', now, 'ru')?.full).toBe(
 			'Changed 28 сентября 2026, 22:14'
 		)
+	})
+
+	// learning-services#765: the page's language, not Russian for everyone.
+	it('writes the dates in the language of the page', () => {
+		const now = new Date(2026, 9, 1, 18, 0)
+		expect(changedAt('2026-09-28T22:14:42', now, 'en')).toEqual({
+			short: 'Sep 28',
+			full: 'Changed September 28, 2026, 10:14 PM',
+		})
+		expect(changedAt('2025-12-30T10:00:00', now, 'en')?.short).toBe(
+			'12/30/2025'
+		)
+		document.documentElement.lang = 'en'
+		try {
+			expect(changedAt('2026-09-28T22:14:42', now)?.short).toBe('Sep 28')
+			document.documentElement.lang = 'ru'
+			expect(changedAt('2026-09-28T22:14:42', now)?.short).toBe('28 сент.')
+		} finally {
+			document.documentElement.lang = ''
+		}
 	})
 
 	it('puts the most recently written courses first', () => {

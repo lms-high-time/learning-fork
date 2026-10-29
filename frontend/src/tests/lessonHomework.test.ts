@@ -172,6 +172,15 @@ afterEach(() => {
 	vi.restoreAllMocks()
 })
 
+// The dates are written in the page's language; this suite reads a Russian
+// page, as the server renders it (learning-services#765).
+beforeEach(() => {
+	document.documentElement.lang = 'ru'
+})
+afterEach(() => {
+	document.documentElement.lang = ''
+})
+
 describe('LessonHomework', () => {
 	it('asks for the lesson in the chosen space', async () => {
 		answer({})

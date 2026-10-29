@@ -113,6 +113,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue'
 import { Button, FormControl } from 'frappe-ui'
+import { pageLang } from '@/utils/lang'
 
 // One thing the mentor knows about the learner (learning-services#463). The
 // learner may word it themselves rather than talk the agent into it: the edit
@@ -149,7 +150,7 @@ const updatedOn = computed(() => {
 	if (!iso) return ''
 	const day = new Date(`${iso.slice(0, 10)}T00:00:00`)
 	if (Number.isNaN(day.getTime())) return iso
-	const lang = document.documentElement.lang || 'ru'
+	const lang = pageLang()
 	const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long' }
 	if (day.getFullYear() !== new Date().getFullYear()) options.year = 'numeric'
 	try {

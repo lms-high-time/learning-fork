@@ -122,6 +122,24 @@ describe('columns and rows', () => {
 		expect(sortRows(agreements.items, null)).toBe(agreements.items)
 	})
 
+	// learning-services#765: the alphabet is the page's, not Russian always.
+	it('sorts text by the alphabet of the page language', () => {
+		const rows = [
+			{ id: 'A1', topic: 'zebra' },
+			{ id: 'A2', topic: 'äpple' },
+		]
+		const ids = (lang: string) =>
+			sortRows(rows, 'topic', 'asc', lang).map((r) => r.id)
+		expect(ids('en')).toEqual(['A2', 'A1'])
+		expect(ids('sv')).toEqual(['A1', 'A2'])
+		document.documentElement.lang = 'sv'
+		try {
+			expect(sortRows(rows, 'topic').map((r) => r.id)).toEqual(['A1', 'A2'])
+		} finally {
+			document.documentElement.lang = ''
+		}
+	})
+
 	it('names a row by the first always-required column, whatever its key', () => {
 		// No course's key is special (learning-services#360).
 		expect(titleColumn(columns)?.key).toBe('topic')

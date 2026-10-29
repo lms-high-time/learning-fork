@@ -2,6 +2,8 @@
 // it is there, how full it is and when it last changed. Kept apart from the
 // page so the wording and the order are tested without a server.
 
+import { pageLang } from '@/utils/lang'
+
 export type DocumentSummary = {
 	artifact: string
 	title: string
@@ -44,28 +46,42 @@ const sameDay = (a: Date, b: Date) =>
  */
 export function changedAt(
 	modified: string | null | undefined,
-	now: Date = new Date()
+	now: Date = new Date(),
+	lang: string = pageLang()
 ): { short: string; full: string } | null {
 	if (!modified) return null
 	const at = new Date(modified)
 	if (Number.isNaN(at.getTime())) return null
-	const time = at.toLocaleTimeString('ru-RU', {
+	const time = at.toLocaleTimeString(lang, {
 		hour: '2-digit',
 		minute: '2-digit',
 	})
 	const short = sameDay(at, now)
 		? time
 		: at.getFullYear() === now.getFullYear()
-		? at.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
-		: at.toLocaleDateString('ru-RU')
-	const day = at
-		.toLocaleDateString('ru-RU', {
-			day: 'numeric',
-			month: 'long',
-			year: 'numeric',
-		})
-		.replace(/\s?г\.$/, '')
+		? at.toLocaleDateString(lang, { day: 'numeric', month: 'short' })
+		: at.toLocaleDateString(lang)
+	const day = dateInSentence(at, lang)
 	return { short, full: __('Changed {0}, {1}').format(day, time) }
+}
+
+/**
+ * The full date as it goes inside a sentence: «28 сентября 2026», «September
+ * 28, 2026». What a language puts after the year — the Russian «г.» — is cut,
+ * since the sentence goes on after it.
+ */
+function dateInSentence(at: Date, lang: string): string {
+	const parts = new Intl.DateTimeFormat(lang, {
+		day: 'numeric',
+		month: 'long',
+		year: 'numeric',
+	}).formatToParts(at)
+	let end = parts.length
+	while (end > 0 && parts[end - 1].type === 'literal') end--
+	return parts
+		.slice(0, end)
+		.map((part) => part.value)
+		.join('')
 }
 
 const latest = (course: CourseDocuments) =>

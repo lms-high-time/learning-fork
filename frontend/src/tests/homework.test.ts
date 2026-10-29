@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
 	canEdit,
 	dueLabel,
@@ -21,6 +21,15 @@ import {
 
 // A lesson's homework (learning-services#439): the wording and the rules the
 // block and the «Homework» page share.
+
+// The dates are written in the page's language; this suite reads a Russian
+// page, as the server renders it (learning-services#765).
+beforeEach(() => {
+	document.documentElement.lang = 'ru'
+})
+afterEach(() => {
+	document.documentElement.lang = ''
+})
 
 describe('statusLabel', () => {
 	it('names every status, and the absence of a submission', () => {

@@ -190,6 +190,15 @@ afterEach(() => {
 	vi.restoreAllMocks()
 })
 
+// The dates are written in the page's language; this suite reads a Russian
+// page, as the server renders it (learning-services#765).
+beforeEach(() => {
+	document.documentElement.lang = 'ru'
+})
+afterEach(() => {
+	document.documentElement.lang = ''
+})
+
 describe('HomeworkReview', () => {
 	it('asks for the submission it shows', async () => {
 		serve(card())

@@ -104,6 +104,15 @@ beforeEach(() => {
 	router.replace.mockImplementation(({ query }) => (route.query = query))
 })
 
+// The dates are written in the page's language; this suite reads a Russian
+// page, as the server renders it (learning-services#765).
+beforeEach(() => {
+	document.documentElement.lang = 'ru'
+})
+afterEach(() => {
+	document.documentElement.lang = ''
+})
+
 describe('HomeworkQueue', () => {
 	it('asks for the submitted ones first', async () => {
 		serve()
