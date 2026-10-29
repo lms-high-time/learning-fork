@@ -9,12 +9,12 @@
 				{{ __('You become its administrator and invite people by a link.') }}
 			</li>
 			<li>
-				{{ __('Its courses are the open catalog.') }}
+				{{ __('Its courses come from the public catalog.') }}
 			</li>
 			<li data-testid="new-team-limit">
 				{{
 					terms?.member_limit
-						? __('A team holds up to {0} members.').format(terms.member_limit)
+						? plural(terms.member_limit, TEAM_LIMIT)
 						: __('A team holds a limited number of members.')
 				}}
 			</li>
@@ -62,6 +62,8 @@ import {
 	usePageMeta,
 } from 'frappe-ui'
 import PageHeader from '@/components/Layouts/PageHeader.vue'
+import { TEAM_LIMIT } from '@/utils/team'
+import { plural } from '@/utils/plural'
 
 type Answer<T> = {
 	ok: boolean

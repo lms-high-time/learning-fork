@@ -128,7 +128,7 @@
 					>
 						{{
 							__(
-								'The courses are still in the works. Join, and we will write when the first one opens.'
+								'The courses are coming soon. Join, and we will write when the first one opens.'
 							)
 						}}
 					</p>
@@ -216,7 +216,7 @@ const badgeTheme = (course: ProgramCourse) =>
 const memberWaiting = computed(() =>
 	path.value.length && path.value.every((c) => status(c) === 'completed')
 		? __('All courses of the program are passed.')
-		: __('The next course is still in the works. We will write when it opens.')
+		: __('The next course is coming soon. We will write when it opens.')
 )
 
 const loginUrl = computed(

@@ -186,7 +186,7 @@ describe('the panel', () => {
 		const panel = wrapper.get('[data-testid="assistant-panel"]')
 		expect(panel.attributes('role')).toBe('complementary')
 		expect(panel.attributes('aria-modal')).toBeUndefined()
-		expect(panel.attributes('aria-label')).toBe('Your mentor')
+		expect(panel.attributes('aria-label')).toBe('Your agent')
 	})
 
 	it('covers the page on a phone, and Back closes it', async () => {
@@ -264,7 +264,7 @@ describe('the panel', () => {
 
 describe('the suggested action', () => {
 	const props = {
-		title: 'Tell your mentor about yourself',
+		title: 'Tell your agent about yourself',
 		text: 'About 5 minutes.',
 		actionLabel: 'Start',
 		scenario: 'profile',

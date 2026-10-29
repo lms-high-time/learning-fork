@@ -11,7 +11,7 @@
 				v-if="course.data?.upcoming && !isAdmin"
 				class="text-2xl-semibold text-ink-gray-9 mb-2"
 			>
-				{{ __('Course in the works') }}
+				{{ __('Course coming soon') }}
 			</div>
 			<!-- A student has the course already: where they are in it leads, not
 			its price (learning-services#636). -->
@@ -78,10 +78,9 @@
 				>
 					<p class="text-p-sm text-ink-gray-7">
 						{{
-							__('The program «{0}» goes in order: first pass «{1}».').format(
-								lock.title,
-								lock.locked_by?.title
-							)
+							__(
+								'The program “{0}” is taken in order: complete “{1}” first.'
+							).format(lock.title, lock.locked_by?.title)
 						}}
 					</p>
 					<router-link
@@ -92,7 +91,7 @@
 						class="block"
 					>
 						<Button variant="solid" size="md" class="w-full">
-							{{ __('Go to «{0}»').format(lock.locked_by?.title) }}
+							{{ __('Go to “{0}”').format(lock.locked_by?.title) }}
 						</Button>
 					</router-link>
 				</div>
@@ -259,7 +258,7 @@
 						class="text-p-sm text-ink-gray-7 underline-offset-2 hover:underline"
 					>
 						{{
-							__('Course {0} of {1} in the program «{2}»').format(
+							__('Course {0} of {1} in the program “{2}”').format(
 								program.number,
 								program.total,
 								program.title
@@ -276,7 +275,7 @@
 						data-testid="course-program-next"
 						class="mt-1.5 block text-p-sm text-ink-gray-7 underline-offset-2 hover:underline"
 					>
-						{{ __('Next course: «{0}»').format(program.next.title) }}
+						{{ __('Next course: “{0}”').format(program.next.title) }}
 					</router-link>
 				</li>
 			</ul>

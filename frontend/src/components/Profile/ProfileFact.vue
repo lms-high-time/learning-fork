@@ -26,7 +26,7 @@
 					v-model="draft"
 					type="textarea"
 					:rows="3"
-					:aria-label="fact.label || __('What your mentor knows')"
+					:aria-label="fact.label || __('What your agent knows')"
 					data-testid="profile-fact-draft"
 				/>
 				<div class="mt-2 flex gap-2">

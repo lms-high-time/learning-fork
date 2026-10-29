@@ -77,7 +77,7 @@
 							)
 						}}
 					</li>
-					<li>{{ __('Nobody sees your conversations with the mentor.') }}</li>
+					<li>{{ __('Nobody sees your conversations with the agent.') }}</li>
 				</ul>
 				<p class="text-p-sm text-ink-gray-6">
 					<a :href="safeUrl('/privacy')" class="underline">{{

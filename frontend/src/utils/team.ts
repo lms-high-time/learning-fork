@@ -205,7 +205,7 @@ export const audienceText = (
 	item: Allocation,
 	names: Record<string, string>
 ): string => {
-	if (item.chosen_by_member) return __('Taken by the member from the catalog')
+	if (item.chosen_by_member) return __('Self-enrolled from the catalog')
 	if (item.whole_team) return __('The whole team')
 	return item.members.map((user) => names[user] || user).join(', ')
 }
@@ -272,6 +272,18 @@ export const DAYS_LEFT: PluralForms = {
 	few: 'in {0} days [few]',
 	many: 'in {0} days [many]',
 	other: 'in {0} days',
+}
+
+// The team's size limit, on the page that creates one (learning-services#765).
+export const TEAM_LIMIT: PluralForms = {
+	one: 'A team holds up to {0} member.',
+	other: 'A team holds up to {0} members.',
+}
+
+// A member's document: blocks filled of all; the noun goes with the total.
+export const BLOCKS_OF: PluralForms = {
+	one: '{0} of {1} block',
+	other: '{0} of {1} blocks',
 }
 
 export const DAYS_OVERDUE: PluralForms = {

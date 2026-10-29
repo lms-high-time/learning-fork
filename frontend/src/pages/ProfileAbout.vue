@@ -15,12 +15,12 @@
 		>
 			<div class="min-w-0">
 				<h2 id="profile-facts-title" class="text-lg-semibold text-ink-gray-9">
-					{{ __('What your mentor knows about you') }}
+					{{ __('What your agent knows about you') }}
 				</h2>
 				<p v-if="isOwn" class="mt-1 max-w-prose text-p-base text-ink-gray-6">
 					{{
 						__(
-							'Your mentor takes this into account when working through your tasks in lessons. Your team lead does not see it.'
+							'Your agent takes this into account when working through your tasks in lessons. Your team lead does not see it.'
 						)
 					}}
 				</p>
@@ -55,7 +55,7 @@
 				<template #prefix>
 					<span class="lucide-message-circle size-4" aria-hidden="true" />
 				</template>
-				{{ __('Tell your mentor about you') }}
+				{{ __('Tell your agent about you') }}
 			</Button>
 		</div>
 		<!-- Folded groups, one per block: each block is long, and the summary
@@ -407,7 +407,7 @@ const saveFact = async (key, text) => {
 const forgetFact = (key) =>
 	confirmAction({
 		title: __('Delete this fact?'),
-		message: __('Your mentor will forget it.'),
+		message: __('Your agent will forget it.'),
 		label: __('Delete'),
 		async onConfirm() {
 			if (

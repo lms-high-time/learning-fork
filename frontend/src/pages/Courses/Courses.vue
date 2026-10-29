@@ -325,7 +325,7 @@ const courseTabs = computed(() => {
 			value: 'live',
 		},
 		{
-			label: __('Being prepared'),
+			label: __('Coming soon'),
 			value: 'upcoming',
 		},
 	]

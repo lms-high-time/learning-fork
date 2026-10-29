@@ -53,7 +53,7 @@
 				class="rounded-md bg-surface-amber-1 px-3 py-2 text-p-sm text-ink-amber-8"
 				data-testid="homework-comment"
 			>
-				<div class="font-medium">{{ __("Tutor's comment") }}</div>
+				<div class="font-medium">{{ __("Reviewer's comment") }}</div>
 				<p class="mt-1 whitespace-pre-line">{{ comment }}</p>
 			</div>
 

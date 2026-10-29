@@ -7,6 +7,13 @@
  */
 
 import { pageLang } from '@/utils/lang'
+import type { PluralForms } from '@/utils/plural'
+
+/** Rows shown of all; the noun goes with the total (learning-services#765). */
+export const ROWS_OF: PluralForms = {
+	one: '{0} of {1} row',
+	other: '{0} of {1} rows',
+}
 
 /** The longest text a cell or a field takes; the server refuses more. */
 export const MAX_TEXT = 4000

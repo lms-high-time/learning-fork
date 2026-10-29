@@ -154,7 +154,7 @@ export type ReviewCard = {
 }
 
 export const studentName = (student: Student | null | undefined): string =>
-	student?.name || __('Learner')
+	student?.name || __('Unnamed student')
 
 /** The queue's filters; an empty one is no filter. */
 export type QueueFilters = {
@@ -198,7 +198,7 @@ export const queueQuery = (filters: QueueFilters): Record<string, string> => ({
 const STATUS: Record<HomeworkStatus, string> = {
 	Assigned: 'Issued',
 	Submitted: 'Submitted',
-	Returned: 'Returned for revision',
+	Returned: 'Needs changes',
 	Accepted: 'Accepted',
 }
 
@@ -298,7 +298,7 @@ export const lastComment = (
 const EVENTS: Record<HomeworkEvent['event'], string> = {
 	assigned: 'Issued',
 	submitted: 'Submitted',
-	returned: 'Returned for revision',
+	returned: 'Needs changes',
 	accepted: 'Accepted',
 	reopened: 'Reopened',
 }

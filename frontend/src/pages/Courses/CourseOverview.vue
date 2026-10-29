@@ -99,10 +99,10 @@
 							{{
 								course.data.published
 									? __(
-											'You test this course. What seems wrong or awkward, tell the tutor during the session: it reaches the author.'
+											'You test this course. What seems wrong or awkward, tell the agent during the session: it reaches the author.'
 									  )
 									: __(
-											'The course is not published yet: you test it before everyone else. What seems wrong or awkward, tell the tutor during the session: it reaches the author.'
+											'The course is not published yet: you test it before everyone else. What seems wrong or awkward, tell the agent during the session: it reaches the author.'
 									  )
 							}}
 						</span>
@@ -154,7 +154,7 @@
 						</li>
 					</ul>
 					<p v-else class="text-ink-gray-5">
-						{{ __('The course is in the works.') }}
+						{{ __('This course is coming soon.') }}
 					</p>
 				</section>
 

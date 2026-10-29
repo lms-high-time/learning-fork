@@ -51,7 +51,7 @@
 							>
 								{{ memberName(author) }} ·
 								{{
-									__('{0} of {1} blocks').format(
+									__(pluralMessage(author.blocks_total, BLOCKS_OF)).format(
 										author.blocks_filled,
 										author.blocks_total
 									)
@@ -164,7 +164,9 @@ import { computed, ref, watch } from 'vue'
 import { createResource, FormControl, LoadingIndicator } from 'frappe-ui'
 import TeamEntryBody from '@/components/Team/TeamEntryBody.vue'
 import { safeUrl } from '@/utils/safeUrl'
+import { pluralMessage } from '@/utils/plural'
 import {
+	BLOCKS_OF,
 	blockView,
 	firstDocument,
 	memberName,

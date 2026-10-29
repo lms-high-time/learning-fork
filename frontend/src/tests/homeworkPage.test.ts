@@ -156,7 +156,7 @@ describe('Homework page', () => {
 
 		const returned = groups[0].findAll('[data-testid="homework-row"]')[1]
 		expect(returned.text()).toContain('Устав проекта')
-		expect(returned.text()).toContain('Returned for revision')
+		expect(returned.text()).toContain('Needs changes')
 		expect(returned.text()).toContain('Overdue')
 		expect(returned.text()).toContain('Нет целей')
 		expect(returned.find('a').attributes('href')).toBe(

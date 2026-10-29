@@ -9918,12 +9918,8 @@ msgid "Author view"
 msgstr "Кабинет автора"
 
 #: frontend/src/pages/Forms/CourseEnrollmentForm.vue
-msgid "For a team member, allocate the course to the team instead: that adds the deadline and puts them in the lead's report."
+msgid "For a team member, assign the course through the team instead: that adds the deadline and puts them in the lead's report."
 msgstr "Участнику команды курс назначайте через команду: так появится срок, а участник попадёт в отчёт ведущего."
-
-#: frontend/src/pages/Forms/CourseEnrollmentForm.vue
-msgid "Allocate the course"
-msgstr "Назначить курс"
 
 #: frontend/src/pages/MobileYou.vue
 msgid "You"
@@ -10050,7 +10046,7 @@ msgid "covered"
 msgstr "разобрано"
 
 #: frontend/src/components/CourseProgram/LessonObjectives.vue
-msgid "touched in passing"
+msgid "touched on briefly"
 msgstr "задето вскользь"
 
 #: frontend/src/components/CourseProgram/LessonObjectives.vue
@@ -10122,7 +10118,7 @@ msgid "Delete {0}"
 msgstr "Удалить {0}"
 
 #: frontend/src/pages/Documents/Document.vue
-msgid "Delete {0} «{1}»?"
+msgid "Delete {0} “{1}”?"
 msgstr "Удалить {0} «{1}»?"
 
 #: frontend/src/pages/Documents/Document.vue
@@ -10224,6 +10220,10 @@ msgstr "нет"
 #: frontend/src/pages/Documents/Document.vue
 msgid "{0} of {1} rows"
 msgstr "{0} из {1} строк"
+
+#: frontend/src/utils/documentTable.ts
+msgid "{0} of {1} row"
+msgstr "{0} из {1} строки"
 
 #: frontend/src/components/CourseDocumentCard.vue
 msgid "Into the document:"
@@ -10480,7 +10480,7 @@ msgstr "Кто что видит — в политике конфиденциа�
 
 #: frontend/src/components/Team/TeamMembers.vue
 #: frontend/src/pages/Team/Join.vue
-msgid "Nobody sees your conversations with the mentor."
+msgid "Nobody sees your conversations with the agent."
 msgstr "Разговоры с наставником не видит никто."
 
 #: frontend/src/components/Team/TeamMembers.vue
@@ -10503,6 +10503,7 @@ msgid "Copy"
 msgstr "Скопировать"
 
 #: frontend/src/components/Team/TeamAssignments.vue
+#: frontend/src/pages/Forms/CourseEnrollmentForm.vue
 msgid "Assign a course"
 msgstr "Назначить курс"
 
@@ -10531,7 +10532,7 @@ msgid "Assigned"
 msgstr "Назначено"
 
 #: frontend/src/components/Team/TeamAssignments.vue
-msgid "Taken by the member from the catalog"
+msgid "Self-enrolled from the catalog"
 msgstr "Взял(а) сам(а) из каталога"
 
 #: frontend/src/components/Team/TeamAssignments.vue
@@ -10559,7 +10560,7 @@ msgid "You become its administrator and invite people by a link."
 msgstr "Вы станете её администратором и пригласите людей ссылкой."
 
 #: frontend/src/pages/Team/NewTeam.vue
-msgid "Its courses are the open catalog."
+msgid "Its courses come from the public catalog."
 msgstr "Её курсы — открытый каталог."
 
 #: frontend/src/pages/Team/NewTeam.vue
@@ -10576,6 +10577,10 @@ msgstr "Название"
 
 #: frontend/src/components/Team/TeamDocuments.vue
 msgid "{0} of {1} blocks"
+msgstr "заполнено {0} из {1}"
+
+#: frontend/src/utils/team.ts
+msgid "{0} of {1} block"
 msgstr "заполнено {0} из {1}"
 
 #: frontend/src/components/Team/TeamDocuments.vue
@@ -10730,13 +10735,18 @@ msgstr "На главную"
 msgid "A team holds up to {0} members."
 msgstr "В команде может быть до {0} участников."
 
+#: frontend/src/utils/team.ts
+msgid "A team holds up to {0} member."
+msgstr "В команде может быть до {0} участника."
+
 #: frontend/src/pages/Team/NewTeam.vue
 msgid "You have as many teams as one person may start."
 msgstr "У вас уже столько команд, сколько может создать один человек."
 
 #: frontend/src/components/CourseCard.vue
 #: frontend/src/components/Layouts/PageHeader.vue
-msgid "In the works"
+#: frontend/src/pages/Courses/Courses.vue
+msgid "Coming soon"
 msgstr "В разработке"
 
 #: frontend/src/components/CourseCardOverlay.vue
@@ -10764,11 +10774,11 @@ msgid "After the course you will be able to"
 msgstr "После курса вы сможете"
 
 #: frontend/src/pages/Courses/CourseOverview.vue
-msgid "The course is in the works."
+msgid "This course is coming soon."
 msgstr "Курс в разработке."
 
 #: frontend/src/components/CourseCardOverlay.vue
-msgid "Course in the works"
+msgid "Course coming soon"
 msgstr "Курс в разработке"
 
 #: frontend/src/components/CourseCardOverlay.vue
@@ -10779,34 +10789,30 @@ msgstr "Отписаться"
 msgid "Could not unsubscribe"
 msgstr "Не удалось отписаться"
 
-#: frontend/src/pages/Courses/Courses.vue
-msgid "Being prepared"
-msgstr "В разработке"
-
 #: frontend/src/pages/Courses/CourseOverview.vue
-msgid "The course is not published yet: you test it before everyone else. What seems wrong or awkward, tell the tutor during the session: it reaches the author."
+msgid "The course is not published yet: you test it before everyone else. What seems wrong or awkward, tell the agent during the session: it reaches the author."
 msgstr "Курс ещё не опубликован: вы проверяете его первым. Что покажется неверным или неудобным, скажите наставнику на занятии: он передаст это автору."
 
 #: frontend/src/pages/Courses/CourseOverview.vue
-msgid "You test this course. What seems wrong or awkward, tell the tutor during the session: it reaches the author."
+msgid "You test this course. What seems wrong or awkward, tell the agent during the session: it reaches the author."
 msgstr "Вы тестируете этот курс. Что покажется неверным или неудобным, скажите наставнику на занятии: он передаст это автору."
 
 #: frontend/src/components/CourseCardOverlay.vue
 #: frontend/src/components/LessonEntry.vue
-msgid "The program «{0}» goes in order: first pass «{1}»."
+msgid "The program “{0}” is taken in order: complete “{1}” first."
 msgstr "Программа «{0}» идёт по порядку: сначала пройдите курс «{1}»."
 
 #: frontend/src/components/CourseCardOverlay.vue
 #: frontend/src/components/LessonEntry.vue
-msgid "Go to «{0}»"
+msgid "Go to “{0}”"
 msgstr "Перейти к курсу «{0}»"
 
 #: frontend/src/components/CourseCardOverlay.vue
-msgid "Course {0} of {1} in the program «{2}»"
+msgid "Course {0} of {1} in the program “{2}”"
 msgstr "Курс {0} из {1} в программе «{2}»"
 
 #: frontend/src/components/CourseCardOverlay.vue
-msgid "Next course: «{0}»"
+msgid "Next course: “{0}”"
 msgstr "Дальше — курс «{0}»"
 
 #: frontend/src/pages/Programs/ProgramDetail.vue
@@ -10842,7 +10848,7 @@ msgid "Take the courses in any order."
 msgstr "Курсы можно проходить в любом порядке."
 
 #: frontend/src/pages/Programs/ProgramDetail.vue
-msgid "The courses are still in the works. Join, and we will write when the first one opens."
+msgid "The courses are coming soon. Join, and we will write when the first one opens."
 msgstr "Курсы ещё в разработке. Вступите — и мы напишем, когда откроется первый."
 
 #: frontend/src/pages/Programs/ProgramDetail.vue
@@ -10854,7 +10860,7 @@ msgid "All courses of the program are passed."
 msgstr "Все курсы программы пройдены."
 
 #: frontend/src/pages/Programs/ProgramDetail.vue
-msgid "The next course is still in the works. We will write when it opens."
+msgid "The next course is coming soon. We will write when it opens."
 msgstr "Следующий курс ещё в разработке. Напишем, когда он откроется."
 
 #: frontend/src/pages/Programs/ProgramDetail.vue
@@ -10910,7 +10916,7 @@ msgid "Submitted"
 msgstr "Сдано"
 
 #: frontend/src/utils/homework.ts
-msgid "Returned for revision"
+msgid "Needs changes"
 msgstr "На доработке"
 
 #: frontend/src/utils/homework.ts
@@ -10979,7 +10985,7 @@ msgid "Overdue"
 msgstr "Просрочено"
 
 #: frontend/src/components/Homework/LessonHomework.vue
-msgid "Tutor's comment"
+msgid "Reviewer's comment"
 msgstr "Комментарий наставника"
 
 #: frontend/src/components/Homework/LessonHomework.vue
@@ -11108,7 +11114,7 @@ msgid "Homework accepted"
 msgstr "Домашка принята"
 
 #: frontend/src/composables/useHomeworkReview.ts
-msgid "Sent back for revision"
+msgid "Sent back for changes"
 msgstr "Возвращено на доработку"
 
 #: frontend/src/composables/useHomeworkReview.ts
@@ -11116,7 +11122,7 @@ msgid "Acceptance cancelled"
 msgstr "Приём отменён"
 
 #: frontend/src/composables/useHomeworkReview.ts
-msgid "The learner saved a new version. Look at it first."
+msgid "The student saved a new version. Look at it first."
 msgstr "Ученик сохранил новую версию — посмотрите её."
 
 #: frontend/src/components/Homework/HomeworkDiff.vue
@@ -11164,7 +11170,7 @@ msgid "Accept"
 msgstr "Принять"
 
 #: frontend/src/components/Homework/HomeworkReview.vue
-msgid "Return for revision"
+msgid "Send back for changes"
 msgstr "Вернуть на доработку"
 
 #: frontend/src/components/Homework/HomeworkReview.vue
@@ -11176,11 +11182,11 @@ msgid "Return"
 msgstr "Вернуть"
 
 #: frontend/src/components/Homework/HomeworkReview.vue
-msgid "Write what to fix. The learner will see the comment under the lesson."
+msgid "Write what to fix. The student will see the comment under the lesson."
 msgstr "Напишите, что доделать. Комментарий появится у ученика под уроком."
 
 #: frontend/src/components/Homework/HomeworkReview.vue
-msgid "The homework goes back to the learner for revision, with your comment."
+msgid "The homework goes back to the student with your comment."
 msgstr "Домашка вернётся ученику на доработку с вашим комментарием."
 
 #: frontend/src/components/Team/TeamHomeworkDue.vue
@@ -11212,7 +11218,7 @@ msgid "Deadlines saved"
 msgstr "Сроки сохранены"
 
 #: frontend/src/utils/homework.ts
-msgid "Learner"
+msgid "Unnamed student"
 msgstr "Ученик"
 
 #: frontend/src/components/Homework/HomeworkDiff.vue
@@ -11233,7 +11239,7 @@ msgstr "Дата срока — {0}"
 
 #: frontend/src/components/Sidebar/AppSidebar.vue
 #: frontend/src/pages/MobileYou.vue
-msgid "Tell your mentor about yourself"
+msgid "Tell your agent about yourself"
 msgstr "Расскажите наставнику о себе"
 
 #: frontend/src/components/Sidebar/AppSidebar.vue
@@ -11242,7 +11248,7 @@ msgid "Lessons will use examples from your work. About 5 minutes."
 msgstr "Уроки будут на примерах из вашей работы. Около 5 минут."
 
 #: frontend/src/components/AssistantPanel/AssistantPanel.vue
-msgid "Chat with your mentor"
+msgid "Chat with your agent"
 msgstr "Чат с наставником"
 
 #: frontend/src/pages/Profile.vue
@@ -11251,11 +11257,11 @@ msgid "About me"
 msgstr "Обо мне"
 
 #: frontend/src/pages/ProfileAbout.vue
-msgid "Your mentor also knows"
+msgid "Your agent also knows"
 msgstr "Наставник также знает"
 
 #: frontend/src/pages/ProfileAbout.vue
-msgid "Fill in with your mentor"
+msgid "Fill in with your agent"
 msgstr "Заполнить с наставником"
 
 #: frontend/src/pages/ProfileAbout.vue
@@ -11267,7 +11273,7 @@ msgid "Delete this fact?"
 msgstr "Удалить эти сведения?"
 
 #: frontend/src/pages/ProfileAbout.vue
-msgid "Your mentor will forget it."
+msgid "Your agent will forget it."
 msgstr "Наставник это забудет."
 
 #: frontend/src/pages/ProfileAbout.vue
@@ -11283,7 +11289,7 @@ msgid "Updated {0}"
 msgstr "Обновлено {0}"
 
 #: frontend/src/components/AssistantPanel/AssistantPanel.vue
-msgid "Your mentor"
+msgid "Your agent"
 msgstr "Ваш наставник"
 
 #: frontend/src/components/Profile/ProfileFact.vue
@@ -11299,7 +11305,7 @@ msgid "Delete: {0}"
 msgstr "Удалить: {0}"
 
 #: frontend/src/components/Profile/ProfileFact.vue
-msgid "What your mentor knows"
+msgid "What your agent knows"
 msgstr "Что знает наставник"
 
 #: frontend/src/pages/Documents/Documents.vue
@@ -11387,11 +11393,11 @@ msgid "Open claude.ai or the Claude desktop app and go to Customize → Connecto
 msgstr "Откройте claude.ai или программу Claude на компьютере и перейдите в Customize → Connectors."
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "Click «+», then Add custom connector."
+msgid "Click “+”, then Add custom connector."
 msgstr "Нажмите «+», затем Add custom connector."
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "Name — for example «{0}», URL — the address above. Click Add."
+msgid "Name: for example “{0}”; URL: the address above. Click Add."
 msgstr "Name — например, «{0}», URL — адрес выше. Нажмите Add."
 
 #: frontend/src/pages/Agent/Agent.vue
@@ -11399,7 +11405,7 @@ msgid "Click Connect, sign in to this site with your account and allow access."
 msgstr "Нажмите Connect, войдите на этот сайт своей учётной записью и разрешите доступ."
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "In a chat, click «+» → Connectors and check that «{0}» is on."
+msgid "In a chat, click “+” → Connectors and check that “{0}” is on."
 msgstr "В чате нажмите «+» → Connectors и проверьте, что «{0}» включён."
 
 #: frontend/src/pages/Agent/Agent.vue
@@ -11415,11 +11421,11 @@ msgid "Open chatgpt.com, go to Settings → Security and login and turn on Devel
 msgstr "Откройте chatgpt.com, перейдите в настройки, раздел «Безопасность и вход» (Security and login), и включите режим разработчика (Developer mode)."
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "Open Plugins, click «+» and create an app for the platform."
+msgid "Open Plugins, click “+” and create an app for the platform."
 msgstr "Откройте раздел Plugins, нажмите «+» и создайте приложение для платформы."
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "Name — «{0}», URL — the address above, authentication — OAuth."
+msgid "Name: “{0}”; URL: the address above; authentication: OAuth."
 msgstr "Название — «{0}», URL — адрес выше, авторизация — OAuth."
 
 #: frontend/src/pages/Agent/Agent.vue
@@ -11427,7 +11433,7 @@ msgid "Sign in to this site with your account and allow access."
 msgstr "Войдите на этот сайт своей учётной записью и разрешите доступ."
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "In a chat, open the «+» menu, choose Developer mode and turn on «{0}»."
+msgid "In a chat, open the “+” menu, choose Developer mode and turn on “{0}”."
 msgstr "В чате откройте меню «+», выберите режим разработчика (Developer mode) и включите «{0}»."
 
 #: frontend/src/pages/Agent/Agent.vue
@@ -11515,7 +11521,7 @@ msgid "Sign in with your account on this site"
 msgstr "Войдите учётной записью этого сайта"
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "Write: «Show my courses»"
+msgid "Write: “Show my courses”"
 msgstr "Напишите: «Покажи мои курсы»"
 
 #: frontend/src/pages/Agent/Agent.vue
@@ -11539,7 +11545,7 @@ msgid "The assistant does not see the platform"
 msgstr "Ассистент не видит платформу"
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "Check that the connector is on in this chat (in Claude: «+» → Connectors; in ChatGPT: «+» → Developer mode). If it is on, disconnect it in the assistant settings and connect again."
+msgid "Check that the connector is on in this chat (in Claude: “+” → Connectors; in ChatGPT: “+” → Developer mode). If it is on, disconnect it in the assistant settings and connect again."
 msgstr "Проверьте, что коннектор включён в этом чате (в Claude: «+» → Connectors; в ChatGPT: «+» → Developer mode). Если включён — отключите его в настройках ассистента и подключите заново."
 
 #: frontend/src/pages/Agent/Agent.vue
@@ -11547,7 +11553,7 @@ msgid "The assistant asks permission at every step"
 msgstr "Ассистент спрашивает разрешение на каждый шаг"
 
 #: frontend/src/pages/Agent/Agent.vue
-msgid "That is how assistants protect you before the platform records your answers. In Claude you can choose «Allow always» for this connector: it works only with your studies on this site."
+msgid "That is how assistants protect you before the platform records your answers. In Claude you can choose “Allow always” for this connector: it works only with your studies on this site."
 msgstr "Так ассистенты вас защищают: платформа записывает ваши ответы и прогресс. В Claude для этого коннектора можно выбрать «Allow always» — он работает только с вашей учёбой на этом сайте."
 
 #: frontend/src/pages/Agent/Agent.vue
@@ -11568,7 +11574,7 @@ msgstr "Ассистент не видит ваш пароль: вы входи�
 
 #: frontend/src/components/Documents/BlockFields.vue
 #: frontend/src/components/Documents/DocTableEditor.vue
-msgid "Required when «{0}» is filled"
+msgid "Required when “{0}” is filled"
 msgstr "Обязательно, если заполнено «{0}»"
 
 #: frontend/src/components/Documents/LessonDocument.vue
@@ -11647,15 +11653,15 @@ msgid "Login to Frappe Cloud"
 msgstr "Войти в Frappe Cloud"
 
 #: frontend/src/pages/ProfileAbout.vue
-msgid "What your mentor knows about you"
+msgid "What your agent knows about you"
 msgstr "Что наставник знает о вас"
 
 #: frontend/src/pages/ProfileAbout.vue
-msgid "Your mentor takes this into account when working through your tasks in lessons. Your team lead does not see it."
+msgid "Your agent takes this into account when working through your tasks in lessons. Your team lead does not see it."
 msgstr "Наставник учитывает это на уроках, когда разбирает ваши задачи. Руководитель вашей команды этого не видит."
 
 #: frontend/src/pages/ProfileAbout.vue
-msgid "Tell your mentor about you"
+msgid "Tell your agent about you"
 msgstr "Рассказать наставнику о себе"
 
 #: frontend/src/pages/ProfileAbout.vue

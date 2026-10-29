@@ -409,7 +409,7 @@ describe('a fact', () => {
 		).toBe('Fix: Кот Борис')
 		await wrapper.get('[data-testid="profile-fact-edit"]').trigger('click')
 		expect(wrapper.get('textarea').attributes('aria-label')).toBe(
-			'What your mentor knows'
+			'What your agent knows'
 		)
 	})
 })

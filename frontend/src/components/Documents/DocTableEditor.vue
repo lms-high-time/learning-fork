@@ -29,7 +29,7 @@
 			</button>
 			<div class="ms-auto text-p-sm text-ink-gray-5 tabular-nums">
 				{{
-					__('{0} of {1} rows').format(
+					__(pluralMessage(block.items.length, ROWS_OF)).format(
 						String(rows.length),
 						String(block.items.length)
 					)
@@ -212,7 +212,9 @@ import { computed, ref } from 'vue'
 import { Button } from 'frappe-ui'
 import TableCell from '@/components/Documents/TableCell.vue'
 import { useScreenSize } from '@/utils/composables'
+import { pluralMessage } from '@/utils/plural'
 import {
+	ROWS_OF,
 	conditionTitle,
 	filterRows,
 	isMissing,
@@ -290,13 +292,13 @@ function sortBy(key: string) {
 function requiredTitle(column: DocColumn): string {
 	if (column.required === true) return __('Required')
 	const other = conditionTitle(column, props.block.columns)
-	return other ? __('Required when «{0}» is filled').format(other) : ''
+	return other ? __('Required when “{0}” is filled').format(other) : ''
 }
 
 function confirmDelete(row: DocRow) {
 	const name = title.value ? row[title.value.key] : ''
 	const text = name
-		? __('Delete {0} «{1}»?').format(row.id, String(name))
+		? __('Delete {0} “{1}”?').format(row.id, String(name))
 		: __('Delete {0}?').format(row.id)
 	if (window.confirm(text)) emit('deleteRow', row.id)
 }
