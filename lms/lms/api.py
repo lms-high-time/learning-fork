@@ -49,6 +49,7 @@ from lms.lms.utils import (
 	get_field_meta,
 	get_instructors,
 	get_lms_route,
+	get_reader_lang,
 	has_course_instructor_role,
 	has_evaluator_role,
 	has_lms_role,
@@ -153,13 +154,11 @@ def _doctype_permissions():
 	return out
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist(allow_guest=True)  # nosemgrep: frappe-semgrep-rules.rules.security.guest-whitelisted-method
 def get_translations():
-	if frappe.session.user != "Guest":
-		language = frappe.db.get_value("User", frappe.session.user, "language")
-	else:
-		language = frappe.db.get_single_value("System Settings", "language")
-	return get_all_translations(language)
+	"""The interface catalogue in the reader's language — the one `<html lang>`
+	carries (learning-services#765)."""
+	return get_all_translations(get_reader_lang())
 
 
 @frappe.whitelist()

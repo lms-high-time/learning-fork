@@ -1007,6 +1007,27 @@ MAIN_COURSE_LANGUAGE = "ru"
 TAG_START = re.compile(r"<[A-Za-z!/?]")
 
 
+def get_reader_lang() -> str:
+	"""The language Learning speaks to this request: its interface catalogue and
+	`<html lang>` (learning-services#765).
+
+	A user with a language in the profile reads in it. Everyone else — a guest,
+	or a user who never chose — reads in `frappe.local.lang`, which Frappe sets
+	per request: for a guest from the public site's `preferred_language` cookie,
+	then the request's Accept-Language; for a user without a language, the
+	system's. The system language closes the list.
+
+	Before this the catalogue for a guest was the system's whatever the cookie
+	said, and a user with an empty language got no catalogue at all.
+	"""
+	user = frappe.session.user
+	if user and user != "Guest":
+		language = frappe.get_cached_value("User", user, "language")
+		if language:
+			return language
+	return getattr(frappe.local, "lang", None) or frappe.get_system_settings("language") or "en"
+
+
 def course_translation_fields() -> list:
 	"""The translations column to read with a course, when the site has one.
 
