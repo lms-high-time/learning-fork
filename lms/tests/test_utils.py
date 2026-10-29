@@ -6,6 +6,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 import frappe
+from frappe.custom.doctype.custom_field.custom_field import create_custom_field
 from frappe.tests import UnitTestCase
 from frappe.utils import get_system_timezone, getdate, to_timedelta
 
@@ -15,6 +16,7 @@ from lms.lms.utils import (
 	DEFAULT_PAGE_LENGTH,
 	MAX_PAGE_LENGTH,
 	convert_from_system_timezone,
+	course_translation_fields,
 	create_user,
 	format_timezone,
 	get_average_rating,
@@ -41,6 +43,7 @@ from lms.lms.utils import (
 	has_moderator_role,
 	has_student_role,
 	is_instructor,
+	localize_course,
 	resolve_page_length,
 	sanitize_editorjs,
 	slugify,
@@ -765,3 +768,186 @@ class TestEditorJsSanitisation(unittest.TestCase):
 		):
 			with self.subTest(raw=raw):
 				self.assertEqual(sanitize_editorjs(raw), raw)
+
+
+class TestCourseLocalization(BaseTestUtils):
+	"""learning-services#738: the public face of a course — title, summary,
+	description — in the reader's language when the course has a translation
+	into it. Lessons and the author's form stay Russian."""
+
+	FIELD = "course_translations"
+	TITLE = "Курс для проверки перевода"
+	SUMMARY = "Краткое описание курса"
+	DESCRIPTION = "Подробное описание курса"
+	EN = {
+		"title": "Translation Test Course",
+		"short_introduction": "A short course summary",
+		"description": "<p>A detailed course description</p>",
+		"objectives": ["Read the course in English"],
+	}
+
+	@classmethod
+	def setUpClass(cls):
+		super().setUpClass()
+		# Our app adds the field; a site with Learning alone has none, so the test
+		# brings its own and takes it away again.
+		cls.created_field = not frappe.get_meta("LMS Course").has_field(cls.FIELD)
+		cls.created_column = cls.created_field and not frappe.db.has_column("LMS Course", cls.FIELD)
+		if cls.created_field:
+			create_custom_field(
+				"LMS Course",
+				{"fieldname": cls.FIELD, "label": "Course Translations", "fieldtype": "JSON", "hidden": 1},
+			)
+
+	@classmethod
+	def tearDownClass(cls):
+		if cls.created_field:
+			frappe.delete_doc("Custom Field", f"LMS Course-{cls.FIELD}", force=True)
+			if cls.created_column:
+				frappe.db.sql_ddl(f"ALTER TABLE `tabLMS Course` DROP COLUMN `{cls.FIELD}`")
+			frappe.clear_cache(doctype="LMS Course")
+		super().tearDownClass()
+
+	def setUp(self):
+		super().setUp()
+		self.lang = frappe.local.lang
+		course = frappe.new_doc("LMS Course")
+		course.update(
+			{
+				"title": self.TITLE,
+				"short_introduction": self.SUMMARY,
+				"description": self.DESCRIPTION,
+				"published": 1,
+				"instructors": [{"instructor": "Administrator"}],
+			}
+		)
+		course.insert()
+		self.cleanup_items.append(("LMS Course", course.name))
+		self.course = course.name
+
+	def tearDown(self):
+		frappe.local.lang = self.lang
+		super().tearDown()
+
+	def _translate(self, translations):
+		value = translations if isinstance(translations, str) else json.dumps(translations)
+		frappe.db.set_value("LMS Course", self.course, self.FIELD, value)
+
+	def _assert_russian(self, course):
+		self.assertEqual(course.title, self.TITLE)
+		self.assertEqual(course.short_introduction, self.SUMMARY)
+		self.assertIn(self.DESCRIPTION, course.description)
+
+	def _card(self):
+		cards = get_courses(filters={"name": self.course})
+		self.assertEqual(len(cards), 1)
+		return cards[0]
+
+	def test_without_a_translation_the_course_is_unchanged(self):
+		frappe.local.lang = "en"
+		for course in (get_course_details(self.course), self._card()):
+			self._assert_russian(course)
+			self.assertNotIn(self.FIELD, course)
+
+	def test_an_empty_translation_changes_nothing(self):
+		frappe.local.lang = "en"
+		self._translate({"en": {"title": "", "short_introduction": "  "}})
+		self._assert_russian(get_course_details(self.course))
+
+	def test_an_english_reader_gets_the_english_course(self):
+		frappe.local.lang = "en"
+		self._translate({"en": self.EN})
+		for course in (get_course_details(self.course), self._card()):
+			self.assertEqual(course.title, self.EN["title"])
+			self.assertEqual(course.short_introduction, self.EN["short_introduction"])
+			self.assertEqual(course.description, self.EN["description"])
+
+	def test_a_regional_variant_falls_back_to_its_language(self):
+		frappe.local.lang = "en-US"
+		self._translate({"en": self.EN})
+		self.assertEqual(get_course_details(self.course).title, self.EN["title"])
+
+	def test_a_russian_reader_gets_the_russian_course(self):
+		frappe.local.lang = "ru"
+		self._translate({"en": self.EN})
+		self._assert_russian(get_course_details(self.course))
+		self._assert_russian(self._card())
+
+	def test_a_russian_entry_is_not_read(self):
+		self._translate({"ru": {"title": "Другое название"}, "en": self.EN})
+		for lang in ("ru", "ru-RU"):
+			with self.subTest(lang=lang):
+				frappe.local.lang = lang
+				self._assert_russian(get_course_details(self.course))
+				self._assert_russian(self._card())
+
+	def test_a_partial_translation_replaces_only_what_it_has(self):
+		frappe.local.lang = "en"
+		self._translate({"en": {"title": self.EN["title"]}})
+		course = get_course_details(self.course)
+		self.assertEqual(course.title, self.EN["title"])
+		self.assertEqual(course.short_introduction, self.SUMMARY)
+		self.assertIn(self.DESCRIPTION, course.description)
+
+	def test_translations_of_the_wrong_shape_are_ignored(self):
+		frappe.local.lang = "en"
+		for raw in ('["en"]', '{"en": "Broken"}', '{"en": {"title": 7}}', "null"):
+			with self.subTest(raw=raw):
+				self._translate(raw)
+				self._assert_russian(get_course_details(self.course))
+
+	def test_unreadable_translations_are_ignored(self):
+		# A JSON column refuses this; a text one would not.
+		frappe.local.lang = "en"
+		course = frappe._dict(title=self.TITLE, course_translations='{"en": {"title": "Broken"')
+		self.assertEqual(localize_course(course), {"title": self.TITLE})
+
+	def test_the_raw_translations_do_not_reach_the_page(self):
+		frappe.local.lang = "en"
+		self._translate({"en": self.EN})
+		self.assertNotIn(self.FIELD, get_course_details(self.course))
+		self.assertNotIn(self.FIELD, self._card())
+
+	def test_the_document_keeps_the_russian_text(self):
+		frappe.local.lang = "en"
+		self._translate({"en": self.EN})
+		get_course_details(self.course)
+		self._card()
+		# The author's form loads the document itself.
+		self.assertEqual(frappe.get_doc("LMS Course", self.course).title, self.TITLE)
+
+	def test_a_translated_description_is_sanitized(self):
+		frappe.local.lang = "en"
+		self._translate({"en": {"description": '<p>Hi</p><script>alert("x")</script>'}})
+		self.assertNotIn("<script", get_course_details(self.course).description)
+
+	def test_an_unclosed_tag_is_sanitized_too(self):
+		# BeautifulSoup finds no tag in it, so sanitize_html alone would pass it.
+		frappe.local.lang = "en"
+		self._translate({"en": {"title": "<img src=x onerror=alert(1)//"}})
+		self.assertNotIn("onerror", get_course_details(self.course).title)
+
+	def test_plain_text_is_not_escaped(self):
+		frappe.local.lang = "en"
+		self._translate({"en": {"title": "Sales & Marketing"}})
+		self.assertEqual(get_course_details(self.course).title, "Sales & Marketing")
+
+	def test_the_page_meta_is_in_the_readers_language(self):
+		from lms.www._lms import get_meta_from_document
+
+		frappe.local.lang = "en"
+		self._translate({"en": self.EN})
+		meta = get_meta_from_document(f"courses/{self.course}")
+		self.assertEqual(meta["title"], self.EN["title"])
+		self.assertEqual(meta["description"], "A detailed course description")
+
+	def test_learning_alone_reads_no_translations(self):
+		with patch("lms.lms.utils.frappe.get_meta") as get_meta:
+			get_meta.return_value.has_field.return_value = False
+			self.assertEqual(course_translation_fields(), [])
+
+	def test_a_course_without_the_key_is_left_alone(self):
+		frappe.local.lang = "en"
+		course = frappe._dict(title=self.TITLE)
+		self.assertEqual(localize_course(course), {"title": self.TITLE})
+		self.assertEqual(localize_course({}), {})

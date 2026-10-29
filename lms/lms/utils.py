@@ -891,7 +891,8 @@ def get_courses(filters: dict = None, start: int = 0, limit_page_length: int | s
 		filters = {}
 
 	filters, or_filters, show_featured = update_course_filters(filters)
-	fields = get_course_fields()
+	# The cards are localized in get_course_card_details (learning-services#738).
+	fields = get_course_fields() + course_translation_fields()
 	page_length = resolve_page_length(limit_page_length)
 	start = cint(start)
 
@@ -995,8 +996,104 @@ def get_course_categories() -> list:
 	return options
 
 
+# A course's public face in other languages: our app keeps it in a JSON custom
+# field, `{"en": {"title": ..., "short_introduction": ..., "description": ...}}`
+# (learning-services#738). Learning installed without that app has no such field.
+COURSE_TRANSLATIONS_FIELD = "course_translations"
+LOCALIZED_COURSE_FIELDS = ("title", "short_introduction", "description")
+# The course's own fields are Russian; a translation into Russian is not read.
+MAIN_COURSE_LANGUAGE = "ru"
+# The start of a tag, a comment or a declaration: text that has to be cleaned.
+TAG_START = re.compile(r"<[A-Za-z!/?]")
+
+
+def course_translation_fields() -> list:
+	"""The translations column to read with a course, when the site has one.
+
+	Asking the database for a field the doctype lacks is an error, so the read
+	includes it only when the meta knows it. The meta is cached, so this costs
+	nothing per call.
+	"""
+	if frappe.get_meta("LMS Course").has_field(COURSE_TRANSLATIONS_FIELD):
+		return [COURSE_TRANSLATIONS_FIELD]
+	return []
+
+
+def localize_course(course: dict) -> dict:
+	"""The course as the reader sees it: title, summary and description in the
+	reader's language when the course carries a translation into it
+	(learning-services#738).
+
+	The language is `frappe.local.lang` — a guest's comes from the
+	`preferred_language` cookie, a user's from the profile — and a regional
+	variant falls back to its parent (`en-US` to `en`). A Russian reader gets
+	the course's own fields: a `ru` entry, if any, is not read. A missing, empty
+	or unreadable translation leaves the Russian text as it is, field by field. The
+	raw translations never leave the server, and nothing is written back: the
+	course form edits the document itself, not this.
+	"""
+	if not course:
+		return course
+
+	translation = get_course_translation(course.pop(COURSE_TRANSLATIONS_FIELD, None))
+	for field in LOCALIZED_COURSE_FIELDS:
+		value = translation.get(field)
+		if isinstance(value, str) and value.strip():
+			course[field] = clean_translated_text(value)
+
+	return course
+
+
+def clean_translated_text(value: str) -> str:
+	"""A translated text as safe to show as the course's own.
+
+	The document's fields are sanitized on save; the JSON field is not. A text
+	with anything like a tag is cleaned unconditionally: without
+	`always_sanitize`, `sanitize_html` lets through what BeautifulSoup finds no
+	tag in, an unclosed `<img src=x onerror=...` among them. Plain text is left
+	alone, so a `&` in a title is not turned into an entity.
+	"""
+	if TAG_START.search(value):
+		return sanitize_html(value, always_sanitize=True)
+	return value
+
+
+def get_course_translation(translations) -> dict:
+	"""The entry of a course's translations for the reader's language, or {}."""
+	if not translations:
+		return {}
+
+	if isinstance(translations, str):
+		try:
+			translations = json.loads(translations)
+		except ValueError:
+			return {}
+
+	if not isinstance(translations, dict):
+		return {}
+
+	lang = getattr(frappe.local, "lang", None)
+	if not lang:
+		return {}
+
+	from frappe.translate import get_parent_language
+
+	# None for a language that is not a variant.
+	parent = get_parent_language(lang) or lang
+	if parent == MAIN_COURSE_LANGUAGE:
+		return {}
+
+	for code in dict.fromkeys((lang, parent)):
+		translation = translations.get(code)
+		if isinstance(translation, dict):
+			return translation
+
+	return {}
+
+
 def get_course_card_details(courses: list) -> list:
 	for course in courses:
+		localize_course(course)
 		course.instructors = get_instructors("LMS Course", course.name)
 
 		if course.paid_course and course.published == 1:
@@ -1136,7 +1233,8 @@ def get_course_details(course: str):
 	if not is_course_published and not can_modify_course(course) and not membership:
 		return {}
 
-	fields = get_course_fields()
+	# Localized below, once, for every caller (learning-services#738).
+	fields = get_course_fields() + course_translation_fields()
 	course_details = frappe.db.get_value(
 		"LMS Course",
 		course,
@@ -1171,7 +1269,7 @@ def get_course_details(course: str):
 		_locked, resume = get_lesson_gate(course)
 		course_details.current_lesson = get_lesson_index(resume or course_details.membership.current_lesson)
 
-	return course_details
+	return localize_course(course_details)
 
 
 def get_categorized_courses(courses: list) -> dict:
