@@ -13,7 +13,7 @@
 		"
 		:role="isMobile ? 'dialog' : 'complementary'"
 		:aria-modal="isMobile ? 'true' : undefined"
-		:aria-label="__('Your mentor')"
+		:aria-label="__('Your agent')"
 		data-testid="assistant-panel"
 	>
 		<!-- Ours, not the chat's: a chat that failed to load (offline, refused to
@@ -22,7 +22,7 @@
 			class="flex h-11 shrink-0 items-center justify-between border-b border-outline-gray-2 ps-4 pe-2"
 		>
 			<span class="text-base font-medium text-ink-gray-9">
-				{{ __('Your mentor') }}
+				{{ __('Your agent') }}
 			</span>
 			<button
 				type="button"
@@ -39,7 +39,7 @@
 			:key="store.url"
 			ref="frame"
 			:src="safeUrl(store.url)"
-			:title="__('Chat with your mentor')"
+			:title="__('Chat with your agent')"
 			class="min-h-0 w-full flex-1 border-0"
 			@load="sendContext"
 		/>

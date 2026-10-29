@@ -44,7 +44,7 @@ export function useReviewQueue(filters: () => QueueFilters) {
 
 const DONE: Record<ReviewAction, string> = {
 	accept: 'Homework accepted',
-	send_back: 'Sent back for revision',
+	send_back: 'Sent back for changes',
 	reopen: 'Acceptance cancelled',
 }
 
@@ -105,7 +105,7 @@ export function useReviewCard(id: Ref<string>) {
 				return 'done'
 			}
 			if (result.code === 'stale_version') {
-				toast.error(__('The learner saved a new version. Look at it first.'))
+				toast.error(__('The student saved a new version. Look at it first.'))
 				await reread()
 				return 'reread'
 			}

@@ -114,7 +114,7 @@ describe('who an assignment is for', () => {
 			audienceText(allocation({ whole_team: false, members: ['a@x'] }), names)
 		).toBe('Анна')
 		expect(audienceText(allocation({ chosen_by_member: true }), names)).toBe(
-			'Taken by the member from the catalog'
+			'Self-enrolled from the catalog'
 		)
 	})
 })

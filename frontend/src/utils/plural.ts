@@ -8,6 +8,8 @@
  * never selects them, so they never show untranslated.
  */
 
+import { pageLang } from '@/utils/lang'
+
 export type PluralForms = {
 	one: string
 	other: string
@@ -17,27 +19,16 @@ export type PluralForms = {
 
 type Catalogue = Record<string, string> | undefined
 
-const currentLang = (): string =>
-	(typeof document !== 'undefined' && document.documentElement.lang) ||
-	(typeof window !== 'undefined' &&
-		(window as Window & { lang?: string }).lang) ||
-	'en'
-
 /** The message for `count` in `lang`; each form carries a `{0}` for the number. */
 export function pluralMessage(
 	count: number,
 	forms: PluralForms,
-	lang: string = currentLang(),
+	lang: string = pageLang(),
 	catalogue: Catalogue = (
 		globalThis as { translatedMessages?: Record<string, string> }
 	).translatedMessages
 ): string {
-	let category: string
-	try {
-		category = new Intl.PluralRules(lang).select(count)
-	} catch {
-		category = count === 1 ? 'one' : 'other'
-	}
+	const category = new Intl.PluralRules(lang).select(count)
 	const form = forms[category as keyof PluralForms]
 	// A form the catalogue does not translate would show in English; `other`
 	// is always translated, so it is the safer fallback.

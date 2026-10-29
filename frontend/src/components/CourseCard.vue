@@ -96,7 +96,7 @@
 				size="md"
 				class="w-fit mb-2 !text-ink-gray-8"
 			>
-				{{ __('In the works') }}
+				{{ __('Coming soon') }}
 			</Badge>
 
 			<div

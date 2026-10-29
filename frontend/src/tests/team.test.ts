@@ -231,6 +231,15 @@ describe('the report in days, sorted, summed', () => {
 		)
 		expect(deadlineText(row({ deadline: null }), today)).toBe('—')
 		expect(formatDay('2026-10-04', 'ru')).toBe('4 октября 2026 г.')
+		// The page's language, not Russian, when none is given (#765).
+		document.documentElement.lang = 'en'
+		try {
+			expect(formatDay('2026-10-04')).toBe('October 4, 2026')
+		} finally {
+			document.documentElement.lang = ''
+		}
+		// A page without a language reads English.
+		expect(formatDay('2026-10-04')).toBe('October 4, 2026')
 	})
 
 	it('sorts by a column, empty deadlines last', () => {

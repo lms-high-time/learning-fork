@@ -73,11 +73,11 @@
 					<li>
 						{{
 							__(
-								'Your progress in a course is one: if you have already passed a course of the team on your own, the team will see that too.'
+								"Your progress in a course is the same everywhere: if you've already completed one of the team's courses on your own, the team will see that too."
 							)
 						}}
 					</li>
-					<li>{{ __('Nobody sees your conversations with the mentor.') }}</li>
+					<li>{{ __('Nobody sees your conversations with the agent.') }}</li>
 				</ul>
 				<p class="text-p-sm text-ink-gray-6">
 					<a :href="safeUrl('/privacy')" class="underline">{{

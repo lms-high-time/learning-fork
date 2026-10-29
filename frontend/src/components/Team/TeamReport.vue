@@ -110,7 +110,7 @@
 					<dd class="ms-1 inline">
 						{{
 							__(
-								'lessons whose quiz passed on the first attempt, of lessons passed.'
+								'lessons whose quiz was passed on the first attempt, of lessons completed.'
 							)
 						}}
 					</dd>

@@ -190,6 +190,15 @@ afterEach(() => {
 	vi.restoreAllMocks()
 })
 
+// The dates are written in the page's language; this suite reads a Russian
+// page, as the server renders it (learning-services#765).
+beforeEach(() => {
+	document.documentElement.lang = 'ru'
+})
+afterEach(() => {
+	document.documentElement.lang = ''
+})
+
 describe('HomeworkReview', () => {
 	it('asks for the submission it shows', async () => {
 		serve(card())
@@ -282,7 +291,7 @@ describe('HomeworkReview', () => {
 		expect(summaries).toContain('History')
 		expect(summaries).toContain('Versions')
 		const rows = wrapper.findAll('details li').map((row) => row.text())
-		expect(rows[0]).toContain('Returned for revision · You ·')
+		expect(rows[0]).toContain('Changes requested · You ·')
 		expect(rows[1]).toContain('Submitted · Анна Ученица ·')
 	})
 
@@ -290,7 +299,7 @@ describe('HomeworkReview', () => {
 		serve(card())
 		let wrapper = await open()
 		expect(button(wrapper, 'Accept')).toBeTruthy()
-		expect(button(wrapper, 'Return for revision')).toBeTruthy()
+		expect(button(wrapper, 'Send back for changes')).toBeTruthy()
 		expect(button(wrapper, 'Cancel acceptance')).toBeFalsy()
 
 		serve(card({ actions: ['reopen'] }))
@@ -348,7 +357,7 @@ describe('HomeworkReview', () => {
 	it('returns with a comment, and not without one', async () => {
 		serve(card())
 		const wrapper = await open()
-		await button(wrapper, 'Return for revision')!.trigger('click')
+		await button(wrapper, 'Send back for changes')!.trigger('click')
 		const dialog = wrapper.find('[data-testid="dialog"]')
 		const send = dialog.find('[data-testid="dialog-action"]')
 		expect(send.attributes('disabled')).toBeDefined()
@@ -366,7 +375,7 @@ describe('HomeworkReview', () => {
 		expect(wrapper.find('[data-testid="dialog"]').exists()).toBe(false)
 
 		// Done: the next return starts from a blank comment.
-		await button(wrapper, 'Return for revision')!.trigger('click')
+		await button(wrapper, 'Send back for changes')!.trigger('click')
 		expect(
 			(wrapper.find('textarea').element as HTMLTextAreaElement).value
 		).toBe('')
@@ -389,19 +398,19 @@ describe('HomeworkReview', () => {
 		serve(card())
 		refuse('stale_version')
 		const wrapper = await open()
-		await button(wrapper, 'Return for revision')!.trigger('click')
+		await button(wrapper, 'Send back for changes')!.trigger('click')
 		await wrapper.find('textarea').setValue('Добавьте решения')
 		await wrapper.find('[data-testid="dialog-action"]').trigger('click')
 		await flushPromises()
 
 		expect(toast.error).toHaveBeenCalledWith(
-			'The learner saved a new version. Look at it first.'
+			'The student saved a new version. Look at it first.'
 		)
 		expect(reads()).toBe(2)
 		expect(pending.load).toHaveBeenCalled()
 		// The dialog closes on the new version; the comment waits for it.
 		expect(wrapper.find('[data-testid="dialog"]').exists()).toBe(false)
-		await button(wrapper, 'Return for revision')!.trigger('click')
+		await button(wrapper, 'Send back for changes')!.trigger('click')
 		expect(
 			(wrapper.find('textarea').element as HTMLTextAreaElement).value
 		).toBe('Добавьте решения')
@@ -411,7 +420,7 @@ describe('HomeworkReview', () => {
 		serve(card())
 		refuse('wrong_status', 'Сдачу уже проверили')
 		const wrapper = await open()
-		await button(wrapper, 'Return for revision')!.trigger('click')
+		await button(wrapper, 'Send back for changes')!.trigger('click')
 		await wrapper.find('textarea').setValue('Ещё раз')
 		// The other tutor accepted it: the card now offers only reopening.
 		const accepted = card({ actions: ['reopen'] })
@@ -424,14 +433,14 @@ describe('HomeworkReview', () => {
 		expect(reads()).toBe(2)
 		expect(pending.load).toHaveBeenCalled()
 		expect(wrapper.find('[data-testid="dialog"]').exists()).toBe(false)
-		expect(button(wrapper, 'Return for revision')).toBeFalsy()
+		expect(button(wrapper, 'Send back for changes')).toBeFalsy()
 	})
 
 	it('keeps the dialog on a race, to try again', async () => {
 		serve(card())
 		refuse('busy', 'Попробуйте ещё раз')
 		const wrapper = await open()
-		await button(wrapper, 'Return for revision')!.trigger('click')
+		await button(wrapper, 'Send back for changes')!.trigger('click')
 		await wrapper.find('textarea').setValue('Добавьте решения')
 		await wrapper.find('[data-testid="dialog-action"]').trigger('click')
 		await flushPromises()
@@ -492,7 +501,7 @@ describe('HomeworkReview', () => {
 		serve(card({ homework: null, student: { name: null } }))
 		const wrapper = await open()
 		expect(wrapper.find('[data-testid="review-title"]').text()).toBe('Спонсор')
-		expect(wrapper.text()).toContain('Learner')
+		expect(wrapper.text()).toContain('Unnamed student')
 		expect(wrapper.text()).toContain('Due 15 января 2030 г.')
 		expect(wrapper.find('[data-testid="review-answer"]').exists()).toBe(true)
 	})

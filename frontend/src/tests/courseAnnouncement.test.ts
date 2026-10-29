@@ -147,7 +147,7 @@ describe('CourseOverview of an announced course', () => {
 		expect(
 			wrapper.find('[data-testid="course-announcement-loading"]').exists()
 		).toBe(true)
-		expect(wrapper.text()).not.toContain('The course is in the works.')
+		expect(wrapper.text()).not.toContain('This course is coming soon.')
 		expect(wrapper.find('[data-testid="outline"]').exists()).toBe(false)
 	})
 

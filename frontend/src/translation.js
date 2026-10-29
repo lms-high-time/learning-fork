@@ -1,5 +1,6 @@
 import { createResource } from 'frappe-ui'
 import { shallowRef } from 'vue'
+import { pageLang } from '@/utils/lang'
 
 // The messages behind `__()`, reactive: a template rendered before the
 // translations arrive re-renders when they do. `__()` once read the window
@@ -56,7 +57,10 @@ function fetchTranslations() {
 	return new Promise((resolve) => {
 		createResource({
 			url: 'lms.lms.api.get_translations',
-			cache: 'translations',
+			// The catalogue is per language: under one key, a switch to English
+			// painted the cached Russian one first (learning-services#765). The
+			// page's language is the one the server answers in.
+			cache: ['translations', pageLang()],
 			auto: true,
 			// transform runs for the cached response and the network one alike;
 			// onSuccess only after the network.
