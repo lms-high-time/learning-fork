@@ -28,12 +28,7 @@ export function pluralMessage(
 		globalThis as { translatedMessages?: Record<string, string> }
 	).translatedMessages
 ): string {
-	let category: string
-	try {
-		category = new Intl.PluralRules(lang).select(count)
-	} catch {
-		category = count === 1 ? 'one' : 'other'
-	}
+	const category = new Intl.PluralRules(lang).select(count)
 	const form = forms[category as keyof PluralForms]
 	// A form the catalogue does not translate would show in English; `other`
 	// is always translated, so it is the safer fallback.

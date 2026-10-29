@@ -153,11 +153,7 @@ const updatedOn = computed(() => {
 	const lang = pageLang()
 	const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long' }
 	if (day.getFullYear() !== new Date().getFullYear()) options.year = 'numeric'
-	try {
-		return new Intl.DateTimeFormat(lang, options).format(day)
-	} catch {
-		return iso.slice(0, 10)
-	}
+	return new Intl.DateTimeFormat(lang, options).format(day)
 })
 
 // Focus follows the editor in and back out to the button that opened it.

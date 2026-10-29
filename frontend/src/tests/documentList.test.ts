@@ -123,6 +123,13 @@ describe('helpers', () => {
 		expect(changedAt('2025-12-30T10:00:00', now, 'en')?.short).toBe(
 			'12/30/2025'
 		)
+		// The short time style: no leading zero in English, as Russian writes it.
+		expect(changedAt('2026-10-01T09:05:00', now, 'en')?.short).toBe('9:05 AM')
+		expect(changedAt('2026-10-01T09:05:00', now, 'ru')?.short).toBe('09:05')
+		// Only the Russian «г.» is cut: the 日 of a Japanese date is the day's.
+		expect(changedAt('2026-09-28T22:14:42', now, 'ja')?.full).toBe(
+			'Changed 2026年9月28日, 22:14'
+		)
 		document.documentElement.lang = 'en'
 		try {
 			expect(changedAt('2026-09-28T22:14:42', now)?.short).toBe('Sep 28')

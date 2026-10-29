@@ -258,13 +258,11 @@ export const formatDay = (
 	if (!iso) return '—'
 	const day = new Date(`${iso.slice(0, 10)}T00:00:00`)
 	if (Number.isNaN(day.getTime())) return iso
-	const options = { day: 'numeric', month: 'long', year: 'numeric' } as const
-	try {
-		return new Intl.DateTimeFormat(lang, options).format(day)
-	} catch {
-		// Not a language tag (a page without boot data): the browser's own.
-		return new Intl.DateTimeFormat(undefined, options).format(day)
-	}
+	return new Intl.DateTimeFormat(lang, {
+		day: 'numeric',
+		month: 'long',
+		year: 'numeric',
+	}).format(day)
 }
 
 export const DAYS_LEFT: PluralForms = {

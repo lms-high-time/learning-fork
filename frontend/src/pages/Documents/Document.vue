@@ -283,7 +283,7 @@ watch(
 // «Сохранено» after the student's own write, «Обновлено» after the agent's.
 const stamp = ref<{ time: string; updated: boolean } | null>(null)
 const clock = (d: Date) =>
-	d.toLocaleTimeString(pageLang(), { hour: '2-digit', minute: '2-digit' })
+	d.toLocaleTimeString(pageLang(), { timeStyle: 'short' })
 watch(
 	() => api.saving.value,
 	(now, before) => {

@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { LESSONS, pluralMessage, plural, STUDENTS } from '@/utils/plural'
 import { ROWS_OF } from '@/utils/documentTable'
 import { BLOCKS_OF, TEAM_LIMIT } from '@/utils/team'
+import { pageLang } from '@/utils/lang'
 
 // learning-services#325: «1 Студенты» and «4 разделов · 8 уроки» become the
 // right form of the noun for the count.
@@ -82,5 +83,26 @@ describe('the fork counts', () => {
 			'A team holds up to {0} member.'
 		)
 		expect(pluralMessage(3, ROWS_OF, 'ru')).toBe('{0} of {1} rows')
+	})
+})
+
+// learning-services#765: the tag is checked once, so no caller needs a guard.
+describe('pageLang', () => {
+	afterEach(() => {
+		document.documentElement.lang = ''
+	})
+
+	it('takes the page tag, canonical', () => {
+		document.documentElement.lang = 'en-gb'
+		expect(pageLang()).toBe('en-GB')
+		document.documentElement.lang = 'ru'
+		expect(pageLang()).toBe('ru')
+	})
+
+	it('reads English without a tag or with the template left unrendered', () => {
+		document.documentElement.lang = ''
+		expect(pageLang()).toBe('en')
+		document.documentElement.lang = '{{ boot.lang }}'
+		expect(pageLang()).toBe('en')
 	})
 })
