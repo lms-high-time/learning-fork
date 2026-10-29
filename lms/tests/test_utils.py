@@ -824,8 +824,13 @@ class TestCourseLocalization(BaseTestUtils):
 		course.insert()
 		self.cleanup_items.append(("LMS Course", course.name))
 		self.course = course.name
+		# The reader is a guest, whose language is `frappe.local.lang`: a
+		# signed-in reader's is the profile's (`get_reader_lang`).
+		self.user = frappe.session.user
+		frappe.set_user("Guest")
 
 	def tearDown(self):
+		frappe.set_user(self.user)
 		frappe.local.lang = self.lang
 		super().tearDown()
 

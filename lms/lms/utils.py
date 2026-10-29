@@ -1008,24 +1008,45 @@ TAG_START = re.compile(r"<[A-Za-z!/?]")
 
 
 def get_reader_lang() -> str:
-	"""The language Learning speaks to this request: its interface catalogue and
-	`<html lang>` (learning-services#765).
+	"""The language Learning speaks to this request: its interface catalogue,
+	`<html lang>` and the course's translated fields (learning-services#765).
 
-	A user with a language in the profile reads in it. Everyone else — a guest,
-	or a user who never chose — reads in `frappe.local.lang`, which Frappe sets
-	per request: for a guest from the public site's `preferred_language` cookie,
-	then the request's Accept-Language; for a user without a language, the
-	system's. The system language closes the list.
-
-	Before this the catalogue for a guest was the system's whatever the cookie
-	said, and a user with an empty language got no catalogue at all.
+	1. A user with a language in the profile reads in it.
+	2. A user who never chose one reads in the public site's choice, the
+	   `preferred_language` cookie. Frappe's own `frappe.local.lang` does not
+	   help here: for a signed-in user it is the profile's language or the
+	   system's, never the cookie.
+	3. A guest reads in `frappe.local.lang`, which Frappe sets per request
+	   from the cookie, then Accept-Language.
+	4. The system language closes the list.
 	"""
 	user = frappe.session.user
 	if user and user != "Guest":
 		language = frappe.get_cached_value("User", user, "language")
-		if language:
-			return language
-	return getattr(frappe.local, "lang", None) or frappe.get_system_settings("language") or "en"
+		return language or get_cookie_lang() or get_system_lang()
+	return getattr(frappe.local, "lang", None) or get_system_lang()
+
+
+def get_cookie_lang() -> str | None:
+	"""The site's `preferred_language` cookie as a language this site has —
+	the cookie's own or its parent (`en-US` to `en`), as Frappe reads it for a
+	guest — or None."""
+	request = getattr(frappe.local, "request", None)
+	cookie = request.cookies.get("preferred_language") if request else None
+	if not cookie:
+		return None
+
+	from frappe.translate import get_all_languages, get_parent_language
+
+	languages = set(get_all_languages() or [])
+	for code in (cookie, get_parent_language(cookie)):
+		if code and code in languages:
+			return code
+	return None
+
+
+def get_system_lang() -> str:
+	return frappe.get_system_settings("language") or "en"
 
 
 def course_translation_fields() -> list:
@@ -1045,9 +1066,9 @@ def localize_course(course: dict) -> dict:
 	reader's language when the course carries a translation into it
 	(learning-services#738).
 
-	The language is `frappe.local.lang` — a guest's comes from the
-	`preferred_language` cookie, a user's from the profile — and a regional
-	variant falls back to its parent (`en-US` to `en`). A Russian reader gets
+	The language is the reader's (`get_reader_lang`) — the profile's, else
+	the public site's `preferred_language` cookie — and a regional variant
+	falls back to its parent (`en-US` to `en`). A Russian reader gets
 	the course's own fields: a `ru` entry, if any, is not read. A missing, empty
 	or unreadable translation leaves the Russian text as it is, field by field. The
 	raw translations never leave the server, and nothing is written back: the
@@ -1093,9 +1114,7 @@ def get_course_translation(translations) -> dict:
 	if not isinstance(translations, dict):
 		return {}
 
-	lang = getattr(frappe.local, "lang", None)
-	if not lang:
-		return {}
+	lang = get_reader_lang()
 
 	from frappe.translate import get_parent_language
 
