@@ -873,6 +873,14 @@ class TestCourseLocalization(BaseTestUtils):
 		self._assert_russian(get_course_details(self.course))
 		self._assert_russian(self._card())
 
+	def test_a_russian_entry_is_not_read(self):
+		self._translate({"ru": {"title": "Другое название"}, "en": self.EN})
+		for lang in ("ru", "ru-RU"):
+			with self.subTest(lang=lang):
+				frappe.local.lang = lang
+				self._assert_russian(get_course_details(self.course))
+				self._assert_russian(self._card())
+
 	def test_a_partial_translation_replaces_only_what_it_has(self):
 		frappe.local.lang = "en"
 		self._translate({"en": {"title": self.EN["title"]}})
@@ -912,6 +920,17 @@ class TestCourseLocalization(BaseTestUtils):
 		frappe.local.lang = "en"
 		self._translate({"en": {"description": '<p>Hi</p><script>alert("x")</script>'}})
 		self.assertNotIn("<script", get_course_details(self.course).description)
+
+	def test_an_unclosed_tag_is_sanitized_too(self):
+		# BeautifulSoup finds no tag in it, so sanitize_html alone would pass it.
+		frappe.local.lang = "en"
+		self._translate({"en": {"title": "<img src=x onerror=alert(1)//"}})
+		self.assertNotIn("onerror", get_course_details(self.course).title)
+
+	def test_plain_text_is_not_escaped(self):
+		frappe.local.lang = "en"
+		self._translate({"en": {"title": "Sales & Marketing"}})
+		self.assertEqual(get_course_details(self.course).title, "Sales & Marketing")
 
 	def test_the_page_meta_is_in_the_readers_language(self):
 		from lms.www._lms import get_meta_from_document

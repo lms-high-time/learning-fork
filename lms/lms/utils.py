@@ -1001,6 +1001,10 @@ def get_course_categories() -> list:
 # (learning-services#738). Learning installed without that app has no such field.
 COURSE_TRANSLATIONS_FIELD = "course_translations"
 LOCALIZED_COURSE_FIELDS = ("title", "short_introduction", "description")
+# The course's own fields are Russian; a translation into Russian is not read.
+MAIN_COURSE_LANGUAGE = "ru"
+# The start of a tag, a comment or a declaration: text that has to be cleaned.
+TAG_START = re.compile(r"<[A-Za-z!/?]")
 
 
 def course_translation_fields() -> list:
@@ -1022,8 +1026,9 @@ def localize_course(course: dict) -> dict:
 
 	The language is `frappe.local.lang` — a guest's comes from the
 	`preferred_language` cookie, a user's from the profile — and a regional
-	variant falls back to its parent (`en-US` to `en`). A missing, empty or
-	unreadable translation leaves the Russian text as it is, field by field. The
+	variant falls back to its parent (`en-US` to `en`). A Russian reader gets
+	the course's own fields: a `ru` entry, if any, is not read. A missing, empty
+	or unreadable translation leaves the Russian text as it is, field by field. The
 	raw translations never leave the server, and nothing is written back: the
 	course form edits the document itself, not this.
 	"""
@@ -1034,10 +1039,23 @@ def localize_course(course: dict) -> dict:
 	for field in LOCALIZED_COURSE_FIELDS:
 		value = translation.get(field)
 		if isinstance(value, str) and value.strip():
-			# The document's own text is sanitized on save; this one is not.
-			course[field] = sanitize_html(value)
+			course[field] = clean_translated_text(value)
 
 	return course
+
+
+def clean_translated_text(value: str) -> str:
+	"""A translated text as safe to show as the course's own.
+
+	The document's fields are sanitized on save; the JSON field is not. A text
+	with anything like a tag is cleaned unconditionally: without
+	`always_sanitize`, `sanitize_html` lets through what BeautifulSoup finds no
+	tag in, an unclosed `<img src=x onerror=...` among them. Plain text is left
+	alone, so a `&` in a title is not turned into an entity.
+	"""
+	if TAG_START.search(value):
+		return sanitize_html(value, always_sanitize=True)
+	return value
 
 
 def get_course_translation(translations) -> dict:
@@ -1060,7 +1078,12 @@ def get_course_translation(translations) -> dict:
 
 	from frappe.translate import get_parent_language
 
-	for code in dict.fromkeys((lang, get_parent_language(lang))):
+	# None for a language that is not a variant.
+	parent = get_parent_language(lang) or lang
+	if parent == MAIN_COURSE_LANGUAGE:
+		return {}
+
+	for code in dict.fromkeys((lang, parent)):
 		translation = translations.get(code)
 		if isinstance(translation, dict):
 			return translation
