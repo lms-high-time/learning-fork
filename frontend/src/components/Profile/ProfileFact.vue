@@ -141,7 +141,7 @@ const draft = ref('')
 const saving = ref(false)
 
 // What a screen reader hears the buttons are for: the label, or for a fact
-// with none («Your mentor also knows») its text.
+// with no label of its own its text.
 const name = computed(() => props.fact.label || props.fact.text || '')
 
 // «20 октября», with the year only when it is not this one.

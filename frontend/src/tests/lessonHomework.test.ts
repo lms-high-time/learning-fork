@@ -471,7 +471,7 @@ describe('LessonHomework', () => {
 		const wrapper = await mountBlock()
 		const rows = wrapper.findAll('details li').map((row) => row.text())
 		expect(rows[0]).toContain('Submitted · You ·')
-		expect(rows[1]).toContain('Needs changes · Тьютор Иванов ·')
+		expect(rows[1]).toContain('Changes requested · Тьютор Иванов ·')
 		expect(wrapper.text()).not.toContain('tutor@x')
 	})
 

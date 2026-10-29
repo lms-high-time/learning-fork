@@ -291,7 +291,7 @@ describe('HomeworkReview', () => {
 		expect(summaries).toContain('History')
 		expect(summaries).toContain('Versions')
 		const rows = wrapper.findAll('details li').map((row) => row.text())
-		expect(rows[0]).toContain('Needs changes · You ·')
+		expect(rows[0]).toContain('Changes requested · You ·')
 		expect(rows[1]).toContain('Submitted · Анна Ученица ·')
 	})
 

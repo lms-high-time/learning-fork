@@ -392,7 +392,7 @@ describe('CourseCardOverlay: where the student is (#636)', () => {
 		await flushPromises()
 		const path = wrapper.get('[data-testid="course-path"]')
 		expect(path.text()).toContain('Chapter 2 of 7 · lesson 5 of 21')
-		expect(path.text()).toContain('Lessons passed: 4 of 21')
+		expect(path.text()).toContain('Lessons completed: 4 of 21')
 		expect(wrapper.text()).not.toContain('Free')
 		expect(wrapper.text()).toContain('Continue with the agent')
 	})
@@ -439,7 +439,7 @@ describe('CourseCardOverlay: where the student is (#636)', () => {
 		})
 		await flushPromises()
 		expect(wrapper.get('[data-testid="course-path"]').text()).toContain(
-			'You have passed the course'
+			"You've completed the course"
 		)
 	})
 

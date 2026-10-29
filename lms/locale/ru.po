@@ -10014,7 +10014,7 @@ msgid "lesson {0} of {1}"
 msgstr "урок {0} из {1}"
 
 #: frontend/src/components/CourseProgram/LessonSlide.vue
-msgid "Lesson passed"
+msgid "Lesson complete"
 msgstr "Пройден"
 
 #: frontend/src/components/CourseProgram/LessonSlide.vue
@@ -10471,7 +10471,7 @@ msgid "While you are in the team, its admin and leads see your progress, homewor
 msgstr "Пока вы в команде, её администратор и ведущие видят ваш прогресс, домашние задания и документы по её курсам. Уйдёте — больше не увидят."
 
 #: frontend/src/pages/Team/Join.vue
-msgid "Your progress in a course is one: if you have already passed a course of the team on your own, the team will see that too."
+msgid "Your progress in a course is the same everywhere: if you've already completed one of the team's courses on your own, the team will see that too."
 msgstr "Прогресс по курсу у вас один: если вы уже проходили курс команды сами, команда увидит и это."
 
 #: frontend/src/pages/Team/Join.vue
@@ -10516,7 +10516,7 @@ msgid "Mandatory"
 msgstr "Обязательный"
 
 #: frontend/src/components/Team/TeamAssignments.vue
-msgid "Everyone assigned gets an email, and a reminder a few days before the deadline if the course is not passed yet."
+msgid "Everyone assigned gets an email, and a reminder a few days before the deadline if the course is not completed yet."
 msgstr "Каждому назначенному придёт письмо, а за несколько дней до срока — напоминание, если курс ещё не пройден."
 
 #: frontend/src/components/Team/TeamAssignments.vue
@@ -10688,7 +10688,7 @@ msgid "filled blocks in all documents of the course, in this team."
 msgstr "заполненные блоки во всех документах курса в этой команде."
 
 #: frontend/src/components/Team/TeamReport.vue
-msgid "lessons whose quiz passed on the first attempt, of lessons passed."
+msgid "lessons whose quiz was passed on the first attempt, of lessons completed."
 msgstr "уроки, квиз которых сдан с первой попытки, из сданных уроков."
 
 #: frontend/src/utils/team.ts
@@ -10790,16 +10790,16 @@ msgid "Could not unsubscribe"
 msgstr "Не удалось отписаться"
 
 #: frontend/src/pages/Courses/CourseOverview.vue
-msgid "The course is not published yet: you test it before everyone else. What seems wrong or awkward, tell the agent during the session: it reaches the author."
+msgid "The course is not published yet: you're testing it before everyone else. If anything seems wrong or awkward, tell the agent during the session; it will pass it on to the author."
 msgstr "Курс ещё не опубликован: вы проверяете его первым. Что покажется неверным или неудобным, скажите наставнику на занятии: он передаст это автору."
 
 #: frontend/src/pages/Courses/CourseOverview.vue
-msgid "You test this course. What seems wrong or awkward, tell the agent during the session: it reaches the author."
+msgid "You're testing this course. If anything seems wrong or awkward, tell the agent during the session; it will pass it on to the author."
 msgstr "Вы тестируете этот курс. Что покажется неверным или неудобным, скажите наставнику на занятии: он передаст это автору."
 
 #: frontend/src/components/CourseCardOverlay.vue
 #: frontend/src/components/LessonEntry.vue
-msgid "The program “{0}” is taken in order: complete “{1}” first."
+msgid "Courses in “{0}” go in order: complete “{1}” first."
 msgstr "Программа «{0}» идёт по порядку: сначала пройдите курс «{1}»."
 
 #: frontend/src/components/CourseCardOverlay.vue
@@ -10840,7 +10840,7 @@ msgid "Join the program"
 msgstr "Вступить в программу"
 
 #: frontend/src/pages/Programs/ProgramDetail.vue
-msgid "Courses open one after another: the next one once the previous is passed."
+msgid "Courses open one after another: each one once you complete the previous one."
 msgstr "Курсы открываются по очереди: следующий — после того, как пройден предыдущий."
 
 #: frontend/src/pages/Programs/ProgramDetail.vue
@@ -10848,7 +10848,7 @@ msgid "Take the courses in any order."
 msgstr "Курсы можно проходить в любом порядке."
 
 #: frontend/src/pages/Programs/ProgramDetail.vue
-msgid "The courses are coming soon. Join, and we will write when the first one opens."
+msgid "The courses are coming soon. Join, and we'll let you know when the first one opens."
 msgstr "Курсы ещё в разработке. Вступите — и мы напишем, когда откроется первый."
 
 #: frontend/src/pages/Programs/ProgramDetail.vue
@@ -10856,11 +10856,11 @@ msgid "This program is not available."
 msgstr "Эта программа недоступна."
 
 #: frontend/src/pages/Programs/ProgramDetail.vue
-msgid "All courses of the program are passed."
+msgid "You've completed every course in this program."
 msgstr "Все курсы программы пройдены."
 
 #: frontend/src/pages/Programs/ProgramDetail.vue
-msgid "The next course is coming soon. We will write when it opens."
+msgid "The next course is coming soon. We'll let you know when it opens."
 msgstr "Следующий курс ещё в разработке. Напишем, когда он откроется."
 
 #: frontend/src/pages/Programs/ProgramDetail.vue
@@ -10872,7 +10872,7 @@ msgid "Could not join the program"
 msgstr "Не удалось вступить в программу"
 
 #: frontend/src/utils/learningProgram.ts
-msgid "Course passed"
+msgid "Course complete"
 msgstr "Пройден"
 
 #: frontend/src/utils/learningProgram.ts
@@ -10917,6 +10917,10 @@ msgstr "Сдано"
 
 #: frontend/src/utils/homework.ts
 msgid "Needs changes"
+msgstr "На доработке"
+
+#: frontend/src/utils/homework.ts
+msgid "Changes requested"
 msgstr "На доработке"
 
 #: frontend/src/utils/homework.ts
@@ -11071,6 +11075,10 @@ msgstr "Не удалось загрузить домашние задания"
 
 #: frontend/src/utils/homework.ts
 msgid "Issued"
+msgstr "Выдано"
+
+#: frontend/src/utils/homework.ts
+msgid "Not submitted yet"
 msgstr "Выдано"
 
 #: frontend/src/pages/Homework/Homework.vue
@@ -11255,14 +11263,6 @@ msgstr "Чат с наставником"
 #: frontend/src/pages/ProfileAbout.vue
 msgid "About me"
 msgstr "Обо мне"
-
-#: frontend/src/pages/ProfileAbout.vue
-msgid "Your agent also knows"
-msgstr "Наставник также знает"
-
-#: frontend/src/pages/ProfileAbout.vue
-msgid "Fill in with your agent"
-msgstr "Заполнить с наставником"
 
 #: frontend/src/pages/ProfileAbout.vue
 msgid "Could not load the profile"
@@ -11661,7 +11661,7 @@ msgid "Your agent takes this into account when working through your tasks in les
 msgstr "Наставник учитывает это на уроках, когда разбирает ваши задачи. Руководитель вашей команды этого не видит."
 
 #: frontend/src/pages/ProfileAbout.vue
-msgid "Tell your agent about you"
+msgid "Start telling your agent about yourself"
 msgstr "Рассказать наставнику о себе"
 
 #: frontend/src/pages/ProfileAbout.vue
@@ -11698,7 +11698,7 @@ msgid "Start with the agent"
 msgstr "Начать с агентом"
 
 #: frontend/src/components/CourseCardOverlay.vue
-msgid "You have passed the course"
+msgid "You've completed the course"
 msgstr "Курс пройден"
 
 #: frontend/src/components/CourseCardOverlay.vue
@@ -11706,7 +11706,7 @@ msgid "Chapter {0} of {1} · lesson {2} of {3}"
 msgstr "Глава {0} из {1} · урок {2} из {3}"
 
 #: frontend/src/components/CourseCardOverlay.vue
-msgid "Lessons passed: {0} of {1}"
+msgid "Lessons completed: {0} of {1}"
 msgstr "Пройдено уроков: {0} из {1}"
 
 #: frontend/src/utils/plural.ts

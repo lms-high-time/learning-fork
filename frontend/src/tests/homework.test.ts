@@ -34,7 +34,7 @@ afterEach(() => {
 describe('statusLabel', () => {
 	it('names every status, and the absence of a submission', () => {
 		// «Выдано» (the design's word), not Learning's «Назначено».
-		expect(statusLabel('Assigned')).toBe('Issued')
+		expect(statusLabel('Assigned')).toBe('Not submitted yet')
 		expect(statusLabel('Submitted')).toBe('Submitted')
 		expect(statusLabel('Returned')).toBe('Needs changes')
 		expect(statusLabel('Accepted')).toBe('Accepted')
@@ -164,7 +164,7 @@ describe('the journal', () => {
 
 	it('names a cancelled acceptance', () => {
 		expect(eventLabel('reopened')).toBe('Reopened')
-		expect(eventLabel('returned')).toBe('Needs changes')
+		expect(eventLabel('returned')).toBe('Changes requested')
 	})
 
 	it('finds the last row of an event', () => {

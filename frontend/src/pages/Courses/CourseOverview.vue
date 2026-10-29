@@ -99,10 +99,10 @@
 							{{
 								course.data.published
 									? __(
-											'You test this course. What seems wrong or awkward, tell the agent during the session: it reaches the author.'
+											"You're testing this course. If anything seems wrong or awkward, tell the agent during the session; it will pass it on to the author."
 									  )
 									: __(
-											'The course is not published yet: you test it before everyone else. What seems wrong or awkward, tell the agent during the session: it reaches the author.'
+											"The course is not published yet: you're testing it before everyone else. If anything seems wrong or awkward, tell the agent during the session; it will pass it on to the author."
 									  )
 							}}
 						</span>

@@ -193,10 +193,11 @@ export const queueQuery = (filters: QueueFilters): Record<string, string> => ({
 	...(filters.organization ? { organization: filters.organization } : {}),
 })
 
-// `Issued`, not `Assigned`: the catalogue's «Назначено» is Learning's word for
-// other things; a homework is «Выдано».
+// Not `Assigned`: the catalogue's «Назначено» is Learning's word for other
+// things; a homework is «Выдано». Its own message, apart from the no-submission
+// «Не сдано», though the English reads alike.
 const STATUS: Record<HomeworkStatus, string> = {
-	Assigned: 'Issued',
+	Assigned: 'Not submitted yet',
 	Submitted: 'Submitted',
 	Returned: 'Needs changes',
 	Accepted: 'Accepted',
@@ -298,7 +299,7 @@ export const lastComment = (
 const EVENTS: Record<HomeworkEvent['event'], string> = {
 	assigned: 'Issued',
 	submitted: 'Submitted',
-	returned: 'Needs changes',
+	returned: 'Changes requested',
 	accepted: 'Accepted',
 	reopened: 'Reopened',
 }

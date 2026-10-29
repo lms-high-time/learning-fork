@@ -23,7 +23,7 @@
 				<div class="text-lg-semibold text-ink-gray-9">
 					{{
 						path.done
-							? __('You have passed the course')
+							? __("You've completed the course")
 							: path.chapter
 							? __('Chapter {0} of {1} · lesson {2} of {3}').format(
 									String(path.chapter),
@@ -31,7 +31,7 @@
 									String(path.lesson),
 									String(path.total)
 							  )
-							: __('Lessons passed: {0} of {1}').format(
+							: __('Lessons completed: {0} of {1}').format(
 									String(path.passed),
 									String(path.total)
 							  )
@@ -53,7 +53,7 @@
 					class="mt-1.5 text-p-sm tabular-nums text-ink-gray-6"
 				>
 					{{
-						__('Lessons passed: {0} of {1}').format(
+						__('Lessons completed: {0} of {1}').format(
 							String(path.passed),
 							String(path.total)
 						)
@@ -78,9 +78,10 @@
 				>
 					<p class="text-p-sm text-ink-gray-7">
 						{{
-							__(
-								'The program “{0}” is taken in order: complete “{1}” first.'
-							).format(lock.title, lock.locked_by?.title)
+							__('Courses in “{0}” go in order: complete “{1}” first.').format(
+								lock.title,
+								lock.locked_by?.title
+							)
 						}}
 					</p>
 					<router-link

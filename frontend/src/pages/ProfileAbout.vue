@@ -55,7 +55,7 @@
 				<template #prefix>
 					<span class="lucide-message-circle size-4" aria-hidden="true" />
 				</template>
-				{{ __('Tell your agent about you') }}
+				{{ __('Start telling your agent about yourself') }}
 			</Button>
 		</div>
 		<!-- Folded groups, one per block: each block is long, and the summary

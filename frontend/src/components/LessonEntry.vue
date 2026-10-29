@@ -32,9 +32,7 @@
 			>
 				<div class="text-p-base text-ink-gray-8">
 					{{
-						__(
-							'The program “{0}” is taken in order: complete “{1}” first.'
-						).format(
+						__('Courses in “{0}” go in order: complete “{1}” first.').format(
 							entry.program_lock.program_title,
 							entry.program_lock.previous.title
 						)

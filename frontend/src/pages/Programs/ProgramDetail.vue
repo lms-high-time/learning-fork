@@ -116,7 +116,7 @@
 						{{
 							details.enforce_course_order
 								? __(
-										'Courses open one after another: the next one once the previous is passed.'
+										'Courses open one after another: each one once you complete the previous one.'
 								  )
 								: __('Take the courses in any order.')
 						}}
@@ -128,7 +128,7 @@
 					>
 						{{
 							__(
-								'The courses are coming soon. Join, and we will write when the first one opens.'
+								"The courses are coming soon. Join, and we'll let you know when the first one opens."
 							)
 						}}
 					</p>
@@ -215,8 +215,8 @@ const badgeTheme = (course: ProgramCourse) =>
 
 const memberWaiting = computed(() =>
 	path.value.length && path.value.every((c) => status(c) === 'completed')
-		? __('All courses of the program are passed.')
-		: __('The next course is coming soon. We will write when it opens.')
+		? __("You've completed every course in this program.")
+		: __("The next course is coming soon. We'll let you know when it opens.")
 )
 
 const loginUrl = computed(
