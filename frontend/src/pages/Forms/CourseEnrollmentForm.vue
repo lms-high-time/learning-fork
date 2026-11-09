@@ -40,11 +40,11 @@
 				>
 					{{
 						__(
-							"For a team member, allocate the course to the team instead: that adds the deadline and puts them in the lead's report."
+							"For a team member, assign the course through the team instead: that adds the deadline and puts them in the lead's report."
 						)
 					}}
 					<a :href="safeUrl(allocationUrl)" class="text-ink-gray-8 underline">{{
-						__('Allocate the course')
+						__('Assign a course')
 					}}</a>
 				</p>
 			</div>

@@ -132,7 +132,7 @@ describe('CourseCardOverlay in a program (#405)', () => {
 		await flushPromises()
 
 		const link = wrapper.get('[data-testid="course-program-next"]')
-		expect(link.text()).toBe('Next course: «Недельный ритм»')
+		expect(link.text()).toBe('Next course: “Недельный ритм”')
 		expect(JSON.parse(link.attributes('data-to') ?? '{}')).toEqual({
 			name: 'CourseDetail',
 			params: { courseName: 'c-3' },
@@ -155,7 +155,7 @@ describe('CourseCardOverlay in a program (#405)', () => {
 		await flushPromises()
 
 		expect(wrapper.get('[data-testid="course-programs"]').text()).toContain(
-			'Course 2 of 3 in the program «Работа между отделами»'
+			'Course 2 of 3 in the program “Работа между отделами”'
 		)
 		expect(wrapper.find('[data-testid="course-program-lock"]').exists()).toBe(
 			false
@@ -208,7 +208,7 @@ describe('CourseCardOverlay in a program (#405)', () => {
 		await flushPromises()
 
 		expect(wrapper.get('[data-testid="course-program-lock"]').text()).toContain(
-			'first pass «Где теряется работа»'
+			'complete “Где теряется работа” first'
 		)
 		expect(wrapper.find('[data-testid="course-study"]').exists()).toBe(false)
 	})
@@ -312,7 +312,7 @@ describe('CourseCardOverlay for an announced course', () => {
 		const wrapper = mountAnnounced()
 
 		expect(wrapper.find('[data-testid="course-upcoming"]').exists()).toBe(true)
-		expect(wrapper.text()).toContain('Course in the works')
+		expect(wrapper.text()).toContain('Course coming soon')
 		expect(wrapper.text()).not.toContain('Free')
 		expect(wrapper.text()).not.toContain('Enroll Now')
 		expect(wrapper.find('[data-testid="course-notify"]').exists()).toBe(true)
@@ -392,7 +392,7 @@ describe('CourseCardOverlay: where the student is (#636)', () => {
 		await flushPromises()
 		const path = wrapper.get('[data-testid="course-path"]')
 		expect(path.text()).toContain('Chapter 2 of 7 · lesson 5 of 21')
-		expect(path.text()).toContain('Lessons passed: 4 of 21')
+		expect(path.text()).toContain('Lessons completed: 4 of 21')
 		expect(wrapper.text()).not.toContain('Free')
 		expect(wrapper.text()).toContain('Continue with the agent')
 	})
@@ -439,7 +439,7 @@ describe('CourseCardOverlay: where the student is (#636)', () => {
 		})
 		await flushPromises()
 		expect(wrapper.get('[data-testid="course-path"]').text()).toContain(
-			'You have passed the course'
+			"You've completed the course"
 		)
 	})
 

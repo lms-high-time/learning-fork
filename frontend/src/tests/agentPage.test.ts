@@ -147,7 +147,7 @@ describe('the agent page', () => {
 	it('opens on Claude and names the connector after the site', () => {
 		const wrapper = open()
 		expect(wrapper.find('[data-testid="agent-panel-claude"]').text()).toContain(
-			'«MCP-LMS»'
+			'“MCP-LMS”'
 		)
 	})
 

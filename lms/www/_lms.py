@@ -3,12 +3,17 @@ import re
 import frappe
 from bs4 import BeautifulSoup
 from frappe import _
-from frappe.translate import get_user_lang
 from frappe.utils.data import escape_html
 from frappe.utils.jinja_globals import is_rtl
 from frappe.utils.telemetry import capture
 
-from lms.lms.utils import course_translation_fields, get_lms_path, get_lms_route, localize_course
+from lms.lms.utils import (
+	course_translation_fields,
+	get_lms_path,
+	get_lms_route,
+	get_reader_lang,
+	localize_course,
+)
 
 no_cache = 1
 
@@ -38,7 +43,7 @@ def get_boot():
 			"csrf_token": frappe.sessions.get_csrf_token(),
 			"site_name": frappe.local.site,
 			"lms_path": get_lms_path(),
-			"lang": get_user_lang(),
+			"lang": get_reader_lang(),
 			"text_direction": "rtl" if is_rtl() else "ltr",
 		}
 	)

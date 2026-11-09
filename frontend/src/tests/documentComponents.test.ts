@@ -184,7 +184,7 @@ describe('BlockFields', () => {
 		expect(star('method').attributes('title')).toBe('Required')
 		expect(star('exception').exists()).toBe(false)
 		expect(star('who').attributes('title')).toBe(
-			'Required when «Исключение» is filled'
+			'Required when “Исключение” is filled'
 		)
 		const missing = (key: string) =>
 			wrapper
@@ -257,7 +257,7 @@ describe('DocTableEditor', () => {
 		expect(heads).toEqual(['ID', 'Тема*', 'Драйвер', 'Область*', 'Row actions'])
 		expect(
 			editor().get('thead th:nth-child(4) span[title]').attributes('title')
-		).toBe('Required when «Драйвер» is filled')
+		).toBe('Required when “Драйвер” is filled')
 	})
 
 	it('narrows to rows with empty cells', async () => {

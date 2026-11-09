@@ -115,11 +115,11 @@
 									)
 								}}
 							</li>
-							<li>{{ __('Click «+», then Add custom connector.') }}</li>
+							<li>{{ __('Click “+”, then Add custom connector.') }}</li>
 							<li>
 								{{
 									__(
-										'Name — for example «{0}», URL — the address above. Click Add.'
+										'Name: for example “{0}”; URL: the address above. Click Add.'
 									).format(name)
 								}}
 							</li>
@@ -133,7 +133,7 @@
 							<li>
 								{{
 									__(
-										'In a chat, click «+» → Connectors and check that «{0}» is on.'
+										'In a chat, click “+” → Connectors and check that “{0}” is on.'
 									).format(name)
 								}}
 							</li>
@@ -169,14 +169,14 @@
 							<li>
 								{{
 									__(
-										'Open Plugins, click «+» and create an app for the platform.'
+										'Open Plugins, click “+” and create an app for the platform.'
 									)
 								}}
 							</li>
 							<li>
 								{{
 									__(
-										'Name — «{0}», URL — the address above, authentication — OAuth.'
+										'Name: “{0}”; URL: the address above; authentication: OAuth.'
 									).format(name)
 								}}
 							</li>
@@ -188,7 +188,7 @@
 							<li>
 								{{
 									__(
-										'In a chat, open the «+» menu, choose Developer mode and turn on «{0}».'
+										'In a chat, open the “+” menu, choose Developer mode and turn on “{0}”.'
 									).format(name)
 								}}
 							</li>
@@ -426,7 +426,7 @@ const name = computed(() => session.branding?.data?.app_name || 'Learning')
 const steps = [
 	__("Add the address to your assistant's settings"),
 	__('Sign in with your account on this site'),
-	__('Write: «Show my courses»'),
+	__('Write: “Show my courses”'),
 ]
 
 type Client =
@@ -475,13 +475,13 @@ const faq = [
 	{
 		question: __('The assistant does not see the platform'),
 		answer: __(
-			'Check that the connector is on in this chat (in Claude: «+» → Connectors; in ChatGPT: «+» → Developer mode). If it is on, disconnect it in the assistant settings and connect again.'
+			'Check that the connector is on in this chat (in Claude: “+” → Connectors; in ChatGPT: “+” → Developer mode). If it is on, disconnect it in the assistant settings and connect again.'
 		),
 	},
 	{
 		question: __('The assistant asks permission at every step'),
 		answer: __(
-			'That is how assistants protect you before the platform records your answers. In Claude you can choose «Allow always» for this connector: it works only with your studies on this site.'
+			'That is how assistants protect you before the platform records your answers. In Claude you can choose “Allow always” for this connector: it works only with your studies on this site.'
 		),
 	},
 	{

@@ -43,8 +43,8 @@ export const stepStatus = (
 
 export const stepLabel = (status: StepStatus, previous?: number): string =>
 	({
-		upcoming: __('In the works'),
-		completed: __('Course passed'),
+		upcoming: __('Coming soon'),
+		completed: __('Course complete'),
 		locked: __('Opens after course {0}').format(previous ?? 1),
 		in_progress: __('In progress'),
 		open: __('Available to take'),

@@ -2,6 +2,8 @@
 // it is there, how full it is and when it last changed. Kept apart from the
 // page so the wording and the order are tested without a server.
 
+import { pageLang } from '@/utils/lang'
+
 export type DocumentSummary = {
 	artifact: string
 	title: string
@@ -44,28 +46,43 @@ const sameDay = (a: Date, b: Date) =>
  */
 export function changedAt(
 	modified: string | null | undefined,
-	now: Date = new Date()
+	now: Date = new Date(),
+	lang: string = pageLang()
 ): { short: string; full: string } | null {
 	if (!modified) return null
 	const at = new Date(modified)
 	if (Number.isNaN(at.getTime())) return null
-	const time = at.toLocaleTimeString('ru-RU', {
-		hour: '2-digit',
-		minute: '2-digit',
-	})
+	const time = at.toLocaleTimeString(lang, { timeStyle: 'short' })
 	const short = sameDay(at, now)
 		? time
 		: at.getFullYear() === now.getFullYear()
-		? at.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
-		: at.toLocaleDateString('ru-RU')
-	const day = at
-		.toLocaleDateString('ru-RU', {
-			day: 'numeric',
-			month: 'long',
-			year: 'numeric',
-		})
-		.replace(/\s?г\.$/, '')
+		? at.toLocaleDateString(lang, { day: 'numeric', month: 'short' })
+		: at.toLocaleDateString(lang)
+	const day = dateInSentence(at, lang)
 	return { short, full: __('Changed {0}, {1}').format(day, time) }
+}
+
+// The Russian «г.» after the year; the sentence goes on after the date.
+const YEAR_WORD = /^\s*г\.?$/
+
+/**
+ * The full date as it goes inside a sentence: «28 сентября 2026», «September
+ * 28, 2026». Only the Russian «г.» after the year is cut: the 日 that ends a
+ * Japanese date is the day's own mark and stays.
+ */
+function dateInSentence(at: Date, lang: string): string {
+	const parts = new Intl.DateTimeFormat(lang, {
+		day: 'numeric',
+		month: 'long',
+		year: 'numeric',
+	}).formatToParts(at)
+	const last = parts[parts.length - 1]
+	const cut =
+		parts.length > 1 &&
+		parts[parts.length - 2].type === 'year' &&
+		last.type === 'literal' &&
+		YEAR_WORD.test(last.value)
+	return (cut ? parts.slice(0, -1) : parts).map((part) => part.value).join('')
 }
 
 const latest = (course: CourseDocuments) =>

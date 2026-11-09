@@ -3,7 +3,7 @@
  *
  * Kept out of the components so the rules that matter are pinned by tests: which
  * status a lesson shows, and that only covered topics count as mastered — a topic
- * touched in passing is not progress, and counting it would show a course further
+ * touched on briefly is not progress, and counting it would show a course further
  * along than it is (learning-services#322).
  */
 

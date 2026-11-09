@@ -1,5 +1,8 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { LESSONS, pluralMessage, plural, STUDENTS } from '@/utils/plural'
+import { ROWS_OF } from '@/utils/documentTable'
+import { BLOCKS_OF, TEAM_LIMIT } from '@/utils/team'
+import { pageLang } from '@/utils/lang'
 
 // learning-services#325: «1 Студенты» and «4 разделов · 8 уроки» become the
 // right form of the noun for the count.
@@ -56,5 +59,50 @@ describe('plural', () => {
 
 	it('shows the display text while the count picks the form', () => {
 		expect(plural(50, LESSONS, '50+')).toBe('50+ уроков')
+	})
+})
+
+// learning-services#765: the counts our pages wrote as «{0} members» whatever
+// the number. Where a count reads "of" a total, the total picks the noun.
+describe('the fork counts', () => {
+	it('picks the singular for one and the plural for the rest', () => {
+		expect(pluralMessage(1, TEAM_LIMIT, 'en')).toBe(
+			'A team holds up to {0} member.'
+		)
+		expect(pluralMessage(25, TEAM_LIMIT, 'en')).toBe(
+			'A team holds up to {0} members.'
+		)
+		expect(pluralMessage(1, ROWS_OF, 'en')).toBe('{0} of {1} row')
+		expect(pluralMessage(4, ROWS_OF, 'en')).toBe('{0} of {1} rows')
+		expect(pluralMessage(1, BLOCKS_OF, 'en')).toBe('{0} of {1} block')
+		expect(pluralMessage(4, BLOCKS_OF, 'en')).toBe('{0} of {1} blocks')
+	})
+
+	it('gives Russian the genitive singular after 21 and the plural after 3', () => {
+		expect(pluralMessage(21, TEAM_LIMIT, 'ru')).toBe(
+			'A team holds up to {0} member.'
+		)
+		expect(pluralMessage(3, ROWS_OF, 'ru')).toBe('{0} of {1} rows')
+	})
+})
+
+// learning-services#765: the tag is checked once, so no caller needs a guard.
+describe('pageLang', () => {
+	afterEach(() => {
+		document.documentElement.lang = ''
+	})
+
+	it('takes the page tag, canonical', () => {
+		document.documentElement.lang = 'en-gb'
+		expect(pageLang()).toBe('en-GB')
+		document.documentElement.lang = 'ru'
+		expect(pageLang()).toBe('ru')
+	})
+
+	it('reads English without a tag or with the template left unrendered', () => {
+		document.documentElement.lang = ''
+		expect(pageLang()).toBe('en')
+		document.documentElement.lang = '{{ boot.lang }}'
+		expect(pageLang()).toBe('en')
 	})
 })

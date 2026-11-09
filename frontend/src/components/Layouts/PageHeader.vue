@@ -20,7 +20,7 @@
 				<!-- An announcement is published only in the database sense: to
 				the reader it is in the works (learning-services#391). -->
 				<Badge v-if="upcoming" theme="orange" class="!text-ink-gray-8">
-					{{ __('In the works') }}
+					{{ __('Coming soon') }}
 				</Badge>
 				<Badge v-else-if="published" theme="green">{{ __('Published') }}</Badge>
 			</template>

@@ -172,6 +172,15 @@ afterEach(() => {
 	vi.restoreAllMocks()
 })
 
+// The dates are written in the page's language; this suite reads a Russian
+// page, as the server renders it (learning-services#765).
+beforeEach(() => {
+	document.documentElement.lang = 'ru'
+})
+afterEach(() => {
+	document.documentElement.lang = ''
+})
+
 describe('LessonHomework', () => {
 	it('asks for the lesson in the chosen space', async () => {
 		answer({})
@@ -462,7 +471,7 @@ describe('LessonHomework', () => {
 		const wrapper = await mountBlock()
 		const rows = wrapper.findAll('details li').map((row) => row.text())
 		expect(rows[0]).toContain('Submitted · You ·')
-		expect(rows[1]).toContain('Returned for revision · Тьютор Иванов ·')
+		expect(rows[1]).toContain('Changes requested · Тьютор Иванов ·')
 		expect(wrapper.text()).not.toContain('tutor@x')
 	})
 

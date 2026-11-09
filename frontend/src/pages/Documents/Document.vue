@@ -132,6 +132,7 @@ import { useSpace, type Space } from '@/stores/space'
 import { documentReaders, withSpace } from '@/utils/space'
 import { sessionStore } from '@/stores/session'
 import { useScreenSize } from '@/utils/composables'
+import { pageLang } from '@/utils/lang'
 import {
 	defaultView,
 	outline,
@@ -282,7 +283,7 @@ watch(
 // «Сохранено» after the student's own write, «Обновлено» after the agent's.
 const stamp = ref<{ time: string; updated: boolean } | null>(null)
 const clock = (d: Date) =>
-	d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+	d.toLocaleTimeString(pageLang(), { timeStyle: 'short' })
 watch(
 	() => api.saving.value,
 	(now, before) => {
@@ -302,7 +303,7 @@ const about = computed(() => {
 		{
 			label: __('Changed {0} · version {1}').format(
 				modified
-					? `${modified.toLocaleDateString('ru-RU')} ${clock(modified)}`
+					? `${modified.toLocaleDateString(pageLang())} ${clock(modified)}`
 					: '—',
 				String(doc.value?.version ?? 0)
 			),

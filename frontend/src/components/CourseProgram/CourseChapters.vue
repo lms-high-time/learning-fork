@@ -253,7 +253,7 @@ const countOf = (chapter: ProgramChapter): string => {
 const countWords = (chapter: ProgramChapter): string => {
 	const progress = progressOf(chapter)
 	if (!progress) return plural(chapter.lessons.length, LESSONS)
-	return __('Lessons passed: {0} of {1}').format(
+	return __('Lessons completed: {0} of {1}').format(
 		String(progress.passed),
 		String(progress.total)
 	)
@@ -273,7 +273,7 @@ const statusOf = (lesson: ProgramLesson): LessonStatus =>
 const statusWord = (lesson: ProgramLesson): string => {
 	switch (statusOf(lesson)) {
 		case 'completed':
-			return __('Lesson passed')
+			return __('Lesson complete')
 		case 'in-progress':
 			return __('Lesson in progress')
 		case 'next':

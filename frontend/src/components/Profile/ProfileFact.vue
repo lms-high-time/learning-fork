@@ -26,7 +26,7 @@
 					v-model="draft"
 					type="textarea"
 					:rows="3"
-					:aria-label="fact.label || __('What your mentor knows')"
+					:aria-label="fact.label || __('What your agent knows')"
 					data-testid="profile-fact-draft"
 				/>
 				<div class="mt-2 flex gap-2">
@@ -113,6 +113,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue'
 import { Button, FormControl } from 'frappe-ui'
+import { pageLang } from '@/utils/lang'
 
 // One thing the mentor knows about the learner (learning-services#463). The
 // learner may word it themselves rather than talk the agent into it: the edit
@@ -140,7 +141,7 @@ const draft = ref('')
 const saving = ref(false)
 
 // What a screen reader hears the buttons are for: the label, or for a fact
-// with none («Your mentor also knows») its text.
+// with no label of its own its text.
 const name = computed(() => props.fact.label || props.fact.text || '')
 
 // «20 октября», with the year only when it is not this one.
@@ -149,14 +150,10 @@ const updatedOn = computed(() => {
 	if (!iso) return ''
 	const day = new Date(`${iso.slice(0, 10)}T00:00:00`)
 	if (Number.isNaN(day.getTime())) return iso
-	const lang = document.documentElement.lang || 'ru'
+	const lang = pageLang()
 	const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long' }
 	if (day.getFullYear() !== new Date().getFullYear()) options.year = 'numeric'
-	try {
-		return new Intl.DateTimeFormat(lang, options).format(day)
-	} catch {
-		return iso.slice(0, 10)
-	}
+	return new Intl.DateTimeFormat(lang, options).format(day)
 })
 
 // Focus follows the editor in and back out to the button that opened it.

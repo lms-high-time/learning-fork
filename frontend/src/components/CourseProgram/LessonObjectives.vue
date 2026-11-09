@@ -93,7 +93,7 @@ function markerClass(objective: ProgramObjective): string {
 
 function statusWord(objective: ProgramObjective): string {
 	if (objective.status === 'covered') return __('covered')
-	if (objective.status === 'touched') return __('touched in passing')
+	if (objective.status === 'touched') return __('touched on briefly')
 	return __('not yet')
 }
 </script>

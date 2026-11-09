@@ -114,6 +114,19 @@ describe('translationsReady', () => {
 		expect(await settledNow(translationsReady())).toBe(true)
 	})
 
+	// learning-services#765: under one key a page switched to English painted
+	// the cached Russian catalogue first.
+	it('keeps a catalogue per page language', async () => {
+		document.documentElement.lang = 'en'
+		try {
+			const { default: plugin } = await loadPlugin()
+			plugin(app() as never)
+			expect(options().cache).toEqual(['translations', 'en'])
+		} finally {
+			document.documentElement.lang = ''
+		}
+	})
+
 	it('re-renders a template painted before the translations landed', async () => {
 		const { default: plugin } = await loadPlugin()
 		const Label = defineComponent({

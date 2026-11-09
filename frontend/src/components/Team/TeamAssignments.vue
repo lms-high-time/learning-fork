@@ -40,7 +40,7 @@
 			<p class="text-p-sm text-ink-gray-5">
 				{{
 					__(
-						'Everyone assigned gets an email, and a reminder a few days before the deadline if the course is not passed yet.'
+						'Everyone assigned gets an email, and a reminder a few days before the deadline if the course is not completed yet.'
 					)
 				}}
 			</p>

@@ -102,7 +102,7 @@
 			(learning-services#463). -->
 			<SuggestedAction
 				v-if="isStudent && profileSummary && !profileSummary.complete"
-				:title="__('Tell your mentor about yourself')"
+				:title="__('Tell your agent about yourself')"
 				:text="__('Lessons will use examples from your work. About 5 minutes.')"
 				:actionLabel="__('Start')"
 				scenario="profile"

@@ -78,7 +78,7 @@ function focus(column: DocColumn) {
 function required(column: DocColumn): string {
 	if (column.required === true) return __('Required')
 	const other = conditionTitle(column, props.columns)
-	return other ? __('Required when «{0}» is filled').format(other) : ''
+	return other ? __('Required when “{0}” is filled').format(other) : ''
 }
 
 function save(column: DocColumn) {

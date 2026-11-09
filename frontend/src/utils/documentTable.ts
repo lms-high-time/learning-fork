@@ -6,6 +6,15 @@
  * arranges what `artifact` returned.
  */
 
+import { pageLang } from '@/utils/lang'
+import type { PluralForms } from '@/utils/plural'
+
+/** Rows shown of all; the noun goes with the total (learning-services#765). */
+export const ROWS_OF: PluralForms = {
+	one: '{0} of {1} row',
+	other: '{0} of {1} rows',
+}
+
 /** The longest text a cell or a field takes; the server refuses more. */
 export const MAX_TEXT = 4000
 
@@ -155,7 +164,8 @@ export type SortDirection = 'asc' | 'desc'
 export function sortRows(
 	rows: DocRow[],
 	key: string | null,
-	direction: SortDirection = 'asc'
+	direction: SortDirection = 'asc',
+	lang: string = pageLang()
 ): DocRow[] {
 	if (!key) return rows
 	const sign = direction === 'asc' ? 1 : -1
@@ -167,7 +177,7 @@ export function sortRows(
 		if (isBlank(x)) return 1
 		if (isBlank(y)) return -1
 		if (key === 'id') return (idNumber(String(x)) - idNumber(String(y))) * sign
-		return String(x).localeCompare(String(y), 'ru') * sign
+		return String(x).localeCompare(String(y), lang) * sign
 	})
 }
 

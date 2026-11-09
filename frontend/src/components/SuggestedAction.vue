@@ -35,7 +35,7 @@ import { Button, Tooltip } from 'frappe-ui'
 import { useAssistantPanel } from '@/stores/assistantPanel'
 
 // An action the platform offers the learner, done in the assistant panel
-// (learning-services#463): «Tell your mentor about yourself» now, later
+// (learning-services#463): «Tell your agent about yourself» now, later
 // «Get to know the platform» or «Continue the lesson». No URL — the chat
 // service does not offer the scenario — and there is nothing to offer.
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
 	canEdit,
 	dueLabel,
@@ -22,12 +22,21 @@ import {
 // A lesson's homework (learning-services#439): the wording and the rules the
 // block and the «Homework» page share.
 
+// The dates are written in the page's language; this suite reads a Russian
+// page, as the server renders it (learning-services#765).
+beforeEach(() => {
+	document.documentElement.lang = 'ru'
+})
+afterEach(() => {
+	document.documentElement.lang = ''
+})
+
 describe('statusLabel', () => {
 	it('names every status, and the absence of a submission', () => {
 		// «Выдано» (the design's word), not Learning's «Назначено».
-		expect(statusLabel('Assigned')).toBe('Issued')
+		expect(statusLabel('Assigned')).toBe('Not submitted yet')
 		expect(statusLabel('Submitted')).toBe('Submitted')
-		expect(statusLabel('Returned')).toBe('Returned for revision')
+		expect(statusLabel('Returned')).toBe('Needs changes')
 		expect(statusLabel('Accepted')).toBe('Accepted')
 		expect(statusLabel(null)).toBe('Not submitted')
 	})
@@ -155,7 +164,7 @@ describe('the journal', () => {
 
 	it('names a cancelled acceptance', () => {
 		expect(eventLabel('reopened')).toBe('Reopened')
-		expect(eventLabel('returned')).toBe('Returned for revision')
+		expect(eventLabel('returned')).toBe('Changes requested')
 	})
 
 	it('finds the last row of an event', () => {

@@ -57,10 +57,10 @@ describe('LessonEntry', () => {
 
 		expect(wrapper.find('[data-testid="lesson-study"]').exists()).toBe(false)
 		expect(wrapper.get('[data-testid="lesson-program-lock"]').text()).toContain(
-			'first pass «Где теряется работа»'
+			'complete “Где теряется работа” first'
 		)
 		expect(wrapper.get('[data-testid="to-course"]').text()).toContain(
-			'Go to «Где теряется работа»'
+			'Go to “Где теряется работа”'
 		)
 	})
 

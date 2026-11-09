@@ -130,7 +130,7 @@
 				/>
 				<Button
 					v-if="card.actions.includes('send_back')"
-					:label="__('Return for revision')"
+					:label="__('Send back for changes')"
 					:disabled="acting"
 					@click="dialog = 'send_back'"
 				/>
@@ -149,10 +149,10 @@
 		<HomeworkReturnDialog
 			v-model:comment="comments.send_back"
 			:open="dialog === 'send_back'"
-			:title="__('Return for revision')"
+			:title="__('Send back for changes')"
 			:message="
 				__(
-					'Write what to fix. The learner will see the comment under the lesson.'
+					'Write what to fix. The student will see the comment under the lesson.'
 				)
 			"
 			:label="__('Return')"
@@ -163,11 +163,7 @@
 			v-model:comment="comments.reopen"
 			:open="dialog === 'reopen'"
 			:title="__('Cancel acceptance')"
-			:message="
-				__(
-					'The homework goes back to the learner for revision, with your comment.'
-				)
-			"
+			:message="__('The homework goes back to the student with your comment.')"
 			:label="__('Cancel acceptance')"
 			:send="(comment: string) => act('reopen', comment)"
 			@update:open="(value: boolean) => !value && (dialog = null)"

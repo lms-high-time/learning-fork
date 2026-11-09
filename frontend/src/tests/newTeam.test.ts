@@ -84,4 +84,16 @@ describe('creating an organization', () => {
 			wrapper.find('[data-testid="create-team"]').attributes('disabled')
 		).toBeDefined()
 	})
+
+	it('says a limit of one member in the singular', async () => {
+		answers[TERMS] = {
+			ok: true,
+			data: { member_limit: 1, organizations_left: 1 },
+		}
+		const wrapper = mount(NewTeam, { global: { mocks } })
+
+		expect(wrapper.find('[data-testid="new-team-limit"]').text()).toBe(
+			'A team holds up to 1 member.'
+		)
+	})
 })

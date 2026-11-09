@@ -5,7 +5,7 @@ import type { ContractAnswer } from '@/utils/postForm'
 
 /**
  * How much of the learner's profile is filled (learning-services#463): what the
- * «Tell your mentor about yourself» card needs, and the chat's address for it.
+ * «Tell your agent about yourself» card needs, and the chat's address for it.
  *
  * Read once per page load, not per mount — the sidebar and the You page both
  * ask, and the answer only changes when the chat saves a fact, which moves the
