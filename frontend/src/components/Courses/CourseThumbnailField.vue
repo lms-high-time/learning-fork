@@ -11,7 +11,7 @@
 				class="relative aspect-[750/422] w-full shrink-0 grid place-items-center overflow-hidden rounded-lg border border-outline-gray-2 bg-surface-gray-2 sm:w-56"
 				:style="
 					!hasImage && doc?.card_gradient
-						? { backgroundColor: wellColor }
+						? { borderTopWidth: '4px', borderTopColor: wellColor }
 						: undefined
 				"
 			>
