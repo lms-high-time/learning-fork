@@ -6,6 +6,7 @@
 		:loading="courses.list.loading || reloading"
 		:total-count="courseCount"
 		:has-next-page="courses.hasNextPage"
+		:page-length-options="pageLengthOptions"
 		v-model:page-length="pageLength"
 		empty-name="Courses"
 		empty-icon="lucide-book-open"
@@ -35,6 +36,12 @@
 					</Button>
 				</template>
 			</Dropdown>
+		</template>
+
+		<!-- The header above already names the page; the h1 stays for screen
+		readers so the page keeps its landmark. -->
+		<template #name>
+			<span class="sr-only">{{ __('All Courses') }}</span>
 		</template>
 
 		<template #filters>
@@ -150,6 +157,11 @@ const courseCountResource = createResource({
 })
 
 const courseCount = computed(() => courseCountResource.data ?? null)
+
+// A choice of page size means nothing while everything fits on one page.
+const pageLengthOptions = computed(() =>
+	courseCount.value > 24 ? [24, 60, 120] : []
+)
 
 const getCourseCount = () => {
 	// Same sequencing hazard as the list: nothing orders the responses, so a

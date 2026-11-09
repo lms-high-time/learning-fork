@@ -2,17 +2,18 @@
 	<div
 		v-if="course.title"
 		class="flex flex-col h-full rounded-md overflow-auto text-ink-gray-9 bg-surface-elevation-1"
-		style="min-height: 350px"
 	>
 		<div
-			class="w-[100%] h-[168px] bg-cover bg-center bg-no-repeat border-t border-x rounded-t-md"
+			class="w-[100%] bg-cover bg-center bg-no-repeat border-x rounded-t-md"
+			:class="
+				course.image
+					? 'h-[168px] border-t'
+					: 'min-h-[120px] p-5 border-t-4 border-b bg-surface-gray-1'
+			"
 			:style="
 				course.image
 					? { backgroundImage: `url('${encodeURI(course.image)}')` }
-					: {
-							backgroundImage: gradientColor,
-							backgroundBlendMode: 'screen',
-					  }
+					: { borderTopColor: coverColor }
 			"
 		>
 			<!-- <div class="flex items-center flex-wrap relative top-4 px-2 w-fit">
@@ -35,24 +36,18 @@
 			</div> -->
 			<div
 				v-if="!course.image"
-				class="flex items-center justify-center text-white flex-1 font-extrabold my-auto px-5 text-center leading-6 h-full"
-				:class="
-					course.title.length > 32
-						? 'text-lg'
-						: course.title.length > 20
-						? 'text-2xl'
-						: 'text-3xl'
-				"
+				data-testid="course-card-title"
+				class="course-card-title text-lg leading-6 text-ink-gray-9 text-start"
 			>
 				{{ course.title }}
 			</div>
 		</div>
-		<div class="flex flex-col flex-auto p-4 border-x-2 border-b-2 rounded-b-md">
+		<div class="flex flex-col flex-auto p-4 border-x border-b rounded-b-md">
 			<!-- An announcement has no lessons, students or rating yet
 			(learning-services#391). -->
 			<div
 				v-if="!course.upcoming"
-				class="flex items-center justify-between mb-2"
+				class="flex items-center gap-x-4 mb-2 tabular-nums"
 			>
 				<div v-if="course.lessons">
 					<Tooltip :text="__('Lessons')">
@@ -72,12 +67,10 @@
 					</Tooltip>
 				</div>
 
-				<div v-if="course.rating">
+				<div v-if="Number(course.rating) > 0" data-testid="course-card-rating">
 					<Tooltip :text="__('Average Rating')">
 						<span class="flex items-center">
-							<LucideStar
-								class="size-4 me-1 text-transparent fill-yellow-500"
-							/>
+							<LucideStar class="size-4 me-1" />
 							{{ formatRating(course.rating) }}
 						</span>
 					</Tooltip>
@@ -99,15 +92,11 @@
 				{{ __('Coming soon') }}
 			</Badge>
 
-			<div
-				v-if="course.image"
-				class="font-semibold leading-6"
-				:class="course.title.length > 32 ? 'text-lg' : 'text-2xl'"
-			>
+			<div v-if="course.image" class="course-card-title text-lg leading-6">
 				{{ course.title }}
 			</div>
 
-			<div class="short-introduction text-sm">
+			<div class="course-card-intro text-sm">
 				{{ course.short_introduction }}
 			</div>
 
@@ -171,9 +160,9 @@ const props = defineProps({
 	},
 })
 
-const gradientColor = computed(() => {
+const coverColor = computed(() => {
 	let color = props.course.card_gradient?.toLowerCase() || 'blue'
-	return `linear-gradient(to top right, black, var(--${color}-400))`
+	return `var(--${color}-400)`
 })
 </script>
 <style>
@@ -203,9 +192,16 @@ const gradientColor = computed(() => {
 	margin-inline-start: calc(-8px);
 }
 
-.short-introduction {
+.course-card-title {
+	font-family: 'Literata', Georgia, serif;
+	font-weight: 500;
+	letter-spacing: -0.01em;
+}
+
+/* The promise of the course is what the card sells: room for all of it. */
+.course-card-intro {
 	display: -webkit-box;
-	-webkit-line-clamp: 2;
+	-webkit-line-clamp: 6;
 	-webkit-box-orient: vertical;
 	text-overflow: ellipsis;
 	width: 100%;

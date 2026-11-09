@@ -2333,6 +2333,11 @@ msgstr "Валюта"
 msgid "Current Lesson"
 msgstr "Текущий урок"
 
+#: frontend/src/pages/Home/Home.vue:20
+#, python-brace-format
+msgid "Streak: {0}"
+msgstr "Серия: {0}"
+
 #: frontend/src/pages/Home/Streak.vue:29
 msgid "Current Streak"
 msgstr "Текущая полоса"

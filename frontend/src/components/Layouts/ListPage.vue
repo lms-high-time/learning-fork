@@ -72,7 +72,10 @@
 		</div>
 
 		<template #footer>
+			<!-- ListFooter copies its options once, when it is created: without the
+			key, options that arrive later would leave an empty control. -->
 			<ListFooter
+				:key="pageLengthOptions.length ? 'paged' : 'single'"
 				v-model="pageLength"
 				class="flex-wrap border-t px-5 py-2"
 				:options="{
@@ -81,6 +84,7 @@
 					pageLengthOptions,
 				}"
 			>
+				<template v-if="!pageLengthOptions.length" #left><div /></template>
 				<template #right>
 					<div class="flex items-center">
 						<Button
