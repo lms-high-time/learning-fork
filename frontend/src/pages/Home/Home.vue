@@ -3,7 +3,7 @@
 		<div class="space-y-2">
 			<div class="flex items-center justify-between">
 				<h1 class="text-2xl-bold text-ink-gray-9">
-					{{ __('Hey') }}, {{ user.data?.full_name }} 👋
+					{{ __('Home') }}
 				</h1>
 				<div>
 					<button
@@ -15,12 +15,10 @@
 								streakInfo.data?.current_streak || 0
 							)
 						"
-						class="bg-surface-amber-2 px-2 py-1 rounded-md cursor-pointer"
+						data-testid="home-streak"
+						class="px-2 py-1 rounded-md cursor-pointer text-sm tabular-nums text-ink-gray-6 hover:text-ink-gray-9 transition-colors focus-visible:ring focus-visible:ring-outline-gray-3"
 					>
-						<span> 🔥 </span>
-						<span class="text-ink-gray-9">
-							{{ streakInfo.data?.current_streak }}
-						</span>
+						{{ __('Streak: {0}').format(streakInfo.data?.current_streak || 0) }}
 					</button>
 				</div>
 			</div>
