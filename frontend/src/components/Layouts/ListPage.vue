@@ -81,6 +81,7 @@
 					pageLengthOptions,
 				}"
 			>
+				<template v-if="!pageLengthOptions.length" #left><div /></template>
 				<template #right>
 					<div class="flex items-center">
 						<Button
