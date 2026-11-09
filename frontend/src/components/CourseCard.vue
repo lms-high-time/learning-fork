@@ -8,7 +8,7 @@
 			:class="
 				course.image
 					? 'h-[168px] border-t'
-					: 'min-h-[136px] p-5 border-t-4 border-b bg-surface-gray-1'
+					: 'min-h-[120px] p-5 border-t-4 border-b bg-surface-gray-1'
 			"
 			:style="
 				course.image
@@ -37,7 +37,7 @@
 			<div
 				v-if="!course.image"
 				data-testid="course-card-title"
-				class="course-card-title text-xl leading-6 text-ink-gray-9 text-start"
+				class="course-card-title text-lg leading-6 text-ink-gray-9 text-start"
 			>
 				{{ course.title }}
 			</div>
@@ -92,11 +92,7 @@
 				{{ __('Coming soon') }}
 			</Badge>
 
-			<div
-				v-if="course.image"
-				class="course-card-title leading-6"
-				:class="course.title.length > 32 ? 'text-lg' : 'text-2xl'"
-			>
+			<div v-if="course.image" class="course-card-title text-lg leading-6">
 				{{ course.title }}
 			</div>
 

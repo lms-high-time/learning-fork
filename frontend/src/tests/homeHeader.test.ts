@@ -1,10 +1,14 @@
 import { describe, expect, it, vi } from 'vitest'
 import { shallowMount, flushPromises } from '@vue/test-utils'
 
+const streak = vi.hoisted(() => ({
+	data: { current_streak: 3 } as { current_streak: number } | null,
+}))
+
 vi.mock('frappe-ui', () => ({
 	call: () => Promise.resolve(0),
 	createResource: ({ url }: { url: string }) => ({
-		data: url.includes('streak') ? { current_streak: 3 } : [],
+		data: url.includes('streak') ? streak.data : [],
 		loading: false,
 	}),
 	LoadingIndicator: {},
@@ -47,9 +51,17 @@ describe('Home header', () => {
 	})
 
 	it('shows the streak as a quiet label without an emoji', async () => {
-		const streak = (await mountHome()).find('[data-testid="home-streak"]')
+		const label = (await mountHome()).find('[data-testid="home-streak"]')
 
-		expect(streak.text()).toBe('Streak: 3')
-		expect(streak.classes()).not.toContain('bg-surface-amber-2')
+		expect(label.text()).toBe('Streak: 3')
+		expect(label.classes()).not.toContain('bg-surface-amber-2')
+	})
+
+	it('stays out of the header until the streak is known', async () => {
+		streak.data = null
+		const label = (await mountHome()).find('[data-testid="home-streak"]')
+		streak.data = { current_streak: 3 }
+
+		expect(label.exists()).toBe(false)
 	})
 })

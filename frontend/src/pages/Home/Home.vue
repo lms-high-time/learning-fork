@@ -7,14 +7,9 @@
 				</h1>
 				<div>
 					<button
-						v-if="!isAdmin"
+						v-if="!isAdmin && streakInfo.data"
 						type="button"
 						@click="showStreakModal = true"
-						:aria-label="
-							__('View learning streak: {0} days').format(
-								streakInfo.data?.current_streak || 0
-							)
-						"
 						data-testid="home-streak"
 						class="px-2 py-1 rounded-md cursor-pointer text-sm tabular-nums text-ink-gray-6 hover:text-ink-gray-9 transition-colors focus-visible:ring focus-visible:ring-outline-gray-3"
 					>

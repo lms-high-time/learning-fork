@@ -32,7 +32,9 @@ describe('CourseCard cover without an image', () => {
 	it('is a title page: no gradient, the author color on its top edge', () => {
 		const cover = mountCard({ card_gradient: 'Red' }).find('[style]')
 
-		expect(cover.attributes('style')).toContain('--red-400')
+		expect(cover.attributes('style')).toContain(
+			'border-top-color: var(--red-400)'
+		)
 		expect(cover.attributes('style')).not.toContain('gradient')
 	})
 
