@@ -178,6 +178,15 @@
 							@click="redirectToWebsite()"
 						/>
 					</Tooltip>
+					<!-- The platform is information products under Uzbek law, which may
+					not circulate without an age-rating sign (learning-services#746). -->
+					<Tooltip :text="__('Age rating')">
+						<span
+							data-testid="age-rating"
+							class="rounded border border-outline-gray-2 px-1 text-p-xs text-ink-gray-6"
+							>12+</span
+						>
+					</Tooltip>
 				</div>
 				<Tooltip
 					:text="
