@@ -32,6 +32,20 @@ export type ProgramDocument = {
 	blocks_filled?: number
 }
 
+/**
+ * A competency the course teaches, from the competency catalog
+ * (learning-services#843): an integrative one comes with its parts, a base one
+ * on its own when no integrative one of the course takes it in.
+ */
+export type CourseCompetency = {
+	key: string
+	kind: 'base' | 'integrative'
+	title: string
+	description: string
+	/** An integrative competency's parts that the course covers; a base one has none. */
+	parts?: CourseCompetency[]
+}
+
 export type ProgramLesson = {
 	id: string
 	number: number
@@ -66,6 +80,9 @@ export type ProgramData = {
 	/** Present only for an enrolled student; null once every lesson is closed. */
 	next_lesson?: string | null
 	documents?: ProgramDocument[]
+	/** Integrative competencies first, then base ones outside them; empty for a
+	 * course without the competency catalog. */
+	competencies?: CourseCompetency[]
 	/** An announced course (learning-services#389): no programme, only the
 	 * course objectives, and whether the viewer asked to hear of its release. */
 	upcoming?: boolean
