@@ -1,7 +1,8 @@
 <template>
 	<!-- What the course teaches, above its programme (learning-services#843):
-	the integrative competencies with their parts folded under each, then the
-	base ones no integrative one takes in. -->
+	the integrative competencies with their parts folded under each, then, past
+	a rule, the base ones no integrative one takes in. Every toggle reads the
+	same, so each is described by its competency's title. -->
 	<section
 		data-testid="course-competencies"
 		aria-labelledby="course-competencies-title"
@@ -18,7 +19,10 @@
 				:key="competency.key"
 				data-testid="course-competency"
 			>
-				<h3 class="text-lg-semibold text-ink-gray-9">
+				<h3
+					:id="`course-competency-${index}-title`"
+					class="text-lg-semibold text-ink-gray-9"
+				>
 					{{ competency.title }}
 				</h3>
 				<p
@@ -33,6 +37,7 @@
 						class="mt-2 inline-flex items-center gap-1 rounded text-p-sm font-medium text-ink-gray-6 hover:text-ink-gray-9 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline-blue-6"
 						:aria-expanded="isOpen(competency.key)"
 						:aria-controls="`course-competency-${index}-parts`"
+						:aria-describedby="`course-competency-${index}-title`"
 						data-testid="course-competency-toggle"
 						@click="toggle(competency.key)"
 					>
@@ -67,7 +72,9 @@
 		<ul
 			v-if="base.length"
 			class="list-disc space-y-2 ps-5 text-ink-gray-8"
-			:class="{ 'mt-6': integrative.length }"
+			:class="{
+				'mt-6 border-t border-outline-gray-2 pt-6': integrative.length,
+			}"
 			data-testid="course-competencies-base"
 		>
 			<li v-for="competency in base" :key="competency.key">

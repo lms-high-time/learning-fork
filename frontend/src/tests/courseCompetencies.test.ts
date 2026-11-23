@@ -182,6 +182,8 @@ describe('CourseCompetencies', () => {
 		expect(standalone.text()).toContain('Проект и операции')
 		expect(standalone.text()).toContain('Описание: Проект и операции')
 		expect(standalone.text()).not.toContain('Выбор спонсора')
+		// Set apart from the last integrative one, or it reads as its part.
+		expect(standalone.classes()).toContain('border-t')
 	})
 
 	it('folds the parts under a button that says whether they are shown', async () => {
@@ -192,6 +194,10 @@ describe('CourseCompetencies', () => {
 		expect(toggle.element.tagName).toBe('BUTTON')
 		expect(toggle.attributes('type')).toBe('button')
 		expect(toggle.attributes('aria-controls')).toBe(parts.attributes('id'))
+		// Every toggle reads the same: its competency's title tells them apart.
+		expect(
+			wrapper.get(`#${toggle.attributes('aria-describedby')}`).text()
+		).toBe('Запуск проекта')
 		expect(toggle.attributes('aria-expanded')).toBe('false')
 		expect(parts.isVisible()).toBe(false)
 
