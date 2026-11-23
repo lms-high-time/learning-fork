@@ -123,6 +123,13 @@
 					</div>
 				</section>
 
+				<!-- What the course teaches, above its programme; only a course on
+				the competency catalog has it (learning-services#843). -->
+				<CourseCompetencies
+					v-if="!upcoming && competencies.length"
+					:competencies="competencies"
+				/>
+
 				<!-- An announced course shows what it will teach, not how: its
 				programme is still being built (learning-services#389). -->
 				<section v-if="upcoming" data-testid="course-announcement">
@@ -281,12 +288,17 @@ import CourseCardOverlay from '@/components/CourseCardOverlay.vue'
 import CourseDocumentCard from '@/components/CourseDocumentCard.vue'
 import CourseOutline from '@/components/CourseOutline.vue'
 import CourseChapters from '@/components/CourseProgram/CourseChapters.vue'
+import CourseCompetencies from '@/components/CourseProgram/CourseCompetencies.vue'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
 import CourseReviews from '@/components/CourseReviews.vue'
 import CourseInstructors from '@/components/CourseInstructors.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import RelatedCourses from '@/components/RelatedCourses.vue'
-import { coursePath, type ProgramData } from '@/utils/courseProgram'
+import {
+	coursePath,
+	type CourseCompetency,
+	type ProgramData,
+} from '@/utils/courseProgram'
 import { markdownLinks } from '@/utils/markdownLinks'
 import { SHOW_COURSE_AUTHORS } from '@/utils/courseAuthors'
 import { useSpace } from '@/stores/space'
@@ -368,6 +380,10 @@ watch(
 // its slide, just without the topics. No lessons — the outline's own empty state.
 // The documents the course builds, from the same map (#340).
 const documents = computed(() => courseMap.data?.data?.documents ?? [])
+// What the course teaches, from the same map (learning-services#843).
+const competencies = computed<CourseCompetency[]>(
+	() => courseMap.data?.data?.competencies ?? []
+)
 
 // An announced course, for anyone not enrolled in it and not managing it:
 // Learning knows the flag before the map arrives, so the outline never

@@ -11754,3 +11754,11 @@ msgstr "Файл в архиве больше {0} МБ."
 #: frontend/src/pages/MobileYou.vue
 msgid "Age rating"
 msgstr "Возрастная категория"
+
+#: frontend/src/components/CourseProgram/CourseCompetencies.vue
+msgid "What you'll learn"
+msgstr "Чему научитесь"
+
+#: frontend/src/components/CourseProgram/CourseCompetencies.vue
+msgid "What it is made of"
+msgstr "Из чего складывается"
