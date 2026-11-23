@@ -87,6 +87,15 @@ jobs:
           path: ~/.cache/Cypress
           key: ${{ runner.os }}-cypress
 
+      # ubuntu-latest became Ubuntu 26.04: its mariadb-client 11.8 insists on
+      # TLS by default, and the mariadb:10.8 service speaks none ("ERROR 2026
+      # (HY000): TLS/SSL error: SSL is required, but the server does not
+      # support it"). ~/.my.cnf is read by install.sh's `mariadb` calls and by
+      # the `mariadb` frappe spawns to restore the site, so both go plaintext,
+      # the same way upstream frappe/lms does it in .github/helper/install-e2e.sh.
+      - name: Let the MariaDB client connect without TLS
+        run: printf '[client]\nskip-ssl\n' > ~/.my.cnf
+
       - name: Install Dependencies
         run: |
           bash ${GITHUB_WORKSPACE}/.github/helper/install_dependencies.sh
