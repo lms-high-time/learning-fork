@@ -30,10 +30,10 @@
   "devDependencies": {
     "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^10.0.1",
-    "cypress": "^14.5.4",
+    "cypress": "^16.3.0",
     "cypress-file-upload": "^5.0.8",
     "cypress-real-events": "^1.14.0",
-    "cypress-split": "^1.24.28"
+    "cypress-split": "^1.25.4"
   },
   "dependencies": {
     "pre-commit": "^1.2.2"
