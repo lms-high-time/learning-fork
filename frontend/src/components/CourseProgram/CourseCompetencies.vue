@@ -4,7 +4,8 @@
 	full list is here for whoever wants it — no counts, nothing folded. The
 	integrative skills first, each with the parts it is made of; then the base
 	ones no integrative skill takes in, under a heading of their own when both
-	kinds are there (learning-services#843). -->
+	kinds are there (learning-services#843). An enrolled student sees where
+	they stand in each (learning-services#857). -->
 	<section data-testid="course-competencies" class="max-w-prose space-y-8">
 		<p class="text-p-base text-ink-gray-7">
 			{{
@@ -19,9 +20,12 @@
 				:key="competency.key"
 				data-testid="course-competency"
 			>
-				<h2 class="text-lg-semibold text-ink-gray-9">
-					{{ competency.title }}
-				</h2>
+				<div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+					<h2 class="text-lg-semibold text-ink-gray-9">
+						{{ competency.title }}
+					</h2>
+					<CompetencyLevel :competency="competency" />
+				</div>
 				<p
 					v-if="competency.description"
 					class="mt-1 text-p-base text-ink-gray-7"
@@ -43,8 +47,14 @@
 						data-testid="course-competency-parts"
 					>
 						<li v-for="part in competency.parts" :key="part.key">
-							<span class="block text-p-base font-medium text-ink-gray-8">
-								{{ part.title }}
+							<span class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+								<span
+									class="text-p-base font-medium text-ink-gray-8"
+									data-testid="competency-title"
+								>
+									{{ part.title }}
+								</span>
+								<CompetencyLevel :competency="part" />
 							</span>
 							<span
 								v-if="part.description"
@@ -74,8 +84,14 @@
 			</h2>
 			<ul class="space-y-3">
 				<li v-for="competency in base" :key="competency.key">
-					<span class="block text-p-base font-medium text-ink-gray-8">
-						{{ competency.title }}
+					<span class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+						<span
+							class="text-p-base font-medium text-ink-gray-8"
+							data-testid="competency-title"
+						>
+							{{ competency.title }}
+						</span>
+						<CompetencyLevel :competency="competency" />
 					</span>
 					<span
 						v-if="competency.description"
@@ -92,6 +108,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { CourseCompetency } from '@/utils/courseProgram'
+import CompetencyLevel from '@/components/CourseProgram/CompetencyLevel.vue'
 
 const props = defineProps<{
 	competencies: CourseCompetency[]

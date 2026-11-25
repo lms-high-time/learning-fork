@@ -205,7 +205,10 @@ describe('CourseCompetencies, the «Skills» tab', () => {
 		expect(
 			parts
 				.findAll('li')
-				.map((li) => li.findAll('span').map((span) => span.text()))
+				.map((li) => [
+					li.get('[data-testid="competency-title"]').text(),
+					li.get('.text-p-sm').text(),
+				])
 		).toEqual([
 			['Выбор спонсора', 'Описание: Выбор спонсора'],
 			['Цель проекта', 'Описание: Цель проекта'],
@@ -236,5 +239,107 @@ describe('CourseCompetencies, the «Skills» tab', () => {
 		expect(standalone.attributes('aria-labelledby')).toBeUndefined()
 		expect(standalone.classes()).not.toContain('border-t')
 		expect(standalone.text()).toContain('Проект и операции')
+	})
+})
+
+// Where an enrolled student stands, in the words of the scale and with no
+// numbers (learning-services#857).
+describe("CourseCompetencies, an enrolled student's levels", () => {
+	const mountBlock = (list: CourseCompetency[]) =>
+		mount(CourseCompetencies, {
+			props: { competencies: list },
+			global: { mocks: { __: (s: string) => s } },
+		})
+	const skill = (extra: Partial<CourseCompetency>): CourseCompetency => ({
+		...base('ops', 'Проект и операции'),
+		target: 2,
+		...extra,
+	})
+	const badges = (wrapper: ReturnType<typeof mountBlock>) =>
+		wrapper.findAll('[data-testid="competency-level"]')
+	// What a sighted student reads on the badge: without the screen reader's
+	// «Your level:» in front.
+	const shown = (badge: { text: () => string }) =>
+		badge.text().replace('Your level:', '').trim()
+
+	it('shows no levels to a visitor: the server sends none', () => {
+		const wrapper = mountBlock(competencies)
+
+		expect(badges(wrapper)).toHaveLength(0)
+	})
+
+	it.each([
+		[{ status: 'locked', level: null }, 'Ahead in the course'],
+		[{ status: 'no_info', level: null }, 'Not checked yet'],
+		[{ status: 'level', level: 1 }, 'You recognise it'],
+		[{ status: 'level', level: 2 }, 'You explain it'],
+		[{ status: 'level', level: 3 }, 'You apply it'],
+		[{ status: 'level', level: 4 }, 'You transfer it'],
+	])('says %o as «%s»', (standing, label) => {
+		const wrapper = mountBlock([skill(standing)])
+
+		const [badge] = badges(wrapper)
+		expect(badge.text()).toContain(label)
+		expect(badge.text()).not.toMatch(/\d/)
+	})
+
+	it('ticks a level that reaches the course goal', () => {
+		const wrapper = mountBlock([
+			skill({ status: 'level', level: 3, target: 3 }),
+		])
+
+		const [badge] = badges(wrapper)
+		expect(badge.find('.lucide-check').exists()).toBe(true)
+		expect(badge.get('[data-testid="competency-goal"]').text()).toContain(
+			'course goal reached'
+		)
+		// Read after the title, the badge says whose level it is.
+		expect(badge.text()).toContain('Your level:')
+	})
+
+	it('leaves a level below the course goal unticked', () => {
+		const wrapper = mountBlock([
+			skill({ status: 'level', level: 2, target: 3 }),
+		])
+
+		const [badge] = badges(wrapper)
+		expect(badge.find('.lucide-check').exists()).toBe(false)
+		expect(badge.find('[data-testid="competency-goal"]').exists()).toBe(false)
+	})
+
+	it('shows nothing for a standing it does not know', () => {
+		const wrapper = mountBlock([skill({ status: 'credited', level: null })])
+
+		expect(badges(wrapper)).toHaveLength(0)
+	})
+
+	it('shows the levels of an integrative skill and of its parts', () => {
+		const wrapper = mountBlock([
+			{
+				...competencies[0],
+				target: 3,
+				status: 'level',
+				level: 2,
+				parts: [
+					{
+						...base('sponsor', 'Выбор спонсора'),
+						target: 2,
+						status: 'no_info',
+						level: null,
+					},
+					{ ...base('goal', 'Цель проекта'), target: null },
+				],
+			},
+		])
+
+		const item = wrapper.get('[data-testid="course-competency"]')
+		const parts = item.get('[data-testid="course-competency-parts"]')
+		expect(
+			parts.findAll('[data-testid="competency-level"]').map(shown)
+		).toEqual(['Not checked yet'])
+		expect(badges(wrapper).map(shown)).toEqual([
+			'You explain it',
+			'Not checked yet',
+		])
 	})
 })

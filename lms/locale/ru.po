@@ -11779,6 +11779,38 @@ msgstr "Курс проверяет эти умения в разговоре с
 msgid "Other skills"
 msgstr "Отдельные умения"
 
+#: frontend/src/components/CourseProgram/CompetencyLevel.vue
+msgid "Ahead in the course"
+msgstr "Впереди"
+
+#: frontend/src/components/CourseProgram/CompetencyLevel.vue
+msgid "Not checked yet"
+msgstr "Ещё не проверено"
+
+#: frontend/src/components/CourseProgram/CompetencyLevel.vue
+msgid "You recognise it"
+msgstr "Узнаёте"
+
+#: frontend/src/components/CourseProgram/CompetencyLevel.vue
+msgid "You explain it"
+msgstr "Объясняете"
+
+#: frontend/src/components/CourseProgram/CompetencyLevel.vue
+msgid "You apply it"
+msgstr "Применяете"
+
+#: frontend/src/components/CourseProgram/CompetencyLevel.vue
+msgid "You transfer it"
+msgstr "Переносите"
+
+#: frontend/src/components/CourseProgram/CompetencyLevel.vue
+msgid "course goal reached"
+msgstr "цель курса достигнута"
+
+#: frontend/src/components/CourseProgram/CompetencyLevel.vue
+msgid "Your level:"
+msgstr "Ваш уровень:"
+
 #: frontend/src/components/CourseProgram/CourseCompetencies.vue
 msgid "What it is made of"
 msgstr "Из чего складывается"

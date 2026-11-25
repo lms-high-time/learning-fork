@@ -54,6 +54,14 @@ export type CourseCompetency = {
 	description: string
 	/** An integrative competency's parts that the course covers; a base one has none. */
 	parts?: CourseCompetency[]
+	/** What the course aims for: the highest target among its lessons; null for a part the
+	 * course does not lead on its own (learning-services#857). */
+	target?: number | null
+	/** An enrolled student's standing, for a competency with a target only: `locked` — the
+	 * course has not opened it yet, `no_info` — opened, nothing shown, `level`. */
+	status?: 'locked' | 'no_info' | 'level' | string
+	/** The level shown, 1–4; null without one. */
+	level?: number | null
 }
 
 export type ProgramLesson = {
