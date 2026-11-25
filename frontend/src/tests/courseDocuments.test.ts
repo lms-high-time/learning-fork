@@ -190,6 +190,8 @@ describe('CourseDocumentCard', () => {
 		])
 		expect(list.find('[data-filled]').exists()).toBe(false)
 		expect(list.find('.sr-only').exists()).toBe(false)
+		// A visitor has no document of their own to open yet.
+		expect(wrapper.find('a').exists()).toBe(false)
 		const caption = list.get(`#${list.get('ul').attributes('aria-labelledby')}`)
 		expect(caption.text()).toBe('Document sections')
 	})
@@ -221,6 +223,25 @@ describe('CourseDocumentCard', () => {
 		expect(items[1].get('.sr-only').text()).toContain('not filled yet')
 		// The way into the document stays, under its sections.
 		expect(wrapper.find('a').exists()).toBe(true)
+	})
+
+	// The page may count the viewer enrolled before the server does: no
+	// «not filled yet» it never said.
+	it('marks nothing for a student when the server sends no fill', () => {
+		const wrapper = mount(CourseDocumentCard, {
+			props: {
+				documents: [
+					{ artifact: 'agreements_log', title: 'Журнал', blocks: sections() },
+				],
+				courseName: 'c1',
+				enrolled: true,
+			},
+			global,
+		})
+		const list = wrapper.get('[data-testid="course-document-sections"]')
+		expect(list.findAll('li')).toHaveLength(3)
+		expect(list.find('[data-filled]').exists()).toBe(false)
+		expect(list.find('.sr-only').exists()).toBe(false)
 	})
 
 	it('keeps the card as it was when the server sends no sections', () => {

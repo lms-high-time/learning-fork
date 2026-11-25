@@ -51,7 +51,10 @@
 				>
 					{{ __('Document sections') }}
 				</p>
+				<!-- role="list": Tailwind strips the markers, and VoiceOver in Safari
+				then drops the list role, its count and its caption. -->
 				<ul
+					role="list"
 					class="mt-2 gap-x-6 sm:columns-2"
 					:aria-labelledby="`course-document-${doc.artifact}-sections`"
 				>

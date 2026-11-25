@@ -24,7 +24,6 @@ export type ProgramBlock = {
 	filled?: boolean
 }
 
-/** A document the course builds; the counts only for an enrolled student. */
 /** A section of a course's document; `filled` only for an enrolled student. */
 export type ProgramDocumentBlock = {
 	key: string
@@ -32,6 +31,7 @@ export type ProgramDocumentBlock = {
 	filled?: boolean
 }
 
+/** A document the course builds; the counts only for an enrolled student. */
 export type ProgramDocument = {
 	artifact: string
 	title: string
