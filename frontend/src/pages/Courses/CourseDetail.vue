@@ -5,7 +5,7 @@
 		:breadcrumbs="breadcrumbs"
 		:published="isAdmin && Boolean(course.data?.published)"
 		:upcoming="Boolean(course.data?.upcoming)"
-		:loading="!course.data"
+		:loading="!course.data || (!isAdmin && !mapSettled)"
 		:doc="course"
 		doc-prop="course"
 	>
@@ -97,7 +97,7 @@
 			lives in lms_frappe_app's author view, not in this editor
 			(learning-services#310). -->
 			<a
-				v-if="tab?.key === 'overview' && course.data && !isMobile"
+				v-if="isAdmin && tab?.key === 'overview' && course.data && !isMobile"
 				:href="
 					safeUrl(`/author?course=${encodeURIComponent(props.courseName)}`)
 				"
@@ -112,7 +112,7 @@
 			<!-- The reports students filed about this course live in the desk
 			(learning-services#301). -->
 			<a
-				v-if="tab?.key === 'overview' && course.data && !isMobile"
+				v-if="isAdmin && tab?.key === 'overview' && course.data && !isMobile"
 				:href="
 					safeUrl(
 						`/desk/agent-course-report?course=${encodeURIComponent(
@@ -163,8 +163,15 @@
 			</Button>
 		</template>
 
+		<!-- Not before the map has answered: it decides whether the page has
+		tabs, and an overview drawn alone and then moved under them was drawn
+		twice (learning-services#854). -->
 		<template #solo>
-			<CourseOverview v-if="course.data" :course="course" />
+			<CourseOverview
+				v-if="course.data && mapSettled"
+				:course="course"
+				:courseMap="courseMap"
+			/>
 			<SkeletonLoader v-else variant="course-page" />
 		</template>
 
@@ -269,6 +276,7 @@ import { useScreenSize } from '@/utils/composables'
 import TabbedDetailPage from '@/components/Layouts/TabbedDetailPage.vue'
 import type { DetailTab } from '@/components/Layouts/TabbedDetailPage.vue'
 import CourseOverview from '@/pages/Courses/CourseOverview.vue'
+import CourseSkills from '@/pages/Courses/CourseSkills.vue'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
 import CourseDashboard from '@/pages/Courses/CourseDashboard.vue'
 import CourseEditor from '@/pages/Courses/CourseEditor.vue'
@@ -278,6 +286,8 @@ import ShortcutTooltip from '@/components/ShortcutTooltip.vue'
 import HeaderButton from '@/components/HeaderButton.vue'
 import { openFormRoute } from '@/composables/useFormRoute'
 import { safeUrl } from '@/utils/safeUrl'
+import { useCourseMap } from '@/composables/useCourseMap'
+import type { CourseCompetency } from '@/utils/courseProgram'
 import type {
 	CourseDetails,
 	CourseInstructorInfo,
@@ -412,10 +422,29 @@ const course = createResource({
 	auto: true,
 }) as Resource<CourseDetails | null>
 
+// The course map, for the overview and for the tabs: a course on the
+// competency catalog gets a «Skills» tab next to its overview
+// (learning-services#854).
+const { courseMap, mapSettled } = useCourseMap(() => course.data?.name)
+
+const competencies = computed<CourseCompetency[]>(
+	() => courseMap.data?.data?.competencies ?? []
+)
+
+// An announced course shows what it will teach, not its skills: the same
+// viewers as the overview's announcement — not enrolled, not managing it.
+const showSkills = computed<boolean>(() => {
+	const upcoming =
+		Boolean(course.data?.upcoming) && !course.data?.membership && !isAdmin.value
+	return !upcoming && competencies.value.length > 0
+})
+
 // Header actions by tab. Enrolling and publishing also live on the overview,
 // the tab a course opens on (learning-services#310).
+// Admins only: since learners got an overview tab too (learning-services#854),
+// the tab alone no longer says who is looking.
 const enrollsHere = (tab?: { key: string }) =>
-	['overview', 'dashboard'].includes(tab?.key ?? '')
+	isAdmin.value && ['overview', 'dashboard'].includes(tab?.key ?? '')
 const publishesHere = (tab?: { key: string }) =>
 	['overview', 'settings'].includes(tab?.key ?? '')
 
@@ -425,8 +454,20 @@ const tabs = computed<DetailTab[]>(() => [
 		label: __('Overview'),
 		component: markRaw(CourseOverview),
 		icon: 'lucide-list',
-		when: isAdmin.value,
+		// A learner gets tabs only once there is a second one to switch to.
+		when: isAdmin.value || showSkills.value,
 		flow: true,
+		props: { courseMap },
+	},
+	{
+		key: 'skills',
+		// Not 'Skills': that string is Learning's own, translated «Навыки».
+		label: __('Course skills'),
+		component: markRaw(CourseSkills),
+		icon: 'lucide-target',
+		when: showSkills.value,
+		flow: true,
+		props: { competencies: competencies.value },
 	},
 	{
 		key: 'dashboard',

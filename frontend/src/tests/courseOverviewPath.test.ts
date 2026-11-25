@@ -71,7 +71,7 @@ vi.mock('@/components/CourseProgram/CourseChapters.vue', () =>
 	stub('CourseChapters', '<div data-testid="course-chapters" />')
 )
 
-import CourseOverview from '@/pages/Courses/CourseOverview.vue'
+import { CourseOverviewHost } from './helpers/courseOverviewHost'
 
 const __ = (message: string) => {
 	if (!/{\d+}/.test(message)) return message
@@ -140,7 +140,7 @@ const course = (membership: boolean) => ({
 })
 
 const open = async (membership: boolean) => {
-	const wrapper = mount(CourseOverview, {
+	const wrapper = mount(CourseOverviewHost, {
 		props: { course: course(membership) as never },
 		global: {
 			provide: { $user: { data: { name: 'a@b.c' } } },
@@ -189,7 +189,7 @@ describe('the course page (#636)', () => {
 
 	it('drops the last course’s map when another course opens', async () => {
 		const props = reactive({ course: course(true) })
-		const wrapper = mount(CourseOverview, {
+		const wrapper = mount(CourseOverviewHost, {
 			props: props as never,
 			global: {
 				provide: { $user: { data: { name: 'a@b.c' } } },

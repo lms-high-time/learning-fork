@@ -11,7 +11,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick, reactive } from 'vue'
-import { flushPromises, shallowMount } from '@vue/test-utils'
+import { shallowMount } from '@vue/test-utils'
 import CourseOverview from '@/pages/Courses/CourseOverview.vue'
 
 type ResourceOpts = {
@@ -29,23 +29,6 @@ const resources: Array<
 		reload: ReturnType<typeof vi.fn>
 	}
 > = []
-
-// The learner's space (learning-services#347): a personal space with no
-// organization, which is Learning as it was before spaces.
-vi.mock('@/stores/space', () => ({
-	PERSONAL: 'personal',
-	useSpace: () => ({
-		load: () => Promise.resolve(),
-		paramFor: () => 'personal',
-		enrolFor: () => 'personal',
-		isOrganization: false,
-		hasOrganizations: false,
-		current: 'personal',
-		spaces: [],
-		myCourseIds: [],
-		catalogIds: [],
-	}),
-}))
 
 vi.mock('frappe-ui', () => ({
 	Badge: { template: '<span><slot /></span>' },
@@ -108,9 +91,19 @@ const outlineResource = () =>
 	resources.find((r) => r.url === 'lms.lms.utils.get_course_outline')!
 
 // Mirrors the real parent: `data` is null until the course request resolves.
+// The map is the page's now (learning-services#854); its timing is covered in
+// useCourseMap.test.ts, here it only has to be there.
 const mountOverview = (course: { data: { name: string } | null }) =>
 	shallowMount(CourseOverview, {
-		props: { course },
+		props: {
+			course,
+			courseMap: reactive({
+				data: null,
+				fetched: false,
+				error: null,
+				fetch: vi.fn(() => Promise.resolve()),
+			}),
+		},
 		global: {
 			provide: { $user: { data: { name: 'a@b.c' } } },
 			mocks: { __: (s: string) => s },
@@ -158,71 +151,5 @@ describe('CourseOverview outline resource', () => {
 		mountOverview(reactive({ data: null }))
 
 		expect(outlineResource().cache).toBeUndefined()
-	})
-})
-
-describe('CourseOverview course map resource', () => {
-	// The map comes from our own app, not from Learning: it is the only place
-	// the page can get objectives and their coverage, and a guest is allowed to
-	// see it. It must follow the same timing rule as the outline — firing with
-	// an undefined course name is what produced the 500 this suite exists for.
-	const mapResource = () =>
-		resources.find((r) => r.url === 'lms_frappe_app.api.public.course_map')!
-
-	it('does not fire while the parent course resource is still loading', () => {
-		mountOverview(reactive({ data: null }))
-
-		const map = mapResource()
-		expect(map.auto).toBe(false)
-		expect(map.fetch).not.toHaveBeenCalled()
-	})
-
-	it('fires once the course name arrives, with the real course in params', async () => {
-		const course = reactive<{ data: { name: string } | null }>({ data: null })
-		mountOverview(course)
-
-		course.data = { name: 'COURSE-1' }
-		await nextTick()
-
-		await flushPromises()
-		const map = mapResource()
-		expect(map.fetch).toHaveBeenCalledTimes(1)
-		// The documents' fill is the chosen space's (learning-services#347).
-		expect(map.makeParams!()).toEqual({ course: 'COURSE-1', space: 'personal' })
-	})
-
-	it('handles a failing request, because the app it calls may not be installed', async () => {
-		// frappe-ui's createResource rethrows in handleError unconditionally, so
-		// whatever fetch() returns has to be handled here. On a Learning site
-		// without lms_frappe_app the server answers AppNotInstalledError, and
-		// that unhandled rejection took down three Cypress specs — every one
-		// that opens a course page. A site without our app must show no map,
-		// quietly.
-		//
-		// The fetch runs after the space is loaded, inside a promise chain, so
-		// the failure arrives as a rejection of that chain. Left unhandled,
-		// vitest reports it and fails this test on its own.
-		const course = reactive<{ data: { name: string } | null }>({ data: null })
-		mountOverview(course)
-
-		const map = mapResource()
-		map.fetch.mockImplementationOnce(() =>
-			Promise.reject(new Error('AppNotInstalledError'))
-		)
-
-		course.data = { name: 'COURSE-1' }
-		await flushPromises()
-
-		expect(map.fetch).toHaveBeenCalledTimes(1)
-	})
-
-	it('asks over GET, which is the only verb the endpoint answers', () => {
-		// The whitelist on the server side is GET-only, and createResource
-		// defaults to POST: the stand answered 403 to every request until this
-		// was set. Server tests call the function directly and these tests mock
-		// the resource, so nothing else covers the verb between them.
-		mountOverview(reactive({ data: null }))
-
-		expect(mapResource().method).toBe('GET')
 	})
 })

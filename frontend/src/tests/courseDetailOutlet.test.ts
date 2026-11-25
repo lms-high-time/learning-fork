@@ -22,6 +22,14 @@ const { passthrough } = vi.hoisted(() => {
 vi.mock('@/stores/settings', () => ({ useSettings: () => ({}) }))
 vi.mock('@/stores/user', () => ({ usersStore: () => ({ userResource: {} }) }))
 vi.mock('@/stores/session', () => ({ sessionStore: () => ({ brand: {} }) }))
+// The page asks for the course map itself now (learning-services#854), and
+// the map's params come from the learner's space store.
+vi.mock('@/stores/space', () => ({
+	useSpace: () => ({
+		load: () => Promise.resolve(),
+		paramFor: () => 'personal',
+	}),
+}))
 
 vi.mock('frappe-ui', () => ({
 	createResource: () => ({ data: null, loading: false, reload: vi.fn() }),

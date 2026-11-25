@@ -10243,8 +10243,8 @@ msgid "Your document"
 msgstr "Ваш документ"
 
 #: frontend/src/components/CourseDocumentCard.vue
-msgid "You will build"
-msgstr "В курсе вы соберёте"
+msgid "What you will get"
+msgstr "Что у вас получится"
 
 #: frontend/src/components/CourseDocumentCard.vue
 msgid "Open the document"
@@ -11755,9 +11755,17 @@ msgstr "Файл в архиве больше {0} МБ."
 msgid "Age rating"
 msgstr "Возрастная категория"
 
+#: frontend/src/pages/Courses/CourseDetail.vue
+msgid "Course skills"
+msgstr "Умения"
+
 #: frontend/src/components/CourseProgram/CourseCompetencies.vue
-msgid "What you'll learn"
-msgstr "Чему научитесь"
+msgid "The course checks these skills in your conversation with the agent instead of a test."
+msgstr "Курс проверяет эти умения в разговоре с агентом — вместо теста."
+
+#: frontend/src/components/CourseProgram/CourseCompetencies.vue
+msgid "Other skills"
+msgstr "Отдельные умения"
 
 #: frontend/src/components/CourseProgram/CourseCompetencies.vue
 msgid "What it is made of"

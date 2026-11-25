@@ -162,7 +162,15 @@ watch(tabIndex, () => {
 	}
 })
 
-watch(() => route.hash, selectFromHash)
+// Back from a tab lands on the address without a hash — the first tab's: the
+// page went back, so the tab has to as well (learning-services#854).
+watch(
+	() => route.hash,
+	(hash) => {
+		if (!hash) tabIndex.value = 0
+		else selectFromHash()
+	}
+)
 
 watch(visibleTabs, () => {
 	if (tabIndex.value >= visibleTabs.value.length) tabIndex.value = 0
