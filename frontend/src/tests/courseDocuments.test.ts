@@ -161,6 +161,103 @@ describe('CourseDocumentCard', () => {
 		})
 	})
 
+	// What will be in the document (learning-services#856).
+	const sections = (filled?: boolean[]) =>
+		['Договорённости', 'Области решений', 'Как мы решаем'].map(
+			(title, index) => ({
+				key: `k${index}`,
+				title,
+				...(filled ? { filled: filled[index] } : {}),
+			})
+		)
+
+	it('lists the sections to a visitor, without marks', () => {
+		const wrapper = mount(CourseDocumentCard, {
+			props: {
+				documents: [
+					{ artifact: 'agreements_log', title: 'Журнал', blocks: sections() },
+				],
+				courseName: 'c1',
+				enrolled: false,
+			},
+			global,
+		})
+		const list = wrapper.get('[data-testid="course-document-sections"]')
+		expect(list.findAll('li').map((li) => li.text())).toEqual([
+			'Договорённости',
+			'Области решений',
+			'Как мы решаем',
+		])
+		expect(list.find('[data-filled]').exists()).toBe(false)
+		expect(list.find('.sr-only').exists()).toBe(false)
+		// A visitor has no document of their own to open yet.
+		expect(wrapper.find('a').exists()).toBe(false)
+		const caption = list.get(`#${list.get('ul').attributes('aria-labelledby')}`)
+		expect(caption.text()).toBe('Document sections')
+	})
+
+	it('marks the filled sections for a student', () => {
+		const wrapper = mount(CourseDocumentCard, {
+			props: {
+				documents: [
+					{
+						artifact: 'agreements_log',
+						title: 'Журнал',
+						blocks_total: 3,
+						blocks_filled: 1,
+						blocks: sections([true, false, false]),
+					},
+				],
+				courseName: 'c1',
+				enrolled: true,
+			},
+			global,
+		})
+		const items = wrapper.findAll('[data-testid="course-document-sections"] li')
+		expect(items.map((li) => li.attributes('data-filled'))).toEqual([
+			'true',
+			'false',
+			'false',
+		])
+		expect(items[0].get('.sr-only').text()).toContain('section filled')
+		expect(items[1].get('.sr-only').text()).toContain('not filled yet')
+		// The way into the document stays, under its sections.
+		expect(wrapper.find('a').exists()).toBe(true)
+	})
+
+	// The page may count the viewer enrolled before the server does: no
+	// «not filled yet» it never said.
+	it('marks nothing for a student when the server sends no fill', () => {
+		const wrapper = mount(CourseDocumentCard, {
+			props: {
+				documents: [
+					{ artifact: 'agreements_log', title: 'Журнал', blocks: sections() },
+				],
+				courseName: 'c1',
+				enrolled: true,
+			},
+			global,
+		})
+		const list = wrapper.get('[data-testid="course-document-sections"]')
+		expect(list.findAll('li')).toHaveLength(3)
+		expect(list.find('[data-filled]').exists()).toBe(false)
+		expect(list.find('.sr-only').exists()).toBe(false)
+	})
+
+	it('keeps the card as it was when the server sends no sections', () => {
+		const wrapper = mount(CourseDocumentCard, {
+			props: {
+				documents: [{ artifact: 'agreements_log', title: 'Журнал' }],
+				courseName: 'c1',
+				enrolled: false,
+			},
+			global,
+		})
+		expect(
+			wrapper.find('[data-testid="course-document-sections"]').exists()
+		).toBe(false)
+	})
+
 	it('draws nothing for a course without a document', () => {
 		const wrapper = mount(CourseDocumentCard, {
 			props: { documents: [], courseName: 'c1', enrolled: true },

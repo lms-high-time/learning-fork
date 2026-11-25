@@ -24,12 +24,22 @@ export type ProgramBlock = {
 	filled?: boolean
 }
 
+/** A section of a course's document; `filled` only for an enrolled student. */
+export type ProgramDocumentBlock = {
+	key: string
+	title: string
+	filled?: boolean
+}
+
 /** A document the course builds; the counts only for an enrolled student. */
 export type ProgramDocument = {
 	artifact: string
 	title: string
 	blocks_total?: number
 	blocks_filled?: number
+	/** Every section of the document in order (learning-services#856); absent
+	 * from a server that does not send them yet. */
+	blocks?: ProgramDocumentBlock[]
 }
 
 /**
