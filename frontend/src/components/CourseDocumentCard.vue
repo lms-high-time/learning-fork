@@ -29,15 +29,6 @@
 					}}
 				</div>
 				<ProgressBar :progress="percent(doc)" />
-				<router-link
-					:to="{
-						name: 'Document',
-						params: { courseName, artifact: doc.artifact },
-					}"
-					class="inline-block"
-				>
-					<Button variant="subtle" :label="__('Open the document')" />
-				</router-link>
 			</template>
 			<p v-else class="text-p-base text-ink-gray-7">
 				{{
@@ -46,6 +37,67 @@
 					)
 				}}
 			</p>
+			<!-- What will be in the document: its sections answer the hard decisions
+			of the task (learning-services#856). In two columns on a wide screen,
+			read down each; a student sees which are filled. -->
+			<div
+				v-if="doc.blocks?.length"
+				class="pt-2"
+				data-testid="course-document-sections"
+			>
+				<p
+					:id="`course-document-${doc.artifact}-sections`"
+					class="text-p-sm font-medium text-ink-gray-6"
+				>
+					{{ __('Document sections') }}
+				</p>
+				<ul
+					class="mt-2 gap-x-6 sm:columns-2"
+					:aria-labelledby="`course-document-${doc.artifact}-sections`"
+				>
+					<li
+						v-for="block in doc.blocks"
+						:key="block.key"
+						class="flex break-inside-avoid items-start gap-2 py-0.5 text-p-base text-ink-gray-8"
+						:data-filled="showFill(doc) ? String(Boolean(block.filled)) : null"
+					>
+						<span
+							v-if="showFill(doc)"
+							class="mt-0.5 size-4 shrink-0"
+							:class="
+								block.filled
+									? 'lucide-circle-check text-ink-green-6'
+									: 'lucide-circle text-ink-gray-4'
+							"
+							aria-hidden="true"
+						/>
+						<span
+							v-else
+							class="mt-2.5 size-1.5 shrink-0 rounded-full bg-surface-gray-5"
+							aria-hidden="true"
+						/>
+						<span>
+							{{ block.title }}
+							<span v-if="showFill(doc)" class="sr-only">
+								—
+								{{
+									block.filled ? __('section filled') : __('not filled yet')
+								}}</span
+							>
+						</span>
+					</li>
+				</ul>
+			</div>
+			<router-link
+				v-if="enrolled && doc.blocks_total"
+				:to="{
+					name: 'Document',
+					params: { courseName, artifact: doc.artifact },
+				}"
+				class="inline-block pt-1"
+			>
+				<Button variant="subtle" :label="__('Open the document')" />
+			</router-link>
 		</div>
 	</section>
 </template>
@@ -59,11 +111,17 @@ import type { ProgramDocument } from '@/utils/courseProgram'
 // visitor its promise, for a student the document itself and how far it is.
 // A section of the overview's main column, between the task the course helps
 // with and its programme (learning-services#854).
-defineProps<{
+const props = defineProps<{
 	documents: ProgramDocument[]
 	courseName: string
 	enrolled: boolean
 }>()
+
+// The marks only for a student, and only where the server said which are
+// filled.
+const showFill = (doc: ProgramDocument): boolean =>
+	props.enrolled &&
+	Boolean(doc.blocks?.some((block) => block.filled !== undefined))
 
 const percent = (doc: ProgramDocument) =>
 	doc.blocks_total

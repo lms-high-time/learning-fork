@@ -10247,6 +10247,18 @@ msgid "What you will get"
 msgstr "Что у вас получится"
 
 #: frontend/src/components/CourseDocumentCard.vue
+msgid "Document sections"
+msgstr "Разделы документа"
+
+#: frontend/src/components/CourseDocumentCard.vue
+msgid "section filled"
+msgstr "заполнен"
+
+#: frontend/src/components/CourseDocumentCard.vue
+msgid "not filled yet"
+msgstr "ещё не заполнен"
+
+#: frontend/src/components/CourseDocumentCard.vue
 msgid "Open the document"
 msgstr "Открыть документ"
 
