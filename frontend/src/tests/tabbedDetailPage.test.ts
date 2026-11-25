@@ -259,6 +259,19 @@ describe('TabbedDetailPage hash', () => {
 		expect(wrapper.find('[data-testid="body-dashboard"]').exists()).toBe(true)
 	})
 
+	// Back from a tab reaches the address without a hash: the first tab's
+	// (learning-services#854).
+	it('goes back to the first tab when the hash is gone', async () => {
+		const { wrapper, router } = await mountPage({ tabs: tabs() })
+		await router.push('/courses/abc#dashboard')
+		await flushPromises()
+
+		await router.push('/courses/abc')
+		await flushPromises()
+
+		expect(wrapper.find('[data-testid="body-overview"]').exists()).toBe(true)
+	})
+
 	it('ignores a hash that names no tab', async () => {
 		const { wrapper } = await mountPage({ tabs: tabs(), hash: '#nonsense' })
 

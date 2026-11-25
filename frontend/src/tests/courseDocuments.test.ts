@@ -133,7 +133,8 @@ describe('CourseDocumentCard', () => {
 			},
 			global,
 		})
-		expect(wrapper.text()).toContain('You will build')
+		// A section of the overview's main column now (learning-services#854).
+		expect(wrapper.get('h2').text()).toBe('What you will get')
 		expect(wrapper.find('a').exists()).toBe(false)
 	})
 

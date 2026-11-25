@@ -1,8 +1,10 @@
 /**
- * «What you'll learn» on the course page (learning-services#843): the
- * competencies of a course on the competency catalog, above its programme —
- * the integrative ones with their parts folded under each, then the base ones
- * no integrative one takes in. A course without them shows no block.
+ * The course's skills (learning-services#843) moved off the overview onto a
+ * tab of their own (learning-services#854): the overview speaks of the task,
+ * the document and the programme; the «Skills» tab lists the integrative
+ * skills with their parts shown under each, then the base ones no integrative
+ * skill takes in, under a heading of their own. Which viewers get the tab is
+ * in courseSkillsTab.test.ts.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
@@ -79,7 +81,7 @@ vi.mock('@/components/CourseProgram/CourseChapters.vue', () => ({
 	default: { template: '<section data-testid="program" />' },
 }))
 
-import CourseOverview from '@/pages/Courses/CourseOverview.vue'
+import { CourseOverviewHost } from './helpers/courseOverviewHost'
 import CourseCompetencies from '@/components/CourseProgram/CourseCompetencies.vue'
 
 const base = (key: string, title: string): CourseCompetency => ({
@@ -116,16 +118,20 @@ const program = (list: CourseCompetency[]): ProgramData => ({
 })
 
 const mountOverview = () =>
-	mount(CourseOverview, {
+	mount(CourseOverviewHost, {
 		props: {
 			course: reactive({
 				data: { name: 'course-1', title: 'Проекты', instructors: [] },
-			}),
+			}) as never,
 		},
 		global: {
 			provide: { $user: { data: { name: 'a@b.c' } } },
 			mocks: { __: (s: string) => s },
-			stubs: { CourseDocumentCard: true },
+			stubs: {
+				CourseDocumentCard: {
+					template: '<section data-testid="course-documents" />',
+				},
+			},
 		},
 	})
 
@@ -134,76 +140,67 @@ afterEach(() => {
 	document.body.innerHTML = ''
 })
 
-describe('CourseOverview «What you\'ll learn»', () => {
-	it('shows the block above the programme when the course has competencies', async () => {
+describe('the overview of a course with skills', () => {
+	it('lists no skills: they have a tab of their own', async () => {
 		mapData.value = { data: program(competencies) }
-		const wrapper = mountOverview()
-		await flushPromises()
-
-		const block = wrapper.get('[data-testid="course-competencies"]')
-		expect(block.get('h2').text()).toBe("What you'll learn")
-		const program_ = wrapper.get('[data-testid="program"]')
-		// Above the programme: the block comes first in the document.
-		expect(
-			block.element.compareDocumentPosition(program_.element) &
-				Node.DOCUMENT_POSITION_FOLLOWING
-		).toBeTruthy()
-	})
-
-	it('shows no block for a course without competencies', async () => {
-		mapData.value = { data: program([]) }
 		const wrapper = mountOverview()
 		await flushPromises()
 
 		expect(wrapper.find('[data-testid="course-competencies"]').exists()).toBe(
 			false
 		)
+		expect(wrapper.text()).not.toContain('Запуск проекта')
 		expect(wrapper.find('[data-testid="program"]').exists()).toBe(true)
+	})
+
+	it('puts the document in the main column, once, before the programme', async () => {
+		mapData.value = { data: program(competencies) }
+		const wrapper = mountOverview()
+		await flushPromises()
+
+		const documents = wrapper.findAll('[data-testid="course-documents"]')
+		expect(documents).toHaveLength(1)
+		expect(documents[0].element.closest('aside')).toBeNull()
+		const program_ = wrapper.get('[data-testid="program"]')
+		expect(
+			documents[0].element.compareDocumentPosition(program_.element) &
+				Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy()
 	})
 })
 
-describe('CourseCompetencies', () => {
-	const mountBlock = () =>
+describe('CourseCompetencies, the «Skills» tab', () => {
+	const mountBlock = (list: CourseCompetency[] = competencies) =>
 		mount(CourseCompetencies, {
-			props: { competencies },
+			props: { competencies: list },
 			global: { mocks: { __: (s: string) => s } },
 			attachTo: document.body,
 		})
 
-	it('lists the integrative ones, then the base ones on their own', () => {
+	it('says why the skills are there, and counts none of them', () => {
+		const wrapper = mountBlock()
+
+		expect(wrapper.get('p').text()).toBe(
+			'The course checks these skills in your conversation with the agent instead of a test.'
+		)
+		expect(wrapper.text()).not.toMatch(/\d/)
+	})
+
+	it('lists the integrative ones with their parts shown, nothing to unfold', () => {
 		const wrapper = mountBlock()
 
 		const items = wrapper.findAll('[data-testid="course-competency"]')
-		expect(items.map((item) => item.get('h3').text())).toEqual([
+		expect(items.map((item) => item.get('h2').text())).toEqual([
 			'Запуск проекта',
 		])
 		expect(items[0].text()).toContain('Запускаете проект со спонсором и целью.')
-		const standalone = wrapper.get('[data-testid="course-competencies-base"]')
-		expect(standalone.text()).toContain('Проект и операции')
-		expect(standalone.text()).toContain('Описание: Проект и операции')
-		expect(standalone.text()).not.toContain('Выбор спонсора')
-		// Set apart from the last integrative one, or it reads as its part.
-		expect(standalone.classes()).toContain('border-t')
-	})
-
-	it('folds the parts under a button that says whether they are shown', async () => {
-		const wrapper = mountBlock()
-		const toggle = wrapper.get('[data-testid="course-competency-toggle"]')
+		// A caption naming the list, not a heading repeated under every skill.
+		const partsList = items[0].get('[data-testid="course-competency-parts"]')
+		const caption = items[0].get(`#${partsList.attributes('aria-labelledby')}`)
+		expect(caption.element.tagName).toBe('P')
+		expect(caption.text()).toBe('What it is made of')
+		expect(wrapper.find('button').exists()).toBe(false)
 		const parts = wrapper.get('[data-testid="course-competency-parts"]')
-
-		expect(toggle.element.tagName).toBe('BUTTON')
-		expect(toggle.attributes('type')).toBe('button')
-		expect(toggle.attributes('aria-controls')).toBe(parts.attributes('id'))
-		// Every toggle reads the same: its competency's title tells them apart.
-		expect(
-			wrapper.get(`#${toggle.attributes('aria-describedby')}`).text()
-		).toBe('Запуск проекта')
-		expect(toggle.attributes('aria-expanded')).toBe('false')
-		expect(parts.isVisible()).toBe(false)
-
-		await toggle.trigger('click')
-
-		expect(toggle.attributes('aria-expanded')).toBe('true')
 		expect(parts.isVisible()).toBe(true)
 		expect(
 			parts
@@ -213,10 +210,31 @@ describe('CourseCompetencies', () => {
 			['Выбор спонсора', 'Описание: Выбор спонсора'],
 			['Цель проекта', 'Описание: Цель проекта'],
 		])
+	})
 
-		await toggle.trigger('click')
+	it('lists the base ones apart, under a heading of their own', () => {
+		const wrapper = mountBlock()
 
-		expect(toggle.attributes('aria-expanded')).toBe('false')
-		expect(parts.isVisible()).toBe(false)
+		const standalone = wrapper.get('[data-testid="course-competencies-base"]')
+		const heading = standalone.get('h2')
+		expect(heading.text()).toBe('Other skills')
+		expect(standalone.attributes('aria-labelledby')).toBe(
+			heading.attributes('id')
+		)
+		expect(standalone.text()).toContain('Проект и операции')
+		expect(standalone.text()).toContain('Описание: Проект и операции')
+		expect(standalone.text()).not.toContain('Выбор спонсора')
+		// Set apart from the last integrative one, or it reads as its part.
+		expect(standalone.classes()).toContain('border-t')
+	})
+
+	it('needs no heading for the base ones when there is nothing else', () => {
+		const wrapper = mountBlock([base('ops', 'Проект и операции')])
+
+		const standalone = wrapper.get('[data-testid="course-competencies-base"]')
+		expect(standalone.find('h2').exists()).toBe(false)
+		expect(standalone.attributes('aria-labelledby')).toBeUndefined()
+		expect(standalone.classes()).not.toContain('border-t')
+		expect(standalone.text()).toContain('Проект и операции')
 	})
 })

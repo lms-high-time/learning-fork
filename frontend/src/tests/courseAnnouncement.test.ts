@@ -96,11 +96,11 @@ vi.mock('@/components/CourseProgram/CourseChapters.vue', () => ({
 
 vi.stubGlobal('__', (s: string) => s)
 
-import CourseOverview from '@/pages/Courses/CourseOverview.vue'
+import { CourseOverviewHost } from './helpers/courseOverviewHost'
 import CourseCard from '@/components/CourseCard.vue'
 
 const mountOverview = (course: Record<string, unknown>) =>
-	mount(CourseOverview, {
+	mount(CourseOverviewHost, {
 		props: { course: reactive({ data: { instructors: [], ...course } }) },
 		global: {
 			provide: { $user: { data: { name: 'a@b.c' } } },

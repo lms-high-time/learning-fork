@@ -113,21 +113,20 @@
 					>
 						{{ course.data.short_introduction }}
 					</p>
-					<div class="md:hidden space-y-4">
+					<div class="md:hidden">
 						<CourseCardOverlay :course="course" :notify="notify" :path="path" />
-						<CourseDocumentCard
-							:documents="documents"
-							:courseName="course.data.name"
-							:enrolled="Boolean(course.data.membership)"
-						/>
 					</div>
 				</section>
 
-				<!-- What the course teaches, above its programme; only a course on
-				the competency catalog has it (learning-services#843). -->
-				<CourseCompetencies
-					v-if="!upcoming && competencies.length"
-					:competencies="competencies"
+				<!-- What the course leaves you with, right after the task it helps
+				with and before how the work goes: the document is the course's
+				promise, so it sits in the main column, once for every screen.
+				The full list of skills has a tab of its own
+				(learning-services#854). -->
+				<CourseDocumentCard
+					:documents="documents"
+					:courseName="course.data.name"
+					:enrolled="Boolean(course.data.membership)"
 				/>
 
 				<!-- An announced course shows what it will teach, not how: its
@@ -258,14 +257,10 @@
 			<aside
 				class="hidden md:flex w-80 shrink-0 flex-col space-y-6 self-start sticky top-5"
 			>
-				<!-- The way in, and what the course leaves you with (#340); the
-				author is in the header already (learning-services#326). -->
+				<!-- The way in; the author is in the header already
+				(learning-services#326), the document in the main column
+				(learning-services#854). -->
 				<CourseCardOverlay :course="course" :notify="notify" :path="path" />
-				<CourseDocumentCard
-					:documents="documents"
-					:courseName="course.data.name"
-					:enrolled="Boolean(course.data.membership)"
-				/>
 			</aside>
 		</div>
 
@@ -288,25 +283,22 @@ import CourseCardOverlay from '@/components/CourseCardOverlay.vue'
 import CourseDocumentCard from '@/components/CourseDocumentCard.vue'
 import CourseOutline from '@/components/CourseOutline.vue'
 import CourseChapters from '@/components/CourseProgram/CourseChapters.vue'
-import CourseCompetencies from '@/components/CourseProgram/CourseCompetencies.vue'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
 import CourseReviews from '@/components/CourseReviews.vue'
 import CourseInstructors from '@/components/CourseInstructors.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import RelatedCourses from '@/components/RelatedCourses.vue'
-import {
-	coursePath,
-	type CourseCompetency,
-	type ProgramData,
-} from '@/utils/courseProgram'
+import { coursePath, type ProgramData } from '@/utils/courseProgram'
 import { markdownLinks } from '@/utils/markdownLinks'
 import { SHOW_COURSE_AUTHORS } from '@/utils/courseAuthors'
-import { useSpace } from '@/stores/space'
-import { withSpace } from '@/utils/space'
+import type { CourseMapResource } from '@/composables/useCourseMap'
 import { LESSONS, SECTIONS, STUDENTS, plural } from '@/utils/plural'
 
 const props = defineProps<{
 	course: Resource<CourseDetails | null>
+	// The page asks for the map — its tabs depend on it too — and hands it
+	// down (learning-services#854).
+	courseMap: CourseMapResource
 }>()
 
 const user = inject<SessionUser>('$user')
@@ -337,53 +329,10 @@ watch(
 	{ immediate: true }
 )
 
-const space = useSpace()
-
-// The map comes from our own app: Learning knows nothing about objectives or
-// their coverage. Same timing rule as the outline above — `auto: false` plus a
-// watch, because firing before the course name arrives sends `undefined` and
-// the server answers 500.
-const courseMap = createResource({
-	url: 'lms_frappe_app.api.public.course_map',
-	// GET, not the default POST: the endpoint is whitelisted for GET only and
-	// answers 403 to anything else. It reads, so GET is also what it means.
-	method: 'GET',
-	makeParams() {
-		const course = props.course.data?.name
-		// The documents' fill is the chosen space's (learning-services#347).
-		return withSpace({ course }, space.paramFor(course))
-	},
-	auto: false,
-}) as Resource<{ data: ProgramData } | null>
-
-watch(
-	() => props.course.data?.name,
-	(name) => {
-		// The rejection has to be handled here: createResource rethrows in
-		// handleError no matter what, and a Learning site without
-		// lms_frappe_app answers AppNotInstalledError. Unhandled, it surfaces
-		// as an application error on every course page — which is exactly how
-		// it took down three Cypress specs. No app, no map, no noise.
-		// Another course's map is no answer for this one: the page is reused
-		// from course to course (learning-services#636).
-		courseMap.reset?.()
-		if (name)
-			space
-				.load()
-				.then(() => courseMap.fetch())
-				.catch(() => {})
-	},
-	{ immediate: true }
-)
-
 // The program needs lessons, not objectives: a lesson without them still gets
 // its slide, just without the topics. No lessons — the outline's own empty state.
 // The documents the course builds, from the same map (#340).
-const documents = computed(() => courseMap.data?.data?.documents ?? [])
-// What the course teaches, from the same map (learning-services#843).
-const competencies = computed<CourseCompetency[]>(
-	() => courseMap.data?.data?.competencies ?? []
-)
+const documents = computed(() => props.courseMap.data?.data?.documents ?? [])
 
 // An announced course, for anyone not enrolled in it and not managing it:
 // Learning knows the flag before the map arrives, so the outline never
@@ -395,10 +344,12 @@ const upcoming = computed<boolean>(
 		!isCourseAdmin.value
 )
 const objectives = computed<string[]>(
-	() => courseMap.data?.data?.objectives ?? []
+	() => props.courseMap.data?.data?.objectives ?? []
 )
-const notify = computed<boolean>(() => Boolean(courseMap.data?.data?.notify))
-const mapLoaded = computed<boolean>(() => Boolean(courseMap.data))
+const notify = computed<boolean>(() =>
+	Boolean(props.courseMap.data?.data?.notify)
+)
+const mapLoaded = computed<boolean>(() => Boolean(props.courseMap.data))
 
 // The meta line: a dot goes between items, so each item's dot shows only when
 // a later item does — hiding the author left one hanging (learning-services#396).
@@ -412,7 +363,9 @@ const hasEnrollments = computed<boolean>(
 const showAuthors = computed<boolean>(
 	() => SHOW_COURSE_AUTHORS && Boolean(props.course.data?.instructors?.length)
 )
-const isTester = computed<boolean>(() => Boolean(courseMap.data?.data?.tester))
+const isTester = computed<boolean>(() =>
+	Boolean(props.courseMap.data?.data?.tester)
+)
 
 const plainText = (html: string): string =>
 	html
@@ -443,20 +396,20 @@ watch(
 		call('lms_frappe_app.api.student.notify_when_released', {
 			course: props.course.data?.name,
 		})
-			.then(() => courseMap.fetch())
+			.then(() => props.courseMap.fetch())
 			.catch(() => {})
 	},
 	{ immediate: true }
 )
 
 const program = computed<ProgramData | null>(() => {
-	const data = courseMap.data?.data
+	const data = props.courseMap.data?.data
 	return data?.chapters?.some((chapter) => chapter.lessons.length) ? data : null
 })
 // Answered, whatever the answer — an empty one included, or the placeholder
 // would wait for good.
 const mapSettled = computed<boolean>(
-	() => Boolean(courseMap.fetched) || Boolean(courseMap.error)
+	() => Boolean(props.courseMap.fetched) || Boolean(props.courseMap.error)
 )
 
 // Where the student is, for the course card (learning-services#636).
