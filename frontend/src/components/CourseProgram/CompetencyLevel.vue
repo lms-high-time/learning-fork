@@ -8,14 +8,16 @@
 		class="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded px-2 py-0.5 text-p-xs font-medium"
 		:class="
 			reached
-				? 'bg-surface-green-2 text-ink-green-7'
+				? 'bg-surface-green-2 text-ink-green-8'
 				: 'bg-surface-gray-2 text-ink-gray-7'
 		"
 		data-testid="competency-level"
 	>
+		<!-- Read after the skill's title, «Ahead» alone says nothing. -->
+		<span class="sr-only">{{ __('Your level:') }} </span>
 		<span v-if="reached" class="lucide-check size-3.5" aria-hidden="true" />
 		{{ label }}
-		<span v-if="reached" class="sr-only"
+		<span v-if="reached" class="sr-only" data-testid="competency-goal"
 			>— {{ __('course goal reached') }}</span
 		>
 	</span>

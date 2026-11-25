@@ -206,7 +206,7 @@ describe('CourseCompetencies, the «Skills» tab', () => {
 			parts
 				.findAll('li')
 				.map((li) => [
-					li.get('.font-medium').text(),
+					li.get('[data-testid="competency-title"]').text(),
 					li.get('.text-p-sm').text(),
 				])
 		).toEqual([
@@ -257,6 +257,10 @@ describe("CourseCompetencies, an enrolled student's levels", () => {
 	})
 	const badges = (wrapper: ReturnType<typeof mountBlock>) =>
 		wrapper.findAll('[data-testid="competency-level"]')
+	// What a sighted student reads on the badge: without the screen reader's
+	// «Your level:» in front.
+	const shown = (badge: { text: () => string }) =>
+		badge.text().replace('Your level:', '').trim()
 
 	it('shows no levels to a visitor: the server sends none', () => {
 		const wrapper = mountBlock(competencies)
@@ -286,7 +290,11 @@ describe("CourseCompetencies, an enrolled student's levels", () => {
 
 		const [badge] = badges(wrapper)
 		expect(badge.find('.lucide-check').exists()).toBe(true)
-		expect(badge.get('.sr-only').text()).toContain('course goal reached')
+		expect(badge.get('[data-testid="competency-goal"]').text()).toContain(
+			'course goal reached'
+		)
+		// Read after the title, the badge says whose level it is.
+		expect(badge.text()).toContain('Your level:')
 	})
 
 	it('leaves a level below the course goal unticked', () => {
@@ -296,7 +304,7 @@ describe("CourseCompetencies, an enrolled student's levels", () => {
 
 		const [badge] = badges(wrapper)
 		expect(badge.find('.lucide-check').exists()).toBe(false)
-		expect(badge.find('.sr-only').exists()).toBe(false)
+		expect(badge.find('[data-testid="competency-goal"]').exists()).toBe(false)
 	})
 
 	it('shows nothing for a standing it does not know', () => {
@@ -327,9 +335,9 @@ describe("CourseCompetencies, an enrolled student's levels", () => {
 		const item = wrapper.get('[data-testid="course-competency"]')
 		const parts = item.get('[data-testid="course-competency-parts"]')
 		expect(
-			parts.findAll('[data-testid="competency-level"]').map((b) => b.text())
+			parts.findAll('[data-testid="competency-level"]').map(shown)
 		).toEqual(['Not checked yet'])
-		expect(badges(wrapper).map((b) => b.text())).toEqual([
+		expect(badges(wrapper).map(shown)).toEqual([
 			'You explain it',
 			'Not checked yet',
 		])

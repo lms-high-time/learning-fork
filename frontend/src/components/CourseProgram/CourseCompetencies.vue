@@ -48,7 +48,10 @@
 					>
 						<li v-for="part in competency.parts" :key="part.key">
 							<span class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-								<span class="text-p-base font-medium text-ink-gray-8">
+								<span
+									class="text-p-base font-medium text-ink-gray-8"
+									data-testid="competency-title"
+								>
 									{{ part.title }}
 								</span>
 								<CompetencyLevel :competency="part" />
@@ -82,7 +85,10 @@
 			<ul class="space-y-3">
 				<li v-for="competency in base" :key="competency.key">
 					<span class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-						<span class="text-p-base font-medium text-ink-gray-8">
+						<span
+							class="text-p-base font-medium text-ink-gray-8"
+							data-testid="competency-title"
+						>
 							{{ competency.title }}
 						</span>
 						<CompetencyLevel :competency="competency" />

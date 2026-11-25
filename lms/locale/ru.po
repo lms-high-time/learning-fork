@@ -11807,6 +11807,10 @@ msgstr "Переносите"
 msgid "course goal reached"
 msgstr "цель курса достигнута"
 
+#: frontend/src/components/CourseProgram/CompetencyLevel.vue
+msgid "Your level:"
+msgstr "Ваш уровень:"
+
 #: frontend/src/components/CourseProgram/CourseCompetencies.vue
 msgid "What it is made of"
 msgstr "Из чего складывается"
